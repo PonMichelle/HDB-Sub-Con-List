@@ -146,40 +146,9 @@ tr:hover td{background:var(--sur2)}
 .cur-proj{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bblue);border-radius:var(--r);font-size:11.5px;color:var(--blue);cursor:pointer;border:1px solid #b5d4f4;flex-shrink:0;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cur-proj svg{flex-shrink:0}
 /* Setup screen */
-.setup-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:600;align-items:center;justify-content:center;padding:20px}
-.setup-box{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:32px;width:100%;max-width:500px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
-.setup-box h1{font-size:18px;font-weight:600;margin-bottom:6px}
-.setup-box p{font-size:12.5px;color:var(--tx2);margin-bottom:20px;line-height:1.6}
-.setup-steps{counter-reset:step;display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
-.step{display:flex;gap:12px;align-items:flex-start;font-size:12.5px;color:var(--tx2);line-height:1.5}
-.step-num{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.step a{color:var(--blue);font-weight:500}
-.key-row{display:flex;gap:8px;margin-top:4px}
-.key-row input{flex:1;padding:8px 10px;font-size:12.5px;border:1px solid var(--bdr2);border-radius:var(--r);background:var(--sur2);color:var(--tx);font-family:'IBM Plex Mono',monospace}
-.key-row input:focus{outline:none;border-color:var(--blue)}
-.setup-note{font-size:11.5px;color:var(--tx3);margin-top:14px;padding:10px 12px;background:var(--sur2);border-radius:var(--r);border:1px solid var(--bdr);line-height:1.5}
 </style>
 </head>
 <body>
-
-<!-- Setup screen: first-time API key entry -->
-<div class="setup-screen" id="setupScreen">
-  <div class="setup-box">
-    <h1>🔑 One-time team setup</h1>
-    <p>This app uses <strong>JSONBin.io</strong> as a free cloud backend so your whole team shares the same live data. Do these 3 steps once, then share the URL with your team.</p>
-    <div class="setup-steps">
-      <div class="step"><div class="step-num">1</div><div>Go to <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> → Sign up free (30 seconds, no credit card needed)</div></div>
-      <div class="step"><div class="step-num">2</div><div>After login → click your profile icon → <strong>API Keys</strong> → copy your <strong>Master Key</strong></div></div>
-      <div class="step"><div class="step-num">3</div><div>Paste it here and click Connect:
-        <div class="key-row" style="margin-top:8px">
-          <input type="password" id="apiKeyInput" placeholder="$2a$10$xxxxxxxxxxxxxxxx..." />
-          <button class="btn btn-blue" onclick="connectApiKey()">Connect →</button>
-        </div>
-      </div></div>
-    </div>
-    <div class="setup-note">📌 <strong>Share this same API key with your whole team</strong> — each person enters it once on first open. After that it's saved in their browser. Recommend saving the key in your team WhatsApp or shared notes.</div>
-  </div>
-</div>
 
 <!-- Project selection screen -->
 <div class="proj-screen" id="projScreen">
@@ -352,37 +321,6 @@ async function sset(key,val){
   cachePut(key,val);
   if(!JBIN_KEY) return;
   try{ await jbSet(key,val); }catch(e){ setSS('err'); }
-}
-
-// ── Setup screen ─────────────────────────────────────────────────
-function showSetup(){
-  document.getElementById('setupScreen').style.display='flex';
-}
-function hideSetup(){
-  document.getElementById('setupScreen').style.display='none';
-}
-async function connectApiKey(){
-  const key=document.getElementById('apiKeyInput').value.trim();
-  if(!key){alert('Please paste your JSONBin Master Key.');return;}
-  // Test the key with a simple request
-  try{
-    setSS('syn');
-    const test=await fetch('https://api.jsonbin.io/v3/b',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'hdb_test','X-Bin-Private':'false'},
-      body:JSON.stringify({data:'test'})
-    });
-    if(!test.ok && test.status===401){alert('Invalid API key. Please check and try again.');setSS('err');return;}
-    setApiKey(key);
-    hideSetup();
-    toast('Connected to JSONBin ✓');
-    await loadProjects();
-    let lastId=null;
-    try{lastId=localStorage.getItem('hdb_last_project');}catch(e){}
-    const lastProj=projects.find(p=>p.id===lastId);
-    if(lastProj){currentProject=lastProj;updateProjUI();hideProjScreen();await loadAll();}
-    else{showProjScreen();renderSB();render();}
-  }catch(e){setSS('err');alert('Connection failed. Check your internet and try again.');}
 }
 
 // ── Project management ──────────────────────────────────────────
