@@ -286,11 +286,9 @@ function statusKey(){return currentProject?`hdb_status_${currentProject.id}`:'hd
 // First-time setup: user enters their JSONBin API key once, stored locally.
 
 const CACHE_PREFIX = 'hdbcache_';
-let JBIN_KEY = '';   // JSONBin Master Key (X-Master-Key)
-let binIds = {};     // { storageKey: binId } mapping, stored locally
-
-function getApiKey(){ return localStorage.getItem('hdb_jbin_key')||''; }
-function setApiKey(k){ localStorage.setItem('hdb_jbin_key',k); JBIN_KEY=k; }
+let JBIN_KEY = '$2a$10$sPrS499Sy8ajjvCon.29quD13FhKvHBfH1BEx8O2az7h6CqHkCOgG';
+function getApiKey(){ return JBIN_KEY; }
+function setApiKey(k){ JBIN_KEY=k; }
 
 function cachePut(key,val){ try{localStorage.setItem(CACHE_PREFIX+key,JSON.stringify(val));}catch(e){} }
 function cacheGet(key){ try{const v=localStorage.getItem(CACHE_PREFIX+key);return v?JSON.parse(v):null;}catch(e){return null;} }
@@ -745,13 +743,6 @@ setInterval(async()=>{
 // ── Init ─────────────────────────────────────────────────────────
 async function init(){
   loadBinIds();
-  JBIN_KEY = getApiKey();
-  if(!JBIN_KEY){
-    showSetup();
-    records=JSON.parse(JSON.stringify(BD));
-    renderSB();render();
-    return;
-  }
   await loadProjects();
   let lastId=null;
   try{lastId=localStorage.getItem('hdb_last_project');}catch(e){}
