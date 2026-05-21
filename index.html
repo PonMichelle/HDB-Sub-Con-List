@@ -145,9 +145,41 @@ tr:hover td{background:var(--sur2)}
 .proj-footer{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--bdr)}
 .cur-proj{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bblue);border-radius:var(--r);font-size:11.5px;color:var(--blue);cursor:pointer;border:1px solid #b5d4f4;flex-shrink:0;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cur-proj svg{flex-shrink:0}
+/* Setup screen */
+.setup-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:600;align-items:center;justify-content:center;padding:20px}
+.setup-box{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl);padding:32px;width:100%;max-width:500px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.setup-box h1{font-size:18px;font-weight:600;margin-bottom:6px}
+.setup-box p{font-size:12.5px;color:var(--tx2);margin-bottom:20px;line-height:1.6}
+.setup-steps{counter-reset:step;display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.step{display:flex;gap:12px;align-items:flex-start;font-size:12.5px;color:var(--tx2);line-height:1.5}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step a{color:var(--blue);font-weight:500}
+.key-row{display:flex;gap:8px;margin-top:4px}
+.key-row input{flex:1;padding:8px 10px;font-size:12.5px;border:1px solid var(--bdr2);border-radius:var(--r);background:var(--sur2);color:var(--tx);font-family:'IBM Plex Mono',monospace}
+.key-row input:focus{outline:none;border-color:var(--blue)}
+.setup-note{font-size:11.5px;color:var(--tx3);margin-top:14px;padding:10px 12px;background:var(--sur2);border-radius:var(--r);border:1px solid var(--bdr);line-height:1.5}
 </style>
 </head>
 <body>
+
+<!-- Setup screen: first-time API key entry -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-box">
+    <h1>🔑 One-time team setup</h1>
+    <p>This app uses <strong>JSONBin.io</strong> as a free cloud backend so your whole team shares the same live data. Do these 3 steps once, then share the URL with your team.</p>
+    <div class="setup-steps">
+      <div class="step"><div class="step-num">1</div><div>Go to <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> → Sign up free (30 seconds, no credit card needed)</div></div>
+      <div class="step"><div class="step-num">2</div><div>After login → click your profile icon → <strong>API Keys</strong> → copy your <strong>Master Key</strong></div></div>
+      <div class="step"><div class="step-num">3</div><div>Paste it here and click Connect:
+        <div class="key-row" style="margin-top:8px">
+          <input type="password" id="apiKeyInput" placeholder="$2a$10$xxxxxxxxxxxxxxxx..." />
+          <button class="btn btn-blue" onclick="connectApiKey()">Connect →</button>
+        </div>
+      </div></div>
+    </div>
+    <div class="setup-note">📌 <strong>Share this same API key with your whole team</strong> — each person enters it once on first open. After that it's saved in their browser. Recommend saving the key in your team WhatsApp or shared notes.</div>
+  </div>
+</div>
 
 <!-- Project selection screen -->
 <div class="proj-screen" id="projScreen">
@@ -206,7 +238,7 @@ tr:hover td{background:var(--sur2)}
     </div>
     <div class="cards-area" id="ca"><div class="cgrid" id="cg"></div></div>
     <div class="tw" id="ta" style="display:none">
-      <table><thead><tr><th>Company</th><th>Trade</th><th>Contact</th><th>Tel/HP</th><th>Email</th><th>Remark</th><th>Invitation</th><th>Not Quote</th><th>Addendum 1</th><th>Addendum 2</th><th>Quotation Rcvd</th><th>Notes</th></tr></thead><tbody id="tb"></tbody></table>
+      <table><thead><tr><th>Company</th><th>Trade</th><th>Contact</th><th>Tel/HP</th><th>Email</th><th>Remark</th><th>Invitation</th><th>Not Quote</th><th>Add.1</th><th>Add.2</th><th>Add.3</th><th>Add.4</th><th>Add.5</th><th>Add.6</th><th>Add.7</th><th>Add.8</th><th>Add.9</th><th>Add.10</th><th>Quotation Rcvd</th><th>Notes</th></tr></thead><tbody id="tb"></tbody></table>
     </div>
   </div>
 </div>
@@ -249,21 +281,119 @@ function setSS(s){
 // Storage key for current project's status
 function statusKey(){return currentProject?`hdb_status_${currentProject.id}`:'hdb_subcon_status';}
 
-// ── Storage: localStorage (works in any browser) ─────────────────
-function sget(key){
-  try{const v=localStorage.getItem(key);return v;}catch(e){return null;}
+// ── Storage: JSONBin.io cloud sync + localStorage cache ──────────
+// Team data syncs via JSONBin. localStorage used as fast local cache.
+// First-time setup: user enters their JSONBin API key once, stored locally.
+
+const CACHE_PREFIX = 'hdbcache_';
+let JBIN_KEY = '';   // JSONBin Master Key (X-Master-Key)
+let binIds = {};     // { storageKey: binId } mapping, stored locally
+
+function getApiKey(){ return localStorage.getItem('hdb_jbin_key')||''; }
+function setApiKey(k){ localStorage.setItem('hdb_jbin_key',k); JBIN_KEY=k; }
+
+function cachePut(key,val){ try{localStorage.setItem(CACHE_PREFIX+key,JSON.stringify(val));}catch(e){} }
+function cacheGet(key){ try{const v=localStorage.getItem(CACHE_PREFIX+key);return v?JSON.parse(v):null;}catch(e){return null;} }
+
+function loadBinIds(){ try{const v=localStorage.getItem('hdb_bin_ids');binIds=v?JSON.parse(v):{};} catch(e){binIds={};} }
+function saveBinIds(){ try{localStorage.setItem('hdb_bin_ids',JSON.stringify(binIds));}catch(e){} }
+
+// Create a new bin on JSONBin for a given key
+async function createBin(key, initialVal){
+  const res = await fetch('https://api.jsonbin.io/v3/b', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Master-Key':JBIN_KEY,'X-Bin-Name':key,'X-Bin-Private':'false'},
+    body: JSON.stringify({data: initialVal})
+  });
+  if(!res.ok) throw new Error('JSONBin create failed: '+res.status);
+  const j = await res.json();
+  return j.metadata.id;
 }
-function sset(key,val){
-  try{localStorage.setItem(key,JSON.stringify(val));return true;}catch(e){return false;}
+
+// Read from JSONBin
+async function jbGet(key){
+  const binId = binIds[key];
+  if(!binId) return null;
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{
+    headers:{'X-Master-Key':JBIN_KEY}
+  });
+  if(!res.ok) return null;
+  const j = await res.json();
+  return j.record.data;
+}
+
+// Write to JSONBin (create bin if not exists)
+async function jbSet(key, val){
+  let binId = binIds[key];
+  if(!binId){
+    binId = await createBin(key, val);
+    binIds[key] = binId;
+    saveBinIds();
+  } else {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':JBIN_KEY},
+      body: JSON.stringify({data: val})
+    });
+    if(!res.ok) throw new Error('JSONBin update failed: '+res.status);
+  }
+  cachePut(key, val);
+}
+
+// Main sget/sset — try cloud, fall back to local cache
+async function sget(key){
+  if(!JBIN_KEY){ const v=cacheGet(key); return v; }
+  try{
+    const v = await jbGet(key);
+    if(v!==null){ cachePut(key,v); return v; }
+    return cacheGet(key);
+  }catch(e){ return cacheGet(key); }
+}
+
+async function sset(key,val){
+  cachePut(key,val);
+  if(!JBIN_KEY) return;
+  try{ await jbSet(key,val); }catch(e){ setSS('err'); }
+}
+
+// ── Setup screen ─────────────────────────────────────────────────
+function showSetup(){
+  document.getElementById('setupScreen').style.display='flex';
+}
+function hideSetup(){
+  document.getElementById('setupScreen').style.display='none';
+}
+async function connectApiKey(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(!key){alert('Please paste your JSONBin Master Key.');return;}
+  // Test the key with a simple request
+  try{
+    setSS('syn');
+    const test=await fetch('https://api.jsonbin.io/v3/b',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Master-Key':key,'X-Bin-Name':'hdb_test','X-Bin-Private':'false'},
+      body:JSON.stringify({data:'test'})
+    });
+    if(!test.ok && test.status===401){alert('Invalid API key. Please check and try again.');setSS('err');return;}
+    setApiKey(key);
+    hideSetup();
+    toast('Connected to JSONBin ✓');
+    await loadProjects();
+    let lastId=null;
+    try{lastId=localStorage.getItem('hdb_last_project');}catch(e){}
+    const lastProj=projects.find(p=>p.id===lastId);
+    if(lastProj){currentProject=lastProj;updateProjUI();hideProjScreen();await loadAll();}
+    else{showProjScreen();renderSB();render();}
+  }catch(e){setSS('err');alert('Connection failed. Check your internet and try again.');}
 }
 
 // ── Project management ──────────────────────────────────────────
-function loadProjects(){
-  const r=sget(SK_PROJECTS);
-  projects=r?JSON.parse(r):[];
+async function loadProjects(){
+  const r=await sget(SK_PROJECTS);
+  projects=r?r:[];
   return projects;
 }
-function saveProjects(){sset(SK_PROJECTS,projects);}
+async function saveProjects(){await sset(SK_PROJECTS,projects);}
 
 function showProjScreen(){
   renderProjList();
@@ -286,42 +416,40 @@ function renderProjList(){
     </div>`).join('');
 }
 
-function createProj(){
+async function createProj(){
   const inp=document.getElementById('newProjName');
   const name=inp.value.trim();
   if(!name){inp.focus();return;}
   if(projects.find(p=>p.name.toLowerCase()===name.toLowerCase())){alert('A project with this name already exists.');return;}
   const proj={id:'proj_'+Date.now(),name,createdAt:new Date().toISOString()};
   projects.push(proj);
-  saveProjects();
+  await saveProjects();
   inp.value='';
   renderProjList();
-  selectProject(proj.id);
+  await selectProject(proj.id);
 }
 
-function selectProject(id){
+async function selectProject(id){
   const proj=projects.find(p=>p.id===id);
   if(!proj)return;
-  // Save current project status before switching
   if(currentProject && Object.keys(statusMap).length>0){
-    saveStatus();
+    await saveStatus();
   }
   currentProject=proj;
   try{localStorage.setItem('hdb_last_project',id);}catch(e){}
   hideProjScreen();
   updateProjUI();
-  loadStatusForProject();
+  await loadStatusForProject();
   renderSB();render();
 }
 
-function deleteProject(id){
+async function deleteProject(id){
   const proj=projects.find(p=>p.id===id);
   if(!proj)return;
   if(!confirm(`Delete project "${proj.name}"? All tracking data for this project will be lost.`))return;
-  // Remove stored status for this project
-  try{localStorage.removeItem(`hdb_status_${id}`);}catch(e){}
+  try{localStorage.removeItem(`${CACHE_PREFIX}hdb_status_${id}`);}catch(e){}
   projects=projects.filter(p=>p.id!==id);
-  saveProjects();
+  await saveProjects();
   if(currentProject&&currentProject.id===id){
     currentProject=null;
     statusMap={};
@@ -339,41 +467,42 @@ function updateProjUI(){
   setSS('ok');
 }
 
-function loadStatusForProject(){
+async function loadStatusForProject(){
+  setSS('syn');
   try{
-    const r=sget(statusKey());
-    statusMap=r?JSON.parse(r):{};
-    // Records are always base data + any additions stored separately
-    const rr=sget(SK_R);
-    records=rr?JSON.parse(rr):JSON.parse(JSON.stringify(BD));
+    const r=await sget(statusKey());
+    statusMap=r?r:{};
+    const rr=await sget(SK_R);
+    records=rr?rr:JSON.parse(JSON.stringify(BD));
     nextId=records.length?Math.max(...records.map(r=>r.id))+1:1;
+    setSS('ok');
   }catch(e){
     records=JSON.parse(JSON.stringify(BD));
     statusMap={};
+    setSS('err');
   }
 }
 
-function loadAll(){
-  loadStatusForProject();
+async function loadAll(){
+  await loadStatusForProject();
   renderSB();render();
 }
 
-function saveRecords(){
+async function saveRecords(){
   try{
-    sset(SK_R,records);
-    toast('Saved ✓');
-  }catch(e){toast('Save failed');}
+    await sset(SK_R,records);
+    setSS('ok');toast('Saved ✓');
+  }catch(e){setSS('err');toast('Save failed');}
 }
 
-function saveStatus(){
+async function saveStatus(){
   if(!currentProject)return;
-  try{sset(statusKey(),statusMap);}catch(e){}
+  try{await sset(statusKey(),statusMap);}catch(e){setSS('err');}
 }
 
-function syncNow(){
+async function syncNow(){
   if(!currentProject){showProjScreen();return;}
-  loadAll();
-  toast('Refreshed ✓');
+  setSS('syn');await loadAll();toast('Synced ✓');
 }
 
 // Auto-save status on page unload (safety net)
@@ -423,7 +552,8 @@ function render(){
     if(!list.length){document.getElementById('cg').innerHTML=`<div class="empty"><div style="font-size:32px;margin-bottom:10px">🔍</div><div style="font-size:13px;color:var(--tx2)">No subcontractors found</div></div>`;return;}
     document.getElementById('cg').innerHTML=list.map(r=>{
       const st=statusMap[r.id]||{};
-      const inv=!!st.invDate; const ad1=!!st.add1Date; const ad2=!!st.add2Date; const qrc=!!st.qrcDate; const noq=!!st.noqDate;
+      const inv=!!st.invDate; const noq=!!st.noqDate; const qrc=!!st.qrcDate;
+      const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const ph=r.tel||r.hp;
       const em=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
       const eH=em.map(e=>`<a href="mailto:${e}" class="demail">${e}</a>`).join('<br>');
@@ -458,17 +588,15 @@ function render(){
             <label class="cblbl2" for="cb_nq${r.id}" style="${noq?'color:#a02020;font-weight:500':''}">Not Quote</label>
             ${noq?`<span class="cbdate" style="color:#a02020">${st.noqDate}</span>`:''}
           </div>
-          ${!noq?`
-          <div class="cbrow2">
-            <input type="checkbox" id="cb_a1${r.id}" ${ad1?'checked':''} onchange="toggleField(${r.id},'add1Date')" style="accent-color:#6c4fc7;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
-            <label class="cblbl2" for="cb_a1${r.id}" style="${ad1?'color:#6c4fc7;font-weight:500':''}">Tender Addendum No.1</label>
-            ${ad1?`<span class="cbdate">${st.add1Date}</span>`:''}
-          </div>
-          <div class="cbrow2">
-            <input type="checkbox" id="cb_a2${r.id}" ${ad2?'checked':''} onchange="toggleField(${r.id},'add2Date')" style="accent-color:#6c4fc7;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
-            <label class="cblbl2" for="cb_a2${r.id}" style="${ad2?'color:#6c4fc7;font-weight:500':''}">Tender Addendum No.2</label>
-            ${ad2?`<span class="cbdate">${st.add2Date}</span>`:''}
-          </div>
+          ${inv&&!noq ? [1,2,3,4,5,6,7,8,9,10].filter(n=> n===1 || ads[n-2]).map(n=>{
+            const fld=`add${n}Date`; const checked=ads[n-1]; const d=st[fld]||'';
+            return`<div class="cbrow2">
+              <input type="checkbox" id="cb_a${n}_${r.id}" ${checked?'checked':''} onchange="toggleField(${r.id},'${fld}')" style="accent-color:#6c4fc7;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
+              <label class="cblbl2" for="cb_a${n}_${r.id}" style="${checked?'color:#6c4fc7;font-weight:500':''}">Tender Addendum No.${n}</label>
+              ${checked?`<span class="cbdate">${d}</span>`:''}
+            </div>`;
+          }).join('') : ''}
+          ${inv&&!noq?`
           <div class="cbrow2">
             <input type="checkbox" id="cb_qr${r.id}" ${qrc?'checked':''} onchange="toggleField(${r.id},'qrcDate')" style="accent-color:#8a5c00;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
             <label class="cblbl2" for="cb_qr${r.id}" style="${qrc?'color:#8a5c00;font-weight:500':''}">Quotation received</label>
@@ -487,17 +615,24 @@ function render(){
     if(!list.length){document.getElementById('tb').innerHTML=`<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--tx3)">No results</td></tr>`;return;}
     document.getElementById('tb').innerHTML=list.map(r=>{
       const st=statusMap[r.id]||{};
-      const inv=!!st.invDate; const ad1=!!st.add1Date; const ad2=!!st.add2Date; const qrc=!!st.qrcDate; const noq=!!st.noqDate;
+      const inv=!!st.invDate; const noq=!!st.noqDate; const qrc=!!st.qrcDate;
+      const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const em=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean).map(e=>`<a href="mailto:${e}" class="tde">${e}</a>`).join('<br>');
       const ph=[r.tel,r.hp].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' / ');
       const rowBg=noq?'background:#fff5f5':qrc?'background:#fffbf0':inv?'background:#f0f6ff':'';
       const namColor=noq?'color:#a02020;font-weight:600':qrc?'color:#7a4f00;font-weight:600':inv?'color:#0c447c;font-weight:500':'font-weight:500';
-      function cbTd(checked,field,color,date,disabled){
-        return`<td style="text-align:center;white-space:nowrap${disabled?';opacity:0.25;pointer-events:none':''}">
-          <input type="checkbox" ${checked?'checked':''} ${disabled?'disabled':''} onchange="toggleField(${r.id},'${field}')" style="accent-color:${color}" />
+      const dash=`<td style="text-align:center;color:var(--tx3);font-size:10px">—</td>`;
+      function cbTd(checked,field,color,date){
+        return`<td style="text-align:center;white-space:nowrap">
+          <input type="checkbox" ${checked?'checked':''} onchange="toggleField(${r.id},'${field}')" style="accent-color:${color}" />
           ${date?`<div style="font-size:9.5px;color:var(--tx3);margin-top:2px;font-family:'IBM Plex Mono',monospace">${date}</div>`:''}
         </td>`;
       }
+      // Build addendum cells: show checkbox only if previous was ticked; else dash
+      const addCells=[1,2,3,4,5,6,7,8,9,10].map(n=>{
+        const prevOk = n===1 ? inv : ads[n-2];
+        return (prevOk&&!noq) ? cbTd(ads[n-1],`add${n}Date`,'#6c4fc7',st[`add${n}Date`]||'') : dash;
+      }).join('');
       return`<tr style="${rowBg}">
         <td style="${namColor}">${r.company}${noq?` <span style="font-size:10px;background:#fdeaea;color:#a02020;border:1px solid #f5a5a5;border-radius:6px;padding:1px 6px;vertical-align:middle;font-weight:400">✕ No quote</span>`:''}</td>
         <td style="font-size:11px;color:var(--tx2)">${r.trade}</td>
@@ -505,11 +640,10 @@ function render(){
         <td style="white-space:nowrap;font-size:11px">${ph||'—'}</td>
         <td>${em||'—'}</td>
         <td style="font-size:10.5px;color:var(--tx3);font-style:italic">${r.remark||''}</td>
-        ${cbTd(inv,'invDate','#1a56a0',st.invDate,false)}
-        ${cbTd(noq,'noqDate','#a02020',st.noqDate,false)}
-        ${cbTd(ad1,'add1Date','#6c4fc7',st.add1Date,noq)}
-        ${cbTd(ad2,'add2Date','#6c4fc7',st.add2Date,noq)}
-        ${cbTd(qrc,'qrcDate','#8a5c00',st.qrcDate,noq)}
+        ${cbTd(inv,'invDate','#1a56a0',st.invDate||'')}
+        ${cbTd(noq,'noqDate','#a02020',st.noqDate||'')}
+        ${addCells}
+        ${inv&&!noq ? cbTd(qrc,'qrcDate','#8a5c00',st.qrcDate||'') : dash}
         <td><input type="text" class="ni" style="width:140px;margin:0" placeholder="Notes..." value="${(st.note||'').replace(/"/g,'&quot;')}" oninput="uf(${r.id},'note',this.value)" /></td>
       </tr>`;
     }).join('');
@@ -541,7 +675,7 @@ function uf(id,field,val){
   const st=statusMap[id]||{};
   statusMap[id]={...st,[field]:val};
   clearTimeout(nTimers[id]);
-  nTimers[id]=setTimeout(()=>{saveStatus();},400);
+  nTimers[id]=setTimeout(()=>{saveStatus();},600);
 }
 function getUser(){return document.getElementById('uname').value.trim()||'Team';}
 function popTr(){
@@ -583,12 +717,12 @@ function saveRec(){
   else{records.push({id:nextId++,...d,addedBy:getUser(),addedAt:new Date().toISOString()});}
   closeMo();renderSB();render();saveRecords();
 }
-function delRec(id){
+async function delRec(id){
   const r=records.find(x=>x.id===id);if(!r)return;
   if(!confirm(`Remove "${r.company}"?`))return;
   records=records.filter(x=>x.id!==id);delete statusMap[id];
   renderSB();render();
-  saveRecords();saveStatus();
+  await saveRecords();await saveStatus();
 }
 function closeMo(){document.getElementById('mo').classList.remove('open');}
 document.getElementById('mo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMo();});
@@ -596,9 +730,29 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 try{const n=localStorage.getItem('hdb_uname');if(n)document.getElementById('uname').value=n;}catch(e){}
 document.getElementById('uname').addEventListener('input',function(){try{localStorage.setItem('hdb_uname',this.value);}catch(e){}});
 
+// Poll for team changes every 20s
+setInterval(async()=>{
+  if(!currentProject||!JBIN_KEY)return;
+  try{
+    const[rr,sr]=await Promise.all([jbGet(SK_R),jbGet(statusKey())]);
+    let ch=false;
+    if(rr&&JSON.stringify(rr)!==JSON.stringify(records)){records=rr;ch=true;}
+    if(sr&&JSON.stringify(sr)!==JSON.stringify(statusMap)){statusMap=sr;ch=true;}
+    if(ch){renderSB();render();setSS('ok');}
+  }catch(e){}
+},20000);
+
 // ── Init ─────────────────────────────────────────────────────────
-function init(){
-  loadProjects();
+async function init(){
+  loadBinIds();
+  JBIN_KEY = getApiKey();
+  if(!JBIN_KEY){
+    showSetup();
+    records=JSON.parse(JSON.stringify(BD));
+    renderSB();render();
+    return;
+  }
+  await loadProjects();
   let lastId=null;
   try{lastId=localStorage.getItem('hdb_last_project');}catch(e){}
   const lastProj=projects.find(p=>p.id===lastId);
@@ -606,10 +760,10 @@ function init(){
     currentProject=lastProj;
     updateProjUI();
     hideProjScreen();
-    loadAll();
+    await loadAll();
   } else {
     showProjScreen();
-    try{const rr=sget(SK_R);records=rr?JSON.parse(rr):JSON.parse(JSON.stringify(BD));nextId=records.length?Math.max(...records.map(r=>r.id))+1:1;}catch(e){records=JSON.parse(JSON.stringify(BD));}
+    records=JSON.parse(JSON.stringify(BD));
     renderSB();render();
   }
 }
@@ -617,10 +771,14 @@ init();
 function exportCSV(){
   const list=getFilt();
   const proj=currentProject?currentProject.name:'All';
-  const h=['Project','Company','Trade','Contact','Tel','HP','Email','Remark','Invitation Date','Not Quote Date','Addendum No.1 Date','Addendum No.2 Date','Quotation Rcvd Date','Notes'];
+  const h=['Project','Company','Trade','Contact','Tel','HP','Email','Remark','Invitation Date','Not Quote Date',
+    'Addendum 1','Addendum 2','Addendum 3','Addendum 4','Addendum 5',
+    'Addendum 6','Addendum 7','Addendum 8','Addendum 9','Addendum 10',
+    'Quotation Rcvd Date','Notes'];
   const rows=list.map(r=>{const st=statusMap[r.id]||{};
+    const addDates=[1,2,3,4,5,6,7,8,9,10].map(n=>st[`add${n}Date`]||'');
     return[proj,r.company,r.trade,r.contact,r.tel,r.hp,r.email,r.remark,
-      st.invDate||'',st.noqDate||'',st.add1Date||'',st.add2Date||'',st.qrcDate||'',st.note||'']
+      st.invDate||'',st.noqDate||'',...addDates,st.qrcDate||'',st.note||'']
       .map(v=>`"${(v||'').replace(/"/g,'""')}"`);});
   const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
   const a=document.createElement('a');
