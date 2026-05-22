@@ -85,6 +85,8 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 .drow svg{flex-shrink:0;margin-top:1px;color:var(--tx3)}
 .drow span{color:var(--tx);word-break:break-word}
 .demail{color:var(--blue)!important;word-break:break-all;font-size:11px}
+.demail:hover{text-decoration:underline}
+.email-all-hint{font-size:10px;color:var(--tx3);margin-top:2px;font-style:italic}
 .rtag{display:inline-block;margin-top:5px;padding:2px 7px;background:var(--bamber);color:var(--amber);font-size:10.5px;border-radius:4px;border:1px solid #f0d890;font-style:italic}
 .dpills{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .dpill{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:2px 6px;border-radius:6px}
@@ -193,7 +195,7 @@ tr:hover td{background:var(--sur2)}
         <button class="vb" id="vbT" onclick="setView('table')" title="Table"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></button>
         <div class="upill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" id="uname" placeholder="Your name" /></div>
         <button class="btn" onclick="syncNow()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,4 1,10 7,10"/><polyline points="23,20 23,14 17,14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Sync</button>
-        <button class="btn" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>CSV</button>
+        <button class="btn" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn btn-blue" onclick="openAdd()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</button>
       </div>
     </div>
@@ -492,7 +494,8 @@ function render(){
       const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const ph=r.tel||r.hp;
       const em=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
-      const eH=em.map(e=>`<a href="mailto:${e}" class="demail">${e}</a>`).join('<br>');
+      const allEmails=em.join(',');
+      const eH=em.map(e=>`<a href="mailto:${allEmails}" class="demail" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
       const nt=st.note||'';
       // Card highlight priority: Not Quote = red > Quote received = amber > Invited = blue
       const cardCls=noq?' nq':qrc?' qrcv':inv?' inv':'';
@@ -510,7 +513,7 @@ function render(){
         <hr class="cdiv"/>
         <div class="cdet">
           ${ph?`<div class="drow">${pIco()}<span>${ph}${r.tel&&r.hp&&r.tel!==r.hp?' · '+r.hp:''}</span></div>`:''}
-          ${eH?`<div class="drow">${mIco()}<span>${eH}</span></div>`:''}
+          ${eH?`<div class="drow">${mIco()}<span>${eH}${em.length>1?`<div class="email-all-hint">↑ click any to send to all ${em.length}</div>`:''}</span></div>`:''}
           ${r.remark?`<div class="rtag">${r.remark}</div>`:''}
         </div>
         <div class="csec">
@@ -553,7 +556,9 @@ function render(){
       const st=statusMap[r.id]||{};
       const inv=!!st.invDate; const noq=!!st.noqDate; const qrc=!!st.qrcDate;
       const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
-      const em=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean).map(e=>`<a href="mailto:${e}" class="tde">${e}</a>`).join('<br>');
+      const emList=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
+      const allEmails=emList.join(',');
+      const em=emList.map(e=>`<a href="mailto:${allEmails}" class="tde" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
       const ph=[r.tel,r.hp].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' / ');
       const rowBg=noq?'background:#fff5f5':qrc?'background:#fffbf0':inv?'background:#f0f6ff':'';
       const namColor=noq?'color:#a02020;font-weight:600':qrc?'color:#7a4f00;font-weight:600':inv?'color:#0c447c;font-weight:500':'font-weight:500';
@@ -699,22 +704,211 @@ async function init(){
 init();
 function exportCSV(){
   const list=getFilt();
-  const proj=currentProject?currentProject.name:'All';
-  const h=['Project','Company','Trade','Contact','Tel','HP','Email','Remark','Invitation Date','Not Quote Date',
-    'Addendum 1','Addendum 2','Addendum 3','Addendum 4','Addendum 5',
-    'Addendum 6','Addendum 7','Addendum 8','Addendum 9','Addendum 10',
-    'Quotation Rcvd Date','Notes'];
-  const rows=list.map(r=>{const st=statusMap[r.id]||{};
-    const addDates=[1,2,3,4,5,6,7,8,9,10].map(n=>st[`add${n}Date`]||'');
-    return[proj,r.company,r.trade,r.contact,r.tel,r.hp,r.email,r.remark,
-      st.invDate||'',st.noqDate||'',...addDates,st.qrcDate||'',st.note||'']
-      .map(v=>`"${(v||'').replace(/"/g,'""')}"`);});
-  const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
-  const a=document.createElement('a');
-  const fname=(currentProject?currentProject.name.replace(/[^a-z0-9]/gi,'_'):'HDB')+'_Subcontractors.csv';
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download=fname;a.click();
+  const proj=currentProject?currentProject.name:'HDB Sub Contractor List';
+  if(!window.XLSX){ toast('Loading export library...'); setTimeout(exportCSV,1500); return; }
+
+  const wb=XLSX.utils.book_new();
+
+  // ── Exact original colors ─────────────────────────────────────
+  const HDR_BG   ='203864'; // dark navy (theme 9)
+  const TRADE_BG ='CC99FF'; // lavender — trade rows
+  const INV_BG   ='CCECFF'; // light blue — invitation sent
+  const NOQT_BG  ='FFCCFF'; // pink — no quote
+  const ADD_BG   ='CCFFCC'; // light green — addendum sent
+  const QUOT_BG  ='FFFF00'; // yellow — quotation received
+
+  // ── Border helpers ────────────────────────────────────────────
+  const S=(s)=>({style:s});
+  const SC=(s,c)=>({style:s,color:{rgb:c}});
+  const dataBorder ={top:S('hair'),bottom:S('hair'),left:S('thin'),right:S('thin')};
+  const thinBorder ={top:S('thin'),bottom:S('thin'),left:S('thin'),right:S('thin')};
+
+  // ── Style factories ───────────────────────────────────────────
+  const hdrS=()=>({
+    font:{bold:true,sz:9,color:{rgb:'FFFFFF'},name:'Calibri'},
+    fill:{fgColor:{rgb:HDR_BG},patternType:'solid'},
+    alignment:{horizontal:'center',vertical:'center',wrapText:true},
+    border:thinBorder
+  });
+  const tradeS=()=>({
+    font:{bold:true,sz:9,name:'Calibri'},
+    fill:{fgColor:{rgb:TRADE_BG},patternType:'solid'},
+    alignment:{horizontal:'left',vertical:'center'},
+    border:thinBorder
+  });
+  const dataS=(bg,centre=false)=>({
+    font:{sz:9,name:'Calibri'},
+    fill:{fgColor:{rgb:bg||'FFFFFF'},patternType:'solid'},
+    alignment:{horizontal:centre?'center':'left',vertical:'center',wrapText:false},
+    border:dataBorder
+  });
+  const legendS=(bg)=>({
+    font:{sz:9,name:'Calibri'},
+    fill:{fgColor:{rgb:bg},patternType:'solid'},
+    alignment:{horizontal:'left',vertical:'center'}
+  });
+  const titleS=()=>({font:{bold:true,sz:10,name:'Calibri'},alignment:{horizontal:'left',vertical:'center'}});
+
+  // ── Column layout (exact original widths) ─────────────────────
+  // Col index: 0=A(spacer) 1=B(No) 2=C(Trade) 3=D(Company) 4=E(Contact)
+  //            5=F(DID) 6=G(TEL) 7=H(FAX) 8=I(H/P) 9=J(Email)
+  //            10=K(Invitation) 11=L(Not Quote)
+  //            12-21=M-V(Addendum 1-10) 22=W(Quotation) 23=X(Remark) 24=Y(Notes)
+  const COLS=[
+    {h:'',                     w:2.7},  // A spacer
+    {h:'No',                   w:6.9},  // B
+    {h:'Trade',                w:34.0}, // C
+    {h:'COMPANY NAME',         w:31.7}, // D
+    {h:'CONTACT PERSON',       w:24.3}, // E
+    {h:'DID',                  w:15.3}, // F
+    {h:'TEL',                  w:16.7}, // G
+    {h:'FAX',                  w:15.3}, // H
+    {h:'H/P',                  w:23.0}, // I
+    {h:'Email',                w:37.0}, // J
+    {h:'Invitation on:',       w:11.6}, // K
+    {h:'Not Quote',            w:12.0}, // L
+    {h:'Tender Addendum No.1', w:14.0}, // M
+    {h:'Tender Addendum No.2', w:14.0}, // N
+    {h:'Tender Addendum No.3', w:14.0}, // O
+    {h:'Tender Addendum No.4', w:14.0}, // P
+    {h:'Tender Addendum No.5', w:14.0}, // Q
+    {h:'Tender Addendum No.6', w:14.0}, // R
+    {h:'Tender Addendum No.7', w:14.0}, // S
+    {h:'Tender Addendum No.8', w:14.0}, // T
+    {h:'Tender Addendum No.9', w:14.0}, // U
+    {h:'Tender Addendum No.10',w:14.0}, // V
+    {h:'Quotation Received',   w:14.0}, // W
+    {h:'Remark',               w:43.3}, // X
+    {h:'Notes',                w:20.0}, // Y
+  ];
+  const NC=COLS.length;
+
+  // ── Build worksheet data ──────────────────────────────────────
+  const aoa=[];
+
+  // Row 1: project title
+  const r1=Array(NC).fill(''); r1[1]=proj; r1[10]='Invitation on:'; aoa.push(r1);
+  // Row 2: status/legend header
+  const r2=Array(NC).fill(''); r2[4]='Status'; r2[10]='Tender Addendum 2'; aoa.push(r2);
+  // Rows 3-6: colour legend
+  aoa.push(Array(NC).fill('')); aoa[2][4]='Send enquiry';
+  aoa.push(Array(NC).fill('')); aoa[3][4]='Pending info, send later';
+  aoa.push(Array(NC).fill('')); aoa[4][4]='Reply: no quote';
+  aoa.push(Array(NC).fill('')); aoa[5][4]='Received quotation';
+  // Row 7: header
+  aoa.push(COLS.map(c=>c.h));
+
+  // Group companies by trade (maintain filter order)
+  const tradeOrder=[]; const tradeMap={};
+  list.forEach(r=>{
+    if(!tradeMap[r.trade]){tradeMap[r.trade]=[];tradeOrder.push(r.trade);}
+    tradeMap[r.trade].push(r);
+  });
+
+  let rNo=1;
+  tradeOrder.forEach(trade=>{
+    const comps=tradeMap[trade];
+    // Trade header row
+    const tr=Array(NC).fill('');
+    tr[1]=rNo++; tr[2]=trade; aoa.push(tr);
+    // Company rows
+    comps.forEach(r=>{
+      const st=statusMap[r.id]||{};
+      const email=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean).join('; ');
+      const adds=[1,2,3,4,5,6,7,8,9,10].map(n=>st[`add${n}Date`]||'');
+      const row=Array(NC).fill('');
+      row[3]=r.company||'';   // D
+      row[4]=r.contact||'';   // E
+      row[5]='';              // F DID
+      row[6]=r.tel||'';       // G TEL
+      row[7]='';              // H FAX
+      row[8]=r.hp||'';        // I H/P
+      row[9]=email;           // J Email
+      row[10]=st.invDate||''; // K Invitation
+      row[11]=st.noqDate||''; // L Not Quote
+      for(let i=0;i<10;i++) row[12+i]=adds[i]; // M-V Addendum 1-10
+      row[22]=st.qrcDate||''; // W Quotation
+      row[23]=r.remark||'';   // X Remark
+      row[24]=st.note||'';    // Y Notes
+      aoa.push(row);
+    });
+  });
+
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=COLS.map(c=>({wch:c.w}));
+  ws['!rows']=[{hpt:15},{hpt:13},{hpt:13},{hpt:13},{hpt:13},{hpt:13},{hpt:30}];
+
+  // Freeze from row 8 (after header row 7)
+  ws['!freeze']={xSplit:0,ySplit:7,topLeftCell:'A8',activePane:'bottomLeft',state:'frozen'};
+
+  // ── Apply styles row by row ───────────────────────────────────
+  // Row 1: title
+  const t1=XLSX.utils.encode_cell({r:0,c:1});
+  if(ws[t1]) ws[t1].s=titleS();
+  const t1k=XLSX.utils.encode_cell({r:0,c:10});
+  if(ws[t1k]) ws[t1k].s={font:{bold:true,sz:9,name:'Calibri'}};
+
+  // Rows 3-6: legend
+  const legColors=['CCECFF','99FFCC','FFCCFF','FFFF00'];
+  for(let i=0;i<4;i++){
+    const addr=XLSX.utils.encode_cell({r:2+i,c:4});
+    if(!ws[addr])ws[addr]={t:'s',v:aoa[2+i][4]};
+    ws[addr].s=legendS(legColors[i]);
+  }
+
+  // Row 7: header (index 6)
+  for(let c=0;c<NC;c++){
+    if(!COLS[c].h) continue;
+    const addr=XLSX.utils.encode_cell({r:6,c});
+    if(!ws[addr])ws[addr]={t:'s',v:COLS[c].h};
+    ws[addr].s=hdrS();
+  }
+
+  // Data rows (from index 7 onward)
+  let wsR=7;
+  tradeOrder.forEach(trade=>{
+    const comps=tradeMap[trade];
+    // Trade row
+    for(let c=0;c<NC;c++){
+      const addr=XLSX.utils.encode_cell({r:wsR,c});
+      if(!ws[addr])ws[addr]={t:'s',v:''};
+      ws[addr].s=tradeS();
+    }
+    // No cell: centre
+    const noAddr=XLSX.utils.encode_cell({r:wsR,c:1});
+    if(ws[noAddr])ws[noAddr].s={...tradeS(),alignment:{horizontal:'center',vertical:'center'}};
+    wsR++;
+
+    comps.forEach(r=>{
+      const st=statusMap[r.id]||{};
+      const noq=!!st.noqDate; const qrc=!!st.qrcDate; const inv=!!st.invDate;
+      const hasAdd=!![1,2,3,4,5,6,7,8,9,10].find(n=>st[`add${n}Date`]);
+
+      // Row background: match original legend colors
+      const rowBg=noq?NOQT_BG:qrc?QUOT_BG:hasAdd?ADD_BG:inv?INV_BG:'FFFFFF';
+
+      for(let c=0;c<NC;c++){
+        const addr=XLSX.utils.encode_cell({r:wsR,c});
+        if(!ws[addr])ws[addr]={t:'s',v:''};
+        // Date cols (K-W = index 10-22): centre
+        const isDate=(c>=10&&c<=22);
+        ws[addr].s=dataS(rowBg,isDate);
+      }
+      wsR++;
+    });
+  });
+
+  XLSX.utils.book_append_sheet(wb,ws,'QuotationList');
+  const fname=(currentProject?currentProject.name.replace(/[^a-z0-9]/gi,'_'):'HDB')+'_QuotationList.xlsx';
+  XLSX.writeFile(wb,fname,{cellStyles:true});
+  toast('Exported ✓');
 }
+
+(function(){
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  document.head.appendChild(s);
+})();
 </script>
 </body>
 </html>
