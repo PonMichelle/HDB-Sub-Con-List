@@ -1,0 +1,7 @@
+{
+  "name": "hdb-export-function",
+  "version": "1.0.0",
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
+}
