@@ -412,8 +412,11 @@ async function loadStatusForProject(){
   try{
     const r=await sget(statusKey());
     statusMap=r?r:{};
+    // Always start from BD (embedded data) to ensure latest subcon list
+    // JSONBin only stores user-added contacts on top of BD
     const rr=await sget(SK_R);
-    records=rr?rr:JSON.parse(JSON.stringify(BD));
+    const additions=rr?rr.filter(r=>r.id>BD.length):[];
+    records=[...JSON.parse(JSON.stringify(BD)),...additions];
     nextId=records.length?Math.max(...records.map(r=>r.id))+1:1;
     setSS('ok');
   }catch(e){
@@ -430,7 +433,8 @@ async function loadAll(){
 
 async function saveRecords(){
   try{
-    await sset(SK_R,records);
+    const additions=records.filter(r=>r.id>BD.length);
+    await sset(SK_R,additions);
     setSS('ok');toast('Saved ✓');
   }catch(e){setSS('err');toast('Save failed');}
 }
@@ -679,7 +683,11 @@ setInterval(async()=>{
   try{
     const[rr,sr]=await Promise.all([jbGet(SK_R),jbGet(statusKey())]);
     let ch=false;
-    if(rr&&JSON.stringify(rr)!==JSON.stringify(records)){records=rr;ch=true;}
+    if(rr){
+      const additions=rr.filter(r=>r.id>BD.length);
+      const fresh=[...JSON.parse(JSON.stringify(BD)),...additions];
+      if(JSON.stringify(fresh)!==JSON.stringify(records)){records=fresh;ch=true;}
+    }
     if(sr&&JSON.stringify(sr)!==JSON.stringify(statusMap)){statusMap=sr;ch=true;}
     if(ch){renderSB();render();setSS('ok');}
   }catch(e){}
