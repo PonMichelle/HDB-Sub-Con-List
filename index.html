@@ -74,6 +74,8 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 .cbrow2:last-child{border-bottom:none}
 .cblbl2{font-size:11.5px;cursor:pointer;user-select:none;color:var(--tx2);flex:1}
 .cbdate{font-size:10.5px;color:var(--tx3);margin-left:auto;white-space:nowrap;font-family:'IBM Plex Mono',monospace}
+.dinput{padding:3px 6px;font-size:11px;border:1px solid var(--bdr2);border-radius:var(--r);background:var(--sur2);color:var(--tx);font-family:inherit;cursor:pointer}
+.dinput:focus{outline:none;border-color:var(--blue)}
 .cth{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px}
 .ctag{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:500;background:var(--bgreen);color:var(--green);border:1px solid #a8d5b5;white-space:nowrap;flex-shrink:0}
@@ -520,26 +522,26 @@ function render(){
           <div class="cbrow2">
             <input type="checkbox" id="cb_inv${r.id}" ${inv?'checked':''} onchange="toggleField(${r.id},'invDate')" style="accent-color:#1a56a0;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
             <label class="cblbl2" for="cb_inv${r.id}" style="${inv?'color:#1a56a0;font-weight:500':''}">Invitation</label>
-            ${inv?`<span class="cbdate">${st.invDate}</span>`:''}
+            ${inv?`<input type="date" class="dinput" value="${st.invDate||''}" onchange="uf(${r.id},'invDate',this.value)" style="margin-left:auto;width:130px;font-size:11px;border-color:#1a56a0" />`:''}
           </div>
           <div class="cbrow2">
             <input type="checkbox" id="cb_nq${r.id}" ${noq?'checked':''} onchange="toggleField(${r.id},'noqDate')" style="accent-color:#a02020;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
             <label class="cblbl2" for="cb_nq${r.id}" style="${noq?'color:#a02020;font-weight:500':''}">Not Quote</label>
-            ${noq?`<span class="cbdate" style="color:#a02020">${st.noqDate}</span>`:''}
+            ${noq?`<input type="date" class="dinput" value="${st.noqDate||''}" onchange="uf(${r.id},'noqDate',this.value)" style="margin-left:auto;width:130px;font-size:11px;border-color:#a02020" />`:''}
           </div>
           ${inv&&!noq ? [1,2,3,4,5,6,7,8,9,10].filter(n=> n===1 || ads[n-2]).map(n=>{
             const fld=`add${n}Date`; const checked=ads[n-1]; const d=st[fld]||'';
             return`<div class="cbrow2">
               <input type="checkbox" id="cb_a${n}_${r.id}" ${checked?'checked':''} onchange="toggleField(${r.id},'${fld}')" style="accent-color:#6c4fc7;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
               <label class="cblbl2" for="cb_a${n}_${r.id}" style="${checked?'color:#6c4fc7;font-weight:500':''}">Tender Addendum No.${n}</label>
-              ${checked?`<span class="cbdate">${d}</span>`:''}
+              ${checked?`<input type="date" class="dinput" value="${d}" onchange="uf(${r.id},'${fld}',this.value)" style="margin-left:auto;width:130px;font-size:11px;border-color:#6c4fc7" />`:''}
             </div>`;
           }).join('') : ''}
           ${inv&&!noq?`
           <div class="cbrow2">
             <input type="checkbox" id="cb_qr${r.id}" ${qrc?'checked':''} onchange="toggleField(${r.id},'qrcDate')" style="accent-color:#8a5c00;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
             <label class="cblbl2" for="cb_qr${r.id}" style="${qrc?'color:#8a5c00;font-weight:500':''}">Quotation received</label>
-            ${qrc?`<span class="cbdate">${st.qrcDate}</span>`:''}
+            ${qrc?`<input type="date" class="dinput" value="${st.qrcDate||''}" onchange="uf(${r.id},'qrcDate',this.value)" style="margin-left:auto;width:130px;font-size:11px;border-color:#8a5c00" />`:''}
           </div>
           `:''}
           <input type="text" class="ni" placeholder="Remarks / notes..." value="${nt.replace(/"/g,'&quot;')}" oninput="uf(${r.id},'note',this.value)" style="margin-top:8px" />
