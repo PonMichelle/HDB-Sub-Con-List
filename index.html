@@ -702,213 +702,172 @@ async function init(){
   }
 }
 init();
-function exportCSV(){
-  const list=getFilt();
-  const proj=currentProject?currentProject.name:'HDB Sub Contractor List';
-  if(!window.XLSX){ toast('Loading export library...'); setTimeout(exportCSV,1500); return; }
+async function exportCSV(){
+  const list = getFilt();
+  const proj = currentProject ? currentProject.name : 'HDB Sub Contractor List';
 
-  const wb=XLSX.utils.book_new();
-
-  // ── Exact original colors ─────────────────────────────────────
-  const HDR_BG   ='203864'; // dark navy (theme 9)
-  const TRADE_BG ='CC99FF'; // lavender — trade rows
-  const INV_BG   ='CCECFF'; // light blue — invitation sent
-  const NOQT_BG  ='FFCCFF'; // pink — no quote
-  const ADD_BG   ='CCFFCC'; // light green — addendum sent
-  const QUOT_BG  ='FFFF00'; // yellow — quotation received
-
-  // ── Border helpers ────────────────────────────────────────────
-  const S=(s)=>({style:s});
-  const SC=(s,c)=>({style:s,color:{rgb:c}});
-  const dataBorder ={top:S('hair'),bottom:S('hair'),left:S('thin'),right:S('thin')};
-  const thinBorder ={top:S('thin'),bottom:S('thin'),left:S('thin'),right:S('thin')};
-
-  // ── Style factories ───────────────────────────────────────────
-  const hdrS=()=>({
-    font:{bold:true,sz:9,color:{rgb:'FFFFFF'},name:'Calibri'},
-    fill:{fgColor:{rgb:HDR_BG},patternType:'solid'},
-    alignment:{horizontal:'center',vertical:'center',wrapText:true},
-    border:thinBorder
-  });
-  const tradeS=()=>({
-    font:{bold:true,sz:9,name:'Calibri'},
-    fill:{fgColor:{rgb:TRADE_BG},patternType:'solid'},
-    alignment:{horizontal:'left',vertical:'center'},
-    border:thinBorder
-  });
-  const dataS=(bg,centre=false)=>({
-    font:{sz:9,name:'Calibri'},
-    fill:{fgColor:{rgb:bg||'FFFFFF'},patternType:'solid'},
-    alignment:{horizontal:centre?'center':'left',vertical:'center',wrapText:false},
-    border:dataBorder
-  });
-  const legendS=(bg)=>({
-    font:{sz:9,name:'Calibri'},
-    fill:{fgColor:{rgb:bg},patternType:'solid'},
-    alignment:{horizontal:'left',vertical:'center'}
-  });
-  const titleS=()=>({font:{bold:true,sz:10,name:'Calibri'},alignment:{horizontal:'left',vertical:'center'}});
-
-  // ── Column layout (exact original widths) ─────────────────────
-  // Col index: 0=A(spacer) 1=B(No) 2=C(Trade) 3=D(Company) 4=E(Contact)
-  //            5=F(DID) 6=G(TEL) 7=H(FAX) 8=I(H/P) 9=J(Email)
-  //            10=K(Invitation) 11=L(Not Quote)
-  //            12-21=M-V(Addendum 1-10) 22=W(Quotation) 23=X(Remark) 24=Y(Notes)
-  const COLS=[
-    {h:'',                     w:2.7},  // A spacer
-    {h:'No',                   w:6.9},  // B
-    {h:'Trade',                w:34.0}, // C
-    {h:'COMPANY NAME',         w:31.7}, // D
-    {h:'CONTACT PERSON',       w:24.3}, // E
-    {h:'DID',                  w:15.3}, // F
-    {h:'TEL',                  w:16.7}, // G
-    {h:'FAX',                  w:15.3}, // H
-    {h:'H/P',                  w:23.0}, // I
-    {h:'Email',                w:37.0}, // J
-    {h:'Invitation on:',       w:11.6}, // K
-    {h:'Not Quote',            w:12.0}, // L
-    {h:'Tender Addendum No.1', w:14.0}, // M
-    {h:'Tender Addendum No.2', w:14.0}, // N
-    {h:'Tender Addendum No.3', w:14.0}, // O
-    {h:'Tender Addendum No.4', w:14.0}, // P
-    {h:'Tender Addendum No.5', w:14.0}, // Q
-    {h:'Tender Addendum No.6', w:14.0}, // R
-    {h:'Tender Addendum No.7', w:14.0}, // S
-    {h:'Tender Addendum No.8', w:14.0}, // T
-    {h:'Tender Addendum No.9', w:14.0}, // U
-    {h:'Tender Addendum No.10',w:14.0}, // V
-    {h:'Quotation Received',   w:14.0}, // W
-    {h:'Remark',               w:43.3}, // X
-    {h:'Notes',                w:20.0}, // Y
-  ];
-  const NC=COLS.length;
-
-  // ── Build worksheet data ──────────────────────────────────────
-  const aoa=[];
-
-  // Row 1: project title
-  const r1=Array(NC).fill(''); r1[1]=proj; r1[10]='Invitation on:'; aoa.push(r1);
-  // Row 2: status/legend header
-  const r2=Array(NC).fill(''); r2[4]='Status'; r2[10]='Tender Addendum 2'; aoa.push(r2);
-  // Rows 3-6: colour legend
-  aoa.push(Array(NC).fill('')); aoa[2][4]='Send enquiry';
-  aoa.push(Array(NC).fill('')); aoa[3][4]='Pending info, send later';
-  aoa.push(Array(NC).fill('')); aoa[4][4]='Reply: no quote';
-  aoa.push(Array(NC).fill('')); aoa[5][4]='Received quotation';
-  // Row 7: header
-  aoa.push(COLS.map(c=>c.h));
-
-  // Group companies by trade (maintain filter order)
-  const tradeOrder=[]; const tradeMap={};
-  list.forEach(r=>{
-    if(!tradeMap[r.trade]){tradeMap[r.trade]=[];tradeOrder.push(r.trade);}
-    tradeMap[r.trade].push(r);
-  });
-
-  let rNo=1;
-  tradeOrder.forEach(trade=>{
-    const comps=tradeMap[trade];
-    // Trade header row
-    const tr=Array(NC).fill('');
-    tr[1]=rNo++; tr[2]=trade; aoa.push(tr);
-    // Company rows
-    comps.forEach(r=>{
-      const st=statusMap[r.id]||{};
-      const email=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean).join('; ');
-      const adds=[1,2,3,4,5,6,7,8,9,10].map(n=>st[`add${n}Date`]||'');
-      const row=Array(NC).fill('');
-      row[3]=r.company||'';   // D
-      row[4]=r.contact||'';   // E
-      row[5]='';              // F DID
-      row[6]=r.tel||'';       // G TEL
-      row[7]='';              // H FAX
-      row[8]=r.hp||'';        // I H/P
-      row[9]=email;           // J Email
-      row[10]=st.invDate||''; // K Invitation
-      row[11]=st.noqDate||''; // L Not Quote
-      for(let i=0;i<10;i++) row[12+i]=adds[i]; // M-V Addendum 1-10
-      row[22]=st.qrcDate||''; // W Quotation
-      row[23]=r.remark||'';   // X Remark
-      row[24]=st.note||'';    // Y Notes
-      aoa.push(row);
+  // Load ExcelJS from CDN if not already loaded
+  if(!window.ExcelJS){
+    toast('Loading Excel library...');
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
     });
-  });
-
-  const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=COLS.map(c=>({wch:c.w}));
-  ws['!rows']=[{hpt:15},{hpt:13},{hpt:13},{hpt:13},{hpt:13},{hpt:13},{hpt:30}];
-
-  // Freeze from row 8 (after header row 7)
-  ws['!freeze']={xSplit:0,ySplit:7,topLeftCell:'A8',activePane:'bottomLeft',state:'frozen'};
-
-  // ── Apply styles row by row ───────────────────────────────────
-  // Row 1: title
-  const t1=XLSX.utils.encode_cell({r:0,c:1});
-  if(ws[t1]) ws[t1].s=titleS();
-  const t1k=XLSX.utils.encode_cell({r:0,c:10});
-  if(ws[t1k]) ws[t1k].s={font:{bold:true,sz:9,name:'Calibri'}};
-
-  // Rows 3-6: legend
-  const legColors=['CCECFF','99FFCC','FFCCFF','FFFF00'];
-  for(let i=0;i<4;i++){
-    const addr=XLSX.utils.encode_cell({r:2+i,c:4});
-    if(!ws[addr])ws[addr]={t:'s',v:aoa[2+i][4]};
-    ws[addr].s=legendS(legColors[i]);
   }
 
-  // Row 7: header (index 6)
-  for(let c=0;c<NC;c++){
-    if(!COLS[c].h) continue;
-    const addr=XLSX.utils.encode_cell({r:6,c});
-    if(!ws[addr])ws[addr]={t:'s',v:COLS[c].h};
-    ws[addr].s=hdrS();
-  }
+  toast('Generating Excel...');
 
-  // Data rows (from index 7 onward)
-  let wsR=7;
-  tradeOrder.forEach(trade=>{
-    const comps=tradeMap[trade];
-    // Trade row
-    for(let c=0;c<NC;c++){
-      const addr=XLSX.utils.encode_cell({r:wsR,c});
-      if(!ws[addr])ws[addr]={t:'s',v:''};
-      ws[addr].s=tradeS();
+  try {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('QuotationList');
+
+    // ── Helpers ────────────────────────────────────────────────────
+    const fill  = hex => ({ type:'pattern', pattern:'solid', fgColor:{argb:'FF'+hex} });
+    const font  = (bold,sz,hex='000000') => ({ name:'Calibri', bold, size:sz, color:{argb:'FF'+hex} });
+    const aln   = (h,v,wrap=false) => ({ horizontal:h, vertical:v, wrapText:wrap });
+    const THIN  = { style:'thin' };
+    const HAIR  = { style:'hair' };
+    const thinB = { top:THIN, bottom:THIN, left:THIN, right:THIN };
+    const hairB = { top:HAIR, bottom:HAIR, left:THIN, right:THIN };
+
+    const HDR_FILL   = fill('203864');
+    const TRADE_FILL = fill('CC99FF');
+    const INV_FILL   = fill('CCECFF');
+    const ADD_FILL   = fill('CCFFCC');
+    const NOQT_FILL  = fill('FFCCFF');
+    const QUOT_FILL  = fill('FFFF00');
+    const WHITE_FILL = fill('FFFFFF');
+    const LEG = [['CCECFF','Send enquiry'],['99FFCC','Pending info, send later'],['FFCCFF','Reply: no quote'],['FFFF00','Received quotation']];
+
+    const HDR_FONT   = font(true,  9, 'FFFFFF');
+    const TRADE_FONT = font(true,  9);
+    const DATA_FONT  = font(false, 9);
+    const TITLE_FONT = font(true, 10);
+    const C  = aln('center','middle',true);
+    const LV = aln('left','middle',false);
+
+    // ── Columns ────────────────────────────────────────────────────
+    const COLS = [
+      {h:'',                     w:2.7 },
+      {h:'No',                   w:6.9 },
+      {h:'Trade',                w:34  },
+      {h:'COMPANY NAME',         w:31.7},
+      {h:'CONTACT PERSON',       w:24.3},
+      {h:'DID',                  w:15.3},
+      {h:'TEL',                  w:16.7},
+      {h:'FAX',                  w:15.3},
+      {h:'H/P',                  w:23  },
+      {h:'Email',                w:37  },
+      {h:'Invitation on:',       w:11.6},
+      {h:'Not Quote',            w:12  },
+      {h:'Tender Addendum No.1', w:14  },
+      {h:'Tender Addendum No.2', w:14  },
+      {h:'Tender Addendum No.3', w:14  },
+      {h:'Tender Addendum No.4', w:14  },
+      {h:'Tender Addendum No.5', w:14  },
+      {h:'Tender Addendum No.6', w:14  },
+      {h:'Tender Addendum No.7', w:14  },
+      {h:'Tender Addendum No.8', w:14  },
+      {h:'Tender Addendum No.9', w:14  },
+      {h:'Tender Addendum No.10',w:14  },
+      {h:'Quotation Received',   w:14  },
+      {h:'Remark',               w:43.3},
+      {h:'Notes',                w:20  },
+    ];
+    ws.columns = COLS.map(c=>({width:c.w}));
+
+    // helper: set cell value + style
+    const sc=(cell,val,f,fn,al,bd)=>{
+      if(val!==undefined && val!==null && val!=='') cell.value=val;
+      if(f)  cell.fill=f;
+      if(fn) cell.font=fn;
+      if(al) cell.alignment=al;
+      if(bd) cell.border=bd;
+    };
+
+    // ── Row 1: title ───────────────────────────────────────────────
+    ws.getRow(1).height=16;
+    sc(ws.getCell('B1'), proj, null, TITLE_FONT, LV);
+    sc(ws.getCell('K1'), 'Invitation on:', null, font(true,9), LV);
+
+    // ── Row 2: labels ──────────────────────────────────────────────
+    ws.getRow(2).height=13;
+    sc(ws.getCell('E2'),'Status',null,font(false,9),LV);
+    sc(ws.getCell('K2'),'Tender Addendum No.',null,font(false,9),LV);
+
+    // ── Rows 3-6: colour legend ────────────────────────────────────
+    for(let i=0;i<4;i++){
+      ws.getRow(3+i).height=13;
+      sc(ws.getCell(3+i,5), LEG[i][1], fill(LEG[i][0]), font(false,9), LV);
     }
-    // No cell: centre
-    const noAddr=XLSX.utils.encode_cell({r:wsR,c:1});
-    if(ws[noAddr])ws[noAddr].s={...tradeS(),alignment:{horizontal:'center',vertical:'center'}};
-    wsR++;
 
-    comps.forEach(r=>{
-      const st=statusMap[r.id]||{};
-      const noq=!!st.noqDate; const qrc=!!st.qrcDate; const inv=!!st.invDate;
-      const hasAdd=!![1,2,3,4,5,6,7,8,9,10].find(n=>st[`add${n}Date`]);
-
-      // Row background: match original legend colors
-      const rowBg=noq?NOQT_BG:qrc?QUOT_BG:hasAdd?ADD_BG:inv?INV_BG:'FFFFFF';
-
-      for(let c=0;c<NC;c++){
-        const addr=XLSX.utils.encode_cell({r:wsR,c});
-        if(!ws[addr])ws[addr]={t:'s',v:''};
-        // Date cols (K-W = index 10-22): centre
-        const isDate=(c>=10&&c<=22);
-        ws[addr].s=dataS(rowBg,isDate);
-      }
-      wsR++;
+    // ── Row 7: header ──────────────────────────────────────────────
+    ws.getRow(7).height=30;
+    ws.views=[{state:'frozen',xSplit:0,ySplit:7,topLeftCell:'A8'}];
+    COLS.forEach((col,i)=>{
+      if(!col.h) return;
+      sc(ws.getCell(7,i+1), col.h, HDR_FILL, HDR_FONT, C, thinB);
     });
-  });
 
-  XLSX.utils.book_append_sheet(wb,ws,'QuotationList');
-  const fname=(currentProject?currentProject.name.replace(/[^a-z0-9]/gi,'_'):'HDB')+'_QuotationList.xlsx';
-  XLSX.writeFile(wb,fname,{cellStyles:true});
-  toast('Exported ✓');
+    // ── Data rows grouped by trade ─────────────────────────────────
+    const tradeOrder=[]; const tradeMap={};
+    list.forEach(r=>{
+      const t=r.trade||'';
+      if(!tradeMap[t]){tradeMap[t]=[];tradeOrder.push(t);}
+      tradeMap[t].push(r);
+    });
+
+    let dr=8, rNo=1;
+    tradeOrder.forEach(trade=>{
+      const comps=tradeMap[trade];
+      ws.getRow(dr).height=16;
+      // Trade header row
+      COLS.forEach((_,i)=>{ sc(ws.getCell(dr,i+1),undefined,TRADE_FILL,TRADE_FONT,LV,thinB); });
+      sc(ws.getCell(dr,2), rNo++, TRADE_FILL, TRADE_FONT, C, thinB);
+      sc(ws.getCell(dr,3), trade, TRADE_FILL, TRADE_FONT, LV, thinB);
+      dr++;
+
+      comps.forEach(r=>{
+        ws.getRow(dr).height=15;
+        const st=statusMap[r.id]||{};
+        const noq=!!st.noqDate, qrc=!!st.qrcDate, inv=!!st.invDate;
+        const hasAdd=[1,2,3,4,5,6,7,8,9,10].some(n=>st[`add${n}Date`]);
+        const bg=noq?NOQT_FILL:qrc?QUOT_FILL:hasAdd?ADD_FILL:inv?INV_FILL:WHITE_FILL;
+        const adds=[1,2,3,4,5,6,7,8,9,10].map(n=>st[`add${n}Date`]||'');
+        const email=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean).join('; ');
+
+        const vals=['','','',r.company,r.contact,'',r.tel,'',r.hp,email,
+          st.invDate||'',st.noqDate||'',...adds,st.qrcDate||'',r.remark||'',st.note||''];
+
+        vals.forEach((v,i)=>{
+          const isDate=(i>=10&&i<=22);
+          sc(ws.getCell(dr,i+1), v||undefined, bg, DATA_FONT, isDate?C:LV, hairB);
+        });
+        dr++;
+      });
+    });
+
+    // Auto filter
+    ws.autoFilter={from:'A7',to:{row:dr-1,column:COLS.length}};
+
+    // ── Download ───────────────────────────────────────────────────
+    const buf  = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href=url; a.download=(proj.replace(/[^a-z0-9]/gi,'_')||'HDB')+'_QuotationList.xlsx';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    toast('Exported ✓');
+
+  } catch(err){
+    console.error(err);
+    toast('Export failed: '+err.message);
+  }
 }
 
-(function(){
-  const s=document.createElement('script');
-  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  document.head.appendChild(s);
-})();
 </script>
 </body>
 </html>
