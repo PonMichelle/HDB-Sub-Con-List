@@ -271,10 +271,9 @@ let firebaseDB = null;
 
 async function initFirebase(){
   if(firebaseDB) return firebaseDB;
-  // Load Firebase scripts if not loaded
   if(!window.firebase){
-    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js');
   }
   if(!firebase.apps.length){
     firebase.initializeApp(firebaseConfig);
@@ -319,9 +318,11 @@ async function sset(key,val){
     const db=await initFirebase();
     await db.ref('hdb/'+fbKey(key)).set(val);
     setSS('ok');
+    toast('Saved ✓');
   }catch(e){
     setSS('err');
-    console.warn('Firebase write error:',e);
+    toast('Save failed — check Firebase rules');
+    console.error('Firebase write error:',e.message);
   }
 }
 
@@ -340,27 +341,13 @@ function listenKey(key, callback){
   }).catch(()=>{});
 }
 
-async function sset(key, val){
-  lsPut('cache_'+key, val);
-  if(!IS_NETLIFY){ setSS('ok'); return; }
-  try{
-    const res = await fetch('/.netlify/functions/store',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({key, val})
-    });
-    if(res.ok) setSS('ok');
-    else setSS('err');
-  }catch(e){ setSS('err'); }
-}
-
 // ── Project management ──────────────────────────────────────────
 async function loadProjects(){
-  const r=sget(SK_PROJECTS);
+  const r=await sget(SK_PROJECTS);
   projects=r?r:[];
   return projects;
 }
-async function saveProjects(){sset(SK_PROJECTS,projects);}
+async function saveProjects(){await sset(SK_PROJECTS,projects);}
 
 async function showProjScreen(){
   document.getElementById('projScreen').style.display='flex';
@@ -556,7 +543,7 @@ async function deleteProject(id){
   const proj=projects.find(p=>p.id===id);
   if(!proj)return;
   if(!confirm(`Delete project "${proj.name}"? All tracking data for this project will be lost.`))return;
-  try{localStorage.removeItem(`${CACHE_PREFIX}hdb_status_${id}`);}catch(e){}
+  try{localStorage.removeItem(`fb_hdb_status_${id}`);}catch(e){}
   projects=projects.filter(p=>p.id!==id);
   await saveProjects();
   if(currentProject&&currentProject.id===id){
