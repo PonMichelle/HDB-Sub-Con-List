@@ -254,90 +254,52 @@ function setSS(s){
 // Storage key for current project's status
 function statusKey(){return currentProject?`hdb_status_${currentProject.id}`:'hdb_subcon_status';}
 
-// ── Storage: JSONBin.io cloud sync + localStorage cache ──────────
-// Team data syncs via JSONBin. localStorage used as fast local cache.
-// First-time setup: user enters their JSONBin API key once, stored locally.
+// ── Storage: Netlify Blobs (team shared) + localStorage cache ─────
+// Reads/writes go to /.netlify/functions/store which uses Netlify Blobs.
+// localStorage used as instant cache so UI feels fast.
 
-const CACHE_PREFIX = 'hdbcache_';
-let JBIN_KEY = '$2a$10$sPrS499Sy8ajjvCon.29quD13FhKvHBfH1BEx8O2az7h6CqHkCOgG';
-function getApiKey(){ return JBIN_KEY; }
-function setApiKey(k){ JBIN_KEY=k; }
+function lsGet(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}}
+function lsPut(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
 
-function cachePut(key,val){ try{localStorage.setItem(CACHE_PREFIX+key,JSON.stringify(val));}catch(e){} }
-function cacheGet(key){ try{const v=localStorage.getItem(CACHE_PREFIX+key);return v?JSON.parse(v):null;}catch(e){return null;} }
-
-function loadBinIds(){ try{const v=localStorage.getItem('hdb_bin_ids');binIds=v?JSON.parse(v):{};} catch(e){binIds={};} }
-function saveBinIds(){ try{localStorage.setItem('hdb_bin_ids',JSON.stringify(binIds));}catch(e){} }
-
-// Create a new bin on JSONBin for a given key
-async function createBin(key, initialVal){
-  const res = await fetch('https://api.jsonbin.io/v3/b', {
-    method:'POST',
-    headers:{'Content-Type':'application/json','X-Master-Key':JBIN_KEY,'X-Bin-Name':key,'X-Bin-Private':'false'},
-    body: JSON.stringify({data: initialVal})
-  });
-  if(!res.ok) throw new Error('JSONBin create failed: '+res.status);
-  const j = await res.json();
-  return j.metadata.id;
-}
-
-// Read from JSONBin
-async function jbGet(key){
-  const binId = binIds[key];
-  if(!binId) return null;
-  const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`,{
-    headers:{'X-Master-Key':JBIN_KEY}
-  });
-  if(!res.ok) return null;
-  const j = await res.json();
-  return j.record.data;
-}
-
-// Write to JSONBin (create bin if not exists)
-async function jbSet(key, val){
-  let binId = binIds[key];
-  if(!binId){
-    binId = await createBin(key, val);
-    binIds[key] = binId;
-    saveBinIds();
-  } else {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`,{
-      method:'PUT',
-      headers:{'Content-Type':'application/json','X-Master-Key':JBIN_KEY},
-      body: JSON.stringify({data: val})
-    });
-    if(!res.ok) throw new Error('JSONBin update failed: '+res.status);
-  }
-  cachePut(key, val);
-}
-
-// Main sget/sset — try cloud, fall back to local cache
 async function sget(key){
-  if(!JBIN_KEY){ const v=cacheGet(key); return v; }
+  // Try localStorage cache first for instant load
+  const cached=lsGet('cache_'+key);
+  // Fetch from server in background
   try{
-    const v = await jbGet(key);
-    if(v!==null){ cachePut(key,v); return v; }
-    return cacheGet(key);
-  }catch(e){ return cacheGet(key); }
+    const res=await fetch(`/.netlify/functions/store?key=${encodeURIComponent(key)}`);
+    if(res.ok){
+      const data=await res.json();
+      lsPut('cache_'+key, data);
+      return data;
+    }
+  }catch(e){}
+  return cached;
 }
 
 async function sset(key,val){
-  cachePut(key,val);
-  if(!JBIN_KEY) return;
-  try{ await jbSet(key,val); }catch(e){ setSS('err'); }
+  lsPut('cache_'+key, val); // instant local cache
+  try{
+    await fetch('/.netlify/functions/store',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({key,val})
+    });
+    setSS('ok');
+  }catch(e){setSS('err');}
 }
 
 // ── Project management ──────────────────────────────────────────
 async function loadProjects(){
-  const r=await sget(SK_PROJECTS);
+  const r=sget(SK_PROJECTS);
   projects=r?r:[];
   return projects;
 }
-async function saveProjects(){await sset(SK_PROJECTS,projects);}
+async function saveProjects(){sset(SK_PROJECTS,projects);}
 
-function showProjScreen(){
-  renderProjList();
+async function showProjScreen(){
   document.getElementById('projScreen').style.display='flex';
+  await loadProjects();
+  renderProjList();
 }
 function hideProjScreen(){document.getElementById('projScreen').style.display='none';}
 
@@ -360,7 +322,138 @@ async function createProj(){
   const inp=document.getElementById('newProjName');
   const name=inp.value.trim();
   if(!name){inp.focus();return;}
-  if(projects.find(p=>p.name.toLowerCase()===name.toLowerCase())){alert('A project with this name already exists.');return;}
+  const existing=projects.find(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(existing){inp.value='';await selectProject(existing.id);return;}
+  const proj={id:'proj_'+Date.now(),name,createdAt:new Date().toISOString()};
+  projects.push(proj);
+  await saveProjects();
+  inp.value='';
+  renderProjList();
+  await selectProject(proj.id);
+}
+
+async function selectProject(id){
+  const proj=projects.find(p=>p.id===id);
+  if(!proj)return;
+  if(currentProject&&Object.keys(statusMap).length>0){await saveStatus();}
+  currentProject=proj;
+  try{localStorage.setItem('hdb_last_project',id);}catch(e){}
+  hideProjScreen();
+  updateProjUI();
+  await loadStatusForProject();
+  renderSB();render();
+}
+
+async function deleteProject(id){
+  const proj=projects.find(p=>p.id===id);
+  if(!proj)return;
+  if(!confirm(`Delete project "${proj.name}"? All tracking data will be lost.`))return;
+  try{localStorage.removeItem(statusKey());}catch(e){}
+  projects=projects.filter(p=>p.id!==id);
+  await saveProjects();
+  if(currentProject&&currentProject.id===id){
+    currentProject=null;statusMap={};updateProjUI();showProjScreen();
+  } else {renderProjList();}
+}
+
+function updateProjUI(){
+  const t=currentProject?currentProject.name:'No project selected';
+  document.getElementById('projTitle').textContent=t;
+  document.getElementById('projBtn').textContent=t.length>22?t.slice(0,20)+'…':t;
+  setSS('ok');
+}
+
+async function loadStatusForProject(){
+  setSS('syn');
+  try{
+    statusMap=sget(statusKey())||{};
+    const additions=sget(SK_R)||[];
+    records=[...JSON.parse(JSON.stringify(BD)),...additions];
+    nextId=records.length?Math.max(...records.map(r=>r.id))+1:1;
+    setSS('ok');
+  }catch(e){records=JSON.parse(JSON.stringify(BD));statusMap={};setSS('err');}
+}
+
+async function loadAll(){await loadStatusForProject();renderSB();render();}
+
+async function saveRecords(){
+  try{
+    const additions=records.filter(r=>r.id>BD.length);
+    sset(SK_R,additions);
+    setSS('ok');toast('Saved ✓');
+  }catch(e){setSS('err');toast('Save failed');}
+}
+
+async function saveStatus(){
+  if(!currentProject)return;
+  try{sset(statusKey(),statusMap);}catch(e){}
+}
+
+async function syncNow(){
+  if(!currentProject){showProjScreen();return;}
+  await loadAll();toast('Refreshed ✓');
+}
+
+setInterval(async()=>{
+  if(!currentProject)return;
+  try{
+    const[sr,rr]=await Promise.all([
+      fetch(`/.netlify/functions/store?key=${encodeURIComponent(statusKey())}`).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch(`/.netlify/functions/store?key=${encodeURIComponent(SK_R)}`).then(r=>r.ok?r.json():null).catch(()=>null),
+    ]);
+    let changed=false;
+    if(sr&&JSON.stringify(sr)!==JSON.stringify(statusMap)){statusMap=sr;changed=true;}
+    if(rr){
+      const additions=rr.filter(r=>r.id>BD.length);
+      const fresh=[...JSON.parse(JSON.stringify(BD)),...additions];
+      if(JSON.stringify(fresh)!==JSON.stringify(records)){records=fresh;changed=true;}
+    }
+    if(changed){renderSB();render();setSS('ok');}
+  }catch(e){}
+},15000);
+
+// ── Project management ──────────────────────────────────────────
+async function loadProjects(){
+  const r=await sget(SK_PROJECTS);
+  projects=r?r:[];
+  return projects;
+}
+async function saveProjects(){await sset(SK_PROJECTS,projects);}
+
+async function showProjScreen(){
+  document.getElementById('projScreen').style.display='flex';
+  document.getElementById('projList').innerHTML='<div style="text-align:center;padding:20px;color:var(--tx3);font-size:12px">Loading projects...</div>';
+  await loadProjects();
+  renderProjList();
+}
+function hideProjScreen(){document.getElementById('projScreen').style.display='none';}
+
+function renderProjList(){
+  const list=document.getElementById('projList');
+  const empty=document.getElementById('projEmpty');
+  if(!projects.length){list.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  list.innerHTML=projects.map(p=>`
+    <div class="proj-item${currentProject&&currentProject.id===p.id?' sel':''}" onclick="selectProject('${p.id}')">
+      <div style="flex:1">
+        <div class="proj-item-name">${p.name}</div>
+        <div class="proj-item-meta">Created ${new Date(p.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>
+      <button class="proj-item-del" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete project">✕</button>
+    </div>`).join('');
+}
+
+async function createProj(){
+  const inp=document.getElementById('newProjName');
+  const name=inp.value.trim();
+  if(!name){inp.focus();return;}
+  // If project already exists, just select it
+  const existing=projects.find(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(existing){
+    inp.value='';
+    await selectProject(existing.id);
+    return;
+  }
   const proj={id:'proj_'+Date.now(),name,createdAt:new Date().toISOString()};
   projects.push(proj);
   await saveProjects();
@@ -695,7 +788,6 @@ setInterval(async()=>{
 
 // ── Init ─────────────────────────────────────────────────────────
 async function init(){
-  loadBinIds();
   await loadProjects();
   let lastId=null;
   try{lastId=localStorage.getItem('hdb_last_project');}catch(e){}
