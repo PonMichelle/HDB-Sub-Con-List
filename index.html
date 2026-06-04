@@ -46,7 +46,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);height:
 a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline;color:var(--blue2)}
 
 /* Sidebar with glass effect when wallpaper active */
-.sidebar{width:258px;flex-shrink:0;background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);border-right:1px solid rgba(226,232,248,0.7);display:flex;flex-direction:column;overflow:hidden;box-shadow:2px 0 8px rgba(67,97,238,0.06);position:relative;transition:width .25s cubic-bezier(.34,1.56,.64,1);min-width:180px;max-width:420px}
+.sidebar{width:258px;flex-shrink:0;background:var(--sur);backdrop-filter:none;border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;box-shadow:2px 0 8px rgba(67,97,238,0.06);position:relative;transition:width .25s cubic-bezier(.34,1.56,.64,1);min-width:180px;max-width:420px}
+/* Glass sidebar only when wallpaper is active */
+#wallpaperBg.active ~ .app .sidebar{background:rgba(255,255,255,0.55)!important;backdrop-filter:blur(12px)!important;border-right-color:rgba(226,232,248,0.7)!important}
+#wallpaperBg.active ~ .app .sidebar .sh{background:linear-gradient(135deg,rgba(67,97,238,0.06),rgba(124,58,237,0.06))!important}
+#wallpaperBg.active ~ .app .sidebar .tsw{background:rgba(255,255,255,0.35)!important;backdrop-filter:blur(6px);border-bottom-color:rgba(0,0,0,0.06)!important}
+#wallpaperBg.active ~ .app .sidebar .tsw input{background:rgba(255,255,255,0.6)!important}
+#wallpaperBg.active ~ .app .sidebar .tlist{background:transparent!important}
+#wallpaperBg.active ~ .app .sidebar .ti{background:transparent}
+#wallpaperBg.active ~ .app .sidebar .ti:hover{background:rgba(238,241,255,0.7)}
+#wallpaperBg.active ~ .app .sidebar .ti.act{background:rgba(238,241,255,0.85)}
 .sidebar.collapsed{width:0!important;min-width:0;overflow:hidden}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:transparent}
 
@@ -1805,6 +1814,115 @@ document.addEventListener('click',e=>{
   if(saved&&saved!=='none') setWallpaper(saved);
 })();
 
+</script>
+<!-- Column drag-to-reorder -->
+<div id="colDropInd" style="position:fixed;top:0;width:3px;background:#4361ee;display:none;z-index:9999;pointer-events:none;box-shadow:0 0 8px rgba(67,97,238,.7);border-radius:2px"></div>
+<style>
+th .drag-grip{cursor:grab;transition:opacity .12s,color .12s}
+th .drag-grip:hover{cursor:grab}
+th[draggable="true"] .drag-grip{cursor:grabbing}
+th.dragging-col{opacity:0.45}
+</style>
+<script>
+/* ===== Per-project column drag-to-reorder ===== */
+function colOrderKey(){return (typeof currentProject!=='undefined'&&currentProject)?`hdb_colorder_${currentProject.id}`:'hdb_colorder_default';}
+function defaultColOrder(){
+  const ths=document.querySelectorAll('#theadRow th');
+  return Array.from(ths).map(th=>parseInt(th.getAttribute('data-col'),10));
+}
+function getColOrder(){
+  let arr=null;
+  try{const raw=localStorage.getItem(colOrderKey());if(raw)arr=JSON.parse(raw);}catch(e){}
+  const def=defaultColOrder();
+  if(!Array.isArray(arr)||arr.length!==def.length)return def;
+  // Validate: same set of indices
+  const a=[...arr].sort((x,y)=>x-y),b=[...def].sort((x,y)=>x-y);
+  for(let i=0;i<a.length;i++){if(a[i]!==b[i])return def;}
+  return arr;
+}
+function setColOrder(arr){
+  try{localStorage.setItem(colOrderKey(),JSON.stringify(arr));}catch(e){}
+}
+function applyColOrder(){
+  const order=getColOrder();
+  const head=document.getElementById('theadRow');if(!head)return;
+  const ths=Array.from(head.children);
+  const byCol={};ths.forEach(th=>{byCol[th.getAttribute('data-col')]=th;});
+  order.forEach(idx=>{const th=byCol[idx];if(th)head.appendChild(th);});
+
+  const tbody=document.getElementById('tb');if(!tbody)return;
+  Array.from(tbody.querySelectorAll('tr')).forEach(tr=>{
+    const tds=Array.from(tr.children);
+    if(tds.length!==order.length)return; // skip "no results" row with colspan
+    tds.forEach((td,i)=>{if(!td.hasAttribute('data-col'))td.setAttribute('data-col',String(i));});
+    const m={};Array.from(tr.children).forEach(td=>{m[td.getAttribute('data-col')]=td;});
+    order.forEach(idx=>{const td=m[idx];if(td)tr.appendChild(td);});
+  });
+}
+
+let _dragSrcCol=null;
+function initColDrag(){
+  const head=document.getElementById('theadRow');if(!head)return;
+  head.querySelectorAll('th').forEach(th=>{
+    const grip=th.querySelector('.drag-grip');
+    if(!grip||grip._wired)return;
+    grip._wired=true;
+    grip.addEventListener('mousedown',()=>{th.draggable=true;});
+    th.addEventListener('dragstart',e=>{
+      if(!th.draggable){e.preventDefault();return;}
+      _dragSrcCol=parseInt(th.getAttribute('data-col'),10);
+      th.classList.add('dragging-col');
+      try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',String(_dragSrcCol));}catch(_){}
+    });
+    th.addEventListener('dragover',e=>{
+      if(_dragSrcCol===null)return;
+      e.preventDefault();
+      const rect=th.getBoundingClientRect();
+      const before=e.clientX<rect.left+rect.width/2;
+      th._dropBefore=before;
+      const ind=document.getElementById('colDropInd');
+      ind.style.display='block';
+      ind.style.left=((before?rect.left:rect.right)-1)+'px';
+      ind.style.top=rect.top+'px';
+      ind.style.height=rect.height+'px';
+    });
+    th.addEventListener('drop',e=>{
+      e.preventDefault();
+      if(_dragSrcCol===null)return;
+      const tgt=parseInt(th.getAttribute('data-col'),10);
+      if(tgt===_dragSrcCol)return;
+      const order=getColOrder().slice();
+      const from=order.indexOf(_dragSrcCol);if(from<0)return;
+      order.splice(from,1);
+      let to=order.indexOf(tgt);if(to<0)return;
+      if(!th._dropBefore)to+=1;
+      order.splice(to,0,_dragSrcCol);
+      setColOrder(order);
+      applyColOrder();
+      if(typeof toast==='function')toast('Column moved ✓');
+    });
+    th.addEventListener('dragend',()=>{
+      th.classList.remove('dragging-col');
+      th.draggable=false;
+      _dragSrcCol=null;
+      const ind=document.getElementById('colDropInd');if(ind)ind.style.display='none';
+    });
+  });
+}
+// If mousedown on grip but user releases without dragging, clear draggable
+document.addEventListener('mouseup',()=>{
+  document.querySelectorAll('#theadRow th[draggable="true"]').forEach(t=>{
+    if(!t.classList.contains('dragging-col'))t.draggable=false;
+  });
+},true);
+
+// Re-apply ordering and re-wire after every render
+(function(){
+  if(typeof render!=='function')return;
+  const _r=render;
+  window.render=function(){const ret=_r.apply(this,arguments);applyColOrder();initColDrag();return ret;};
+})();
+setTimeout(()=>{initColDrag();applyColOrder();},200);
 </script>
 </body>
 </html>
