@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>HDB Subcontractor Directory — Team</title>
+<title>SubconHub — Team</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -95,8 +95,8 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .sidebar-toggle.open svg{transform:rotate(180deg)}
 
 /* Sidebar header */
-.sh{padding:16px;border-bottom:1px solid var(--bdr);background:linear-gradient(135deg,#4361ee08,#7c3aed08)}
-.logo{font-family:'Plus Jakarta Sans',sans-serif;font-size:9.5px;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;font-weight:700}
+.sh{padding:16px;border-bottom:1px solid var(--bdr);background:linear-gradient(135deg,#4361ee08,#7c3aed08);position:relative;overflow:hidden}
+.logo{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px;font-weight:800;line-height:1;background:linear-gradient(115deg,#b8860b 0%,#f7d774 16%,#fffbe6 30%,#ffffff 42%,#dff3ff 52%,#a9d8ff 62%,#f7d774 80%,#b8860b 100%);background-size:240% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;display:inline-block;filter:drop-shadow(1px 1px 0 rgba(140,100,10,.55)) drop-shadow(2px 2px 0 rgba(120,85,8,.4)) drop-shadow(0 4px 6px rgba(0,0,0,.28))}
 .proj{font-size:14px;font-weight:700;color:var(--tx);line-height:1.3;font-family:'Plus Jakarta Sans',sans-serif}
 .syncrow{display:flex;align-items:center;gap:5px;margin-top:6px}
 .sdot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
@@ -121,6 +121,15 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .tc{font-size:10px;background:var(--sur3);border-radius:10px;padding:1px 7px;color:var(--tx3);flex-shrink:0;font-weight:500}
 .ti.act .tc{background:var(--lblue);color:var(--blue);font-weight:600}
+/* Gentle zoom-on-hover for trade names & subcontractor details */
+.tn{transform-origin:left center;transition:transform .4s cubic-bezier(.22,1,.36,1),color .15s}
+.ti:hover .tn{transform:scale(1.38)}
+.cname{transform-origin:left center;transition:transform .4s cubic-bezier(.22,1,.36,1),color .2s}
+.card:hover .cname{transform:scale(1.38)}
+.cperson,.drow span{transition:transform .4s cubic-bezier(.22,1,.36,1)}
+.card:hover .cperson,.card:hover .drow span{transform:scale(1.06);transform-origin:left center}
+.demail,.tde{display:inline-block;transform-origin:left center;transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.demail:hover,.tde:hover{transform:scale(1.38)}
 
 /* Toolbar */
 .toolbar{padding:10px 16px;border-bottom:1px solid var(--bdr);background:var(--sur);display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(67,97,238,0.06)}
@@ -299,10 +308,26 @@ body{
 
 /* Logo pulse */
 @keyframes logoPulse{
-  0%,100%{opacity:1;letter-spacing:.1em}
-  50%{opacity:.7;letter-spacing:.15em}
+  0%{background-position:0% center}
+  100%{background-position:240% center}
 }
-.logo{animation:logoPulse 4s ease infinite;}
+@keyframes logoFloat{
+  0%,100%{transform:perspective(420px) rotateX(9deg) rotateZ(-.5deg) translateY(0)}
+  50%{transform:perspective(420px) rotateX(9deg) rotateZ(.5deg) translateY(-3px)}
+}
+.logo{animation:logoPulse 8s linear infinite, logoFloat 5s ease-in-out infinite;}
+/* Twinkling stars around the header */
+@keyframes twinkle{
+  0%,100%{opacity:0;transform:scale(.3) rotate(0deg)}
+  50%{opacity:1;transform:scale(1.15) rotate(120deg)}
+}
+.spark{position:absolute;pointer-events:none;color:#fff3c4;text-shadow:0 0 6px rgba(247,215,116,.95),0 0 10px rgba(255,255,255,.6);animation:twinkle 3.4s ease-in-out infinite;z-index:2}
+.spark.s1{top:9px;left:118px;font-size:10px;animation-delay:0s}
+.spark.s2{top:30px;left:150px;font-size:14px;animation-delay:1.1s}
+.spark.s3{top:13px;left:172px;font-size:8px;animation-delay:.6s}
+.spark.s4{top:44px;left:96px;font-size:9px;animation-delay:2.2s}
+.spark.s5{top:6px;left:58px;font-size:7px;animation-delay:1.7s}
+.spark.s6{top:40px;left:175px;font-size:8px;animation-delay:2.8s}
 
 /* Sync dot pulse */
 @keyframes dotPulse{
@@ -487,7 +512,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
 <!-- Project selection screen -->
 <div class="proj-screen" id="projScreen">
   <div class="proj-box">
-    <h1>📋 Subcontractor Directory</h1>
+    <h1>📋 SubconHub</h1>
     <p>Select a project or create a new one. Each project tracks its own invitation, addendum and quotation status using the same subcontractor list.</p>
     <div class="proj-list" id="projList"></div>
     <div class="proj-empty" id="projEmpty" style="display:none">No projects yet — create one below</div>
@@ -507,7 +532,8 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
   <div class="sidebar" id="sidebar">
     <div class="resize-handle" id="resizeHandle"></div>
     <div class="sh">
-      <div class="logo">HDB Sub Contractor List</div>
+      <span class="spark s1">✦</span><span class="spark s2">✧</span><span class="spark s3">⋆</span><span class="spark s4">✦</span><span class="spark s5">✧</span><span class="spark s6">⋆</span>
+      <div class="logo">SubconHub</div>
       <div class="proj" id="projTitle" style="font-size:12px;font-weight:600;color:var(--tx);line-height:1.3;margin-bottom:4px">—</div>
       <button class="cur-proj" onclick="showProjScreen()" title="Switch project">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
@@ -1280,7 +1306,7 @@ async function init(){
 init();
 async function exportCSV(){
   const list=getFilt();
-  const proj=currentProject?currentProject.name:'HDB Sub Contractor List';
+  const proj=currentProject?currentProject.name:'SubconHub';
 
   // Load ExcelJS from CDN if not already loaded
   if(!window.ExcelJS){
