@@ -454,6 +454,16 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px;transition:background .2s}
 ::-webkit-scrollbar-thumb:hover{background:var(--blue)}
+/* Email client picker */
+.epicker{position:fixed;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--rl);box-shadow:0 4px 18px rgba(0,0,0,.18);z-index:999;min-width:210px;padding:6px 0;display:none}
+.epicker.open{display:block}
+.epicker-title{font-size:10.5px;color:var(--tx3);padding:5px 14px 4px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--bdr);margin-bottom:4px}
+.epicker-item{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;font-size:12.5px;color:var(--tx)}
+.epicker-item:hover{background:var(--sur2)}
+.epicker-item img{width:16px;height:16px;border-radius:2px;object-fit:contain}
+.epicker-sep{border:none;border-top:1px solid var(--bdr);margin:4px 0}
+.epicker-def{font-size:11px;color:var(--tx3);padding:6px 14px 8px;display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none}
+.epicker-def input{accent-color:var(--blue);cursor:pointer;margin:0}
 </style>
 </head>
 
@@ -522,6 +532,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
         <div class="upill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" id="uname" placeholder="Your name" /></div>
         <button class="btn" onclick="syncNow()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,4 1,10 7,10"/><polyline points="23,20 23,14 17,14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Sync</button>
         <button class="btn" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+        <button class="btn" id="emailDefBtn" onclick="resetEmailDefault()" title="Change default email app">📧 <span id="emailDefLabel">Email</span></button>
         <div style="position:relative">
           <button class="btn" id="colToggleBtn" onclick="toggleColPanel()" title="Show/hide columns"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Columns</button>
           <div id="colPanel" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--sur);border:1.5px solid var(--bdr);border-radius:var(--rl);padding:10px;z-index:100;box-shadow:var(--shadow-md);min-width:200px;max-height:400px;overflow-y:auto">
@@ -590,6 +601,15 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
   </div>
 </div></div>
 <div class="toast" id="toast"></div>
+<div class="epicker" id="epicker">
+  <div class="epicker-title">Open email with</div>
+  <div class="epicker-item" onclick="pickClient('gmail')"><img src="https://www.google.com/favicon.ico" alt=""/>Gmail</div>
+  <div class="epicker-item" onclick="pickClient('yahoo')"><img src="https://www.yahoo.com/favicon.ico" alt=""/>Yahoo Mail</div>
+  <div class="epicker-item" onclick="pickClient('hotmail')"><img src="https://outlook.live.com/favicon.ico" alt=""/>Outlook / Hotmail</div>
+  <hr class="epicker-sep"/>
+  <div class="epicker-item" onclick="pickClient('system')">📧 System Default</div>
+  <label class="epicker-def"><input type="checkbox" id="epdefchk"/> Remember my choice</label>
+</div>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDssse8_5KdmUvlRw6voFvXIQ5e4laVk-k",
@@ -1013,7 +1033,7 @@ function render(){
       const ph=r.tel||r.hp;
       const em=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
       const allEmails=em.join(',');
-      const eH=em.map(e=>`<a href="mailto:${allEmails}" class="demail" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
+      const eH=em.map(e=>`<a href="#" class="demail" onclick="openEmail('${allEmails.replace(/'/g,"\\'")}',event)" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
       const nt=st.note||'';
       // Card highlight priority: Not Quote = red > Quote received = amber > Invited = blue
       const cardCls=noq?' nq':qrc?' qrcv':inv?' inv':'';
@@ -1076,7 +1096,7 @@ function render(){
       const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const emList=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
       const allEmails=emList.join(',');
-      const em=emList.map(e=>`<a href="mailto:${allEmails}" class="tde" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
+      const em=emList.map(e=>`<a href="#" class="tde" onclick="openEmail('${allEmails.replace(/'/g,"\\'")}',event)" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
       const ph=[r.tel,r.hp].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' / ');
       const rowBg=noq?'background:#fff5f5':qrc?'background:#fffbf0':inv?'background:#f0f6ff':'';
       const namColor=noq?'color:#a02020;font-weight:600':qrc?'color:#7a4f00;font-weight:600':inv?'color:#0c447c;font-weight:500':'font-weight:500';
@@ -1186,8 +1206,43 @@ async function delRec(id){
 function closeMo(){document.getElementById('mo').classList.remove('open');}
 document.getElementById('mo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMo();});
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ── Email client picker ──────────────────────────────────────────
+let _epEmail='';
+function openEmail(emails,event){
+  event.preventDefault();event.stopPropagation();
+  const def=localStorage.getItem('hdb_email_client');
+  if(def&&def!=='ask'){openWithClient(emails,def);return;}
+  _epEmail=emails;
+  const p=document.getElementById('epicker');
+  document.getElementById('epdefchk').checked=false;
+  const x=Math.min(event.clientX,window.innerWidth-225);
+  const y=Math.min(event.clientY+6,window.innerHeight-250);
+  p.style.left=x+'px';p.style.top=y+'px';
+  p.classList.add('open');
+}
+function pickClient(client){
+  if(document.getElementById('epdefchk').checked){localStorage.setItem('hdb_email_client',client);updateEmailLabel();}
+  openWithClient(_epEmail,client);
+  closeEPicker();
+}
+function openWithClient(emails,client){
+  const sub='Enquiry - HDB Subcontractor';
+  const to=encodeURIComponent(emails);
+  if(client==='gmail')window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${encodeURIComponent(sub)}`,'_blank');
+  else if(client==='yahoo')window.open(`https://compose.mail.yahoo.com/?to=${to}&subject=${encodeURIComponent(sub)}`,'_blank');
+  else if(client==='hotmail')window.open(`https://outlook.live.com/mail/0/deeplink/compose?to=${to}&subject=${encodeURIComponent(sub)}`,'_blank');
+  else location.href=`mailto:${emails}`;
+}
+function closeEPicker(){document.getElementById('epicker').classList.remove('open');}
+function resetEmailDefault(){localStorage.removeItem('hdb_email_client');updateEmailLabel();toast('Email default cleared - choose next time');}
+const CLIENT_LABELS={gmail:'Gmail',yahoo:'Yahoo',hotmail:'Outlook',system:'System'};
+function updateEmailLabel(){const d=localStorage.getItem('hdb_email_client');const el=document.getElementById('emailDefLabel');if(el)el.textContent=d?CLIENT_LABELS[d]||'Email':'Email';}
+document.addEventListener('click',function(e){if(!e.target.closest('#epicker')&&!e.target.closest('.demail')&&!e.target.closest('.tde'))closeEPicker();});
+
 try{const n=localStorage.getItem('hdb_uname');if(n)document.getElementById('uname').value=n;}catch(e){}
 document.getElementById('uname').addEventListener('input',function(){try{localStorage.setItem('hdb_uname',this.value);}catch(e){}});
+updateEmailLabel();
 
 // Poll for team changes every 20s
 setInterval(async()=>{
