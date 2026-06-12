@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>SubconHub — Team</title>
+<title>Subcon Hub — Team</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -379,20 +379,45 @@ body{
 .setmascot{margin-top:6px;font-size:10px;color:var(--tx3);cursor:pointer;display:inline-block;opacity:.7}
 .setmascot:hover{opacity:1;color:var(--blue);text-decoration:underline}
 /* Animated cartoon buddy in the header corner (walk / read / music) */
-.buddy{position:absolute;top:2px;right:8px;z-index:6;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
+.buddy{position:absolute;top:1px;right:6px;z-index:6;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
 .b-bob{animation:bBob 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
 @keyframes bBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
-.b-legL{transform-box:fill-box;transform-origin:top center;animation:bLegL 18s ease-in-out infinite}
-.b-legR{transform-box:fill-box;transform-origin:top center;animation:bLegR 18s ease-in-out infinite}
-@keyframes bLegL{0%{transform:rotate(14deg)}6%{transform:rotate(-14deg)}12%{transform:rotate(14deg)}18%{transform:rotate(-14deg)}24%{transform:rotate(10deg)}30%,100%{transform:rotate(0)}}
-@keyframes bLegR{0%{transform:rotate(-14deg)}6%{transform:rotate(14deg)}12%{transform:rotate(-14deg)}18%{transform:rotate(14deg)}24%{transform:rotate(-10deg)}30%,100%{transform:rotate(0)}}
-.b-book{opacity:0;animation:bShowBook 18s ease-in-out infinite}
-@keyframes bShowBook{0%,33%{opacity:0}37%,63%{opacity:1}67%,100%{opacity:0}}
-.b-music{opacity:0;animation:bShowMusic 18s ease-in-out infinite}
-@keyframes bShowMusic{0%,66%{opacity:0}70%,96%{opacity:1}100%{opacity:0}}
+.b-legL{transform-box:fill-box;transform-origin:top center;animation:bLegL 25s ease-in-out infinite}
+.b-legR{transform-box:fill-box;transform-origin:top center;animation:bLegR 25s ease-in-out infinite}
+@keyframes bLegL{0%{transform:rotate(14deg)}4%{transform:rotate(-14deg)}8%{transform:rotate(14deg)}12%{transform:rotate(-14deg)}16%{transform:rotate(10deg)}20%,100%{transform:rotate(0)}}
+@keyframes bLegR{0%{transform:rotate(-14deg)}4%{transform:rotate(14deg)}8%{transform:rotate(-14deg)}12%{transform:rotate(14deg)}16%{transform:rotate(-10deg)}20%,100%{transform:rotate(0)}}
+.b-book{opacity:0;animation:bShowBook 25s ease-in-out infinite}
+@keyframes bShowBook{0%,20%{opacity:0}23%,38%{opacity:1}40%,100%{opacity:0}}
+.b-music{opacity:0;animation:bShowMusic 25s ease-in-out infinite}
+@keyframes bShowMusic{0%,40%{opacity:0}43%,58%{opacity:1}60%,100%{opacity:0}}
+.b-phone{opacity:0;animation:bShowPhone 25s ease-in-out infinite}
+@keyframes bShowPhone{0%,60%{opacity:0}63%,78%{opacity:1}80%,100%{opacity:0}}
+.b-selfie{opacity:0;animation:bShowSelfie 25s ease-in-out infinite}
+@keyframes bShowSelfie{0%,80%{opacity:0}83%,98%{opacity:1}100%{opacity:0}}
 .b-note{animation:bNote 1.5s ease-in infinite;transform-box:fill-box}
 .b-note.n2{animation-delay:.75s}
 @keyframes bNote{0%{opacity:0;transform:translateY(4px)}35%{opacity:1}100%{opacity:0;transform:translateY(-11px)}}
+.b-wave{animation:bWave 1.2s ease-out infinite;transform-box:fill-box;transform-origin:left center}
+.b-wave.w2{animation-delay:.45s}
+@keyframes bWave{0%{opacity:0;transform:scale(.5)}40%{opacity:.9}100%{opacity:0;transform:scale(1.3)}}
+.b-flash{animation:bFlash 1.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes bFlash{0%,55%{opacity:0;transform:scale(.6)}68%{opacity:1;transform:scale(1.25)}82%,100%{opacity:0;transform:scale(.6)}}
+/* Creative Subcon Hub brand lockup */
+.brand{display:flex;align-items:center;gap:7px;margin-bottom:2px;animation:brandBounce 3s ease-in-out infinite;transform-origin:left bottom}
+@keyframes brandBounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}46%{transform:translateY(0)}62%{transform:translateY(-2px)}78%{transform:translateY(0)}}
+.brand-icon{flex-shrink:0;overflow:visible}
+.brand-icon line{stroke:#f5a300;stroke-width:1.5;stroke-linecap:round}
+.brand-icon .orbit-ring{fill:none;stroke:#c9c2b5;stroke-width:.7;stroke-dasharray:2 2;opacity:.5}
+.brand-icon .sun-core{fill:url(#hubg)}
+.brand-icon .earth{fill:#2b7fff}
+.rays{transform-box:view-box;transform-origin:16px 16px;animation:spin360 26s linear infinite}
+.orbit{transform-box:view-box;transform-origin:16px 16px;animation:spin360 6s linear infinite}
+@keyframes spin360{to{transform:rotate(360deg)}}
+.brand-word{font-family:'Plus Jakarta Sans','IBM Plex Sans',sans-serif;font-weight:800;font-size:16px;letter-spacing:.02em;display:inline-flex;align-items:center;gap:4px;line-height:1}
+.bk-sub{background:linear-gradient(115deg,#1a1a1a,#8a6a00,#ffd86b,#fff3c0,#ffd86b,#8a6a00,#1a1a1a);background-size:260% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:subShimmer 8s linear infinite}
+@keyframes subShimmer{0%{background-position:0% center}100%{background-position:260% center}}
+.bk-hub{background:linear-gradient(120deg,#1a56a0,#7c3aed);color:#fff;border-radius:6px;padding:1px 7px;box-shadow:0 1px 4px rgba(67,97,238,.35)}
+.brand-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);margin:-1px 0 5px 33px}
 
 /* Sync dot pulse */
 @keyframes dotPulse{
@@ -598,7 +623,22 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <div class="resize-handle" id="resizeHandle"></div>
     <div class="sh">
       <span class="spark s1">✦</span><span class="spark s2">✧</span><span class="spark s3">⋆</span><span class="spark s4">✦</span><span class="spark s5">✧</span><span class="spark s6">⋆</span>
-      <div class="logo">SubconHub</div>
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 32 32" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+          <defs><radialGradient id="hubg"><stop offset="0" stop-color="#fff3b0"/><stop offset="1" stop-color="#f5a300"/></radialGradient></defs>
+          <circle cx="16" cy="16" r="12" class="orbit-ring"/>
+          <g class="rays">
+            <line x1="16" y1="9" x2="16" y2="6"/><line x1="16" y1="23" x2="16" y2="26"/>
+            <line x1="9" y1="16" x2="6" y2="16"/><line x1="23" y1="16" x2="26" y2="16"/>
+            <line x1="10.8" y1="10.8" x2="8.6" y2="8.6"/><line x1="21.2" y1="10.8" x2="23.4" y2="8.6"/>
+            <line x1="10.8" y1="21.2" x2="8.6" y2="23.4"/><line x1="21.2" y1="21.2" x2="23.4" y2="23.4"/>
+          </g>
+          <circle cx="16" cy="16" r="5" class="sun-core"/>
+          <g class="orbit"><circle cx="16" cy="4" r="2.6" class="earth"/><circle cx="15" cy="3.3" r=".9" fill="#aee0ff"/></g>
+        </svg>
+        <span class="brand-word"><span class="bk-sub">SUBCON</span><span class="bk-hub">HUB</span></span>
+      </div>
+      <div class="brand-tag">Subcontractor Directory</div>
       <div class="proj" id="projTitle" style="font-size:12px;font-weight:600;color:var(--tx);line-height:1.3;margin-bottom:4px">—</div>
       <button class="cur-proj" onclick="showProjScreen()" title="Switch project">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
@@ -1302,7 +1342,7 @@ function render(){
       const ph=r.tel||r.hp;
       const em=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
       const allEmails=em.join(',');
-      const eH=em.map(e=>`<a href="#" class="demail" onclick="openEmail('${allEmails.replace(/'/g,"\\'")}',event)" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
+      const eH=em.map(e=>`<a href="#" class="demail" onclick="openEmail(${r.id},event)" title="Click to email ${r.company}">${e}</a>`).join('<br>');
       const nt=st.note||'';
       // Card highlight priority: Not Quote = red > Quote received = amber > Invited = blue
       const cardCls=(noq?' nq':qrc?' qrcv':inv?' inv':'')+(emailSel.has(r.id)?' selem':'');
@@ -1367,7 +1407,7 @@ function render(){
       const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const emList=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
       const allEmails=emList.join(',');
-      const em=emList.map(e=>`<a href="#" class="tde" onclick="openEmail('${allEmails.replace(/'/g,"\\'")}',event)" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
+      const em=emList.map(e=>`<a href="#" class="tde" onclick="openEmail(${r.id},event)" title="Click to email ${r.company}">${e}</a>`).join('<br>');
       const ph=[r.tel,r.hp].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(' / ');
       const rowBg=noq?'background:#fff5f5':qrc?'background:#fffbf0':inv?'background:#f0f6ff':'';
       const namColor=noq?'color:#a02020;font-weight:600':qrc?'color:#7a4f00;font-weight:600':inv?'color:#0c447c;font-weight:500':'font-weight:500';
@@ -1510,12 +1550,15 @@ async function loadMascot(){
 // ── Email client picker ──────────────────────────────────────────
 let _epEmail='';
 let _epBatchItems=null; // [{company,emails}] when batch-sending
-function openEmail(emails,event){
+function openEmail(idOrEmails,event){
   event.preventDefault();event.stopPropagation();
-  _epBatchItems=null;
+  let item;
+  const r=(typeof idOrEmails==='number')?records.find(x=>x.id===idOrEmails):null;
+  if(r){const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(!ems.length){toast('No email on file');return;}item={company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(',')};}
+  else{const ems=(''+idOrEmails).split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(!ems.length)return;item={company:'',contact:'',trade:'',emails:ems.join(',')};}
   const def=localStorage.getItem('hdb_email_client');
-  if(def&&def!=='ask'){openWithClient(emails,def);return;}
-  _epEmail=emails;
+  if(def&&def!=='ask'){showBatchModal([item],def);return;}
+  _epBatchItems=[item];
   showPicker(event);
 }
 function showPicker(event){
