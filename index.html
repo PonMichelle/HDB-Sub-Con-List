@@ -119,6 +119,9 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .ti:hover{background:var(--bblue);color:var(--blue)}
 .ti.act{background:var(--bblue);color:var(--blue);border-left-color:var(--blue);font-weight:600}
 .tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.trename{opacity:0;font-size:12px;color:var(--tx3);cursor:pointer;padding:0 4px;flex-shrink:0}
+.ti:hover .trename{opacity:.85}
+.trename:hover{color:var(--blue)}
 .tc{font-size:10px;background:var(--sur3);border-radius:10px;padding:1px 7px;color:var(--tx3);flex-shrink:0;font-weight:500}
 .ti.act .tc{background:var(--lblue);color:var(--blue);font-weight:600}
 /* Gentle zoom-on-hover for trade names & subcontractor details */
@@ -192,6 +195,31 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .cperson{font-size:11.5px;color:var(--tx2);margin-bottom:8px;min-height:16px}
 .gradechip{display:inline-block;font-size:10.5px;font-weight:600;color:#8a5c00;background:linear-gradient(135deg,#fef3db,#fff8ec);border:1px solid #fcd34d;border-radius:6px;padding:2px 8px;margin-bottom:6px;line-height:1.4;word-break:break-word;cursor:pointer}
 .gradechip:hover{background:linear-gradient(135deg,#fde9b8,#fff3db)}
+.selcb{accent-color:var(--blue);width:15px;height:15px;cursor:pointer;flex-shrink:0;margin-right:7px}
+.card.selem{outline:2px solid var(--blue);outline-offset:1px;box-shadow:0 0 0 4px var(--bblue)}
+tr.selrow-em td{background:var(--bblue)!important}
+.emailbar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tx);color:#fff;padding:10px 14px;border-radius:30px;box-shadow:0 6px 24px rgba(0,0,0,.28);z-index:400;display:none;align-items:center;gap:12px;font-size:13px}
+.emailbar #emailbarTxt{font-weight:600}
+.emailbar .btn{padding:6px 12px;font-size:12px}
+.batchov{position:fixed;inset:0;background:rgba(40,38,34,.55);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.batchov.open{display:flex}
+.batchbox{background:var(--sur);border-radius:var(--rl);width:100%;max-width:460px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.batchhd{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 4px;font-size:16px;font-weight:700}
+.batchx{cursor:pointer;color:var(--tx3);font-size:15px}.batchx:hover{color:var(--red)}
+.batchsub{padding:0 18px 12px;font-size:12px;color:var(--tx3);border-bottom:1px solid var(--bdr)}
+#batchList{overflow-y:auto;padding:6px 0;flex:1}
+.batchrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 18px;border-bottom:1px solid var(--bdr)}
+.batchrow .bname{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-open{background:var(--blue);color:#fff;border-color:var(--blue);flex-shrink:0;padding:5px 12px;font-size:12px}
+.btn-open:hover{background:#0d3f82}
+.batchrow.bdone{opacity:.5}
+.batchrow.bdone .btn-open{background:var(--green);border-color:var(--green)}
+.batchrow.bdone .btn-open::after{content:' ✓'}
+.batchrow.bblocked .btn-open{background:var(--red);border-color:var(--red)}
+.batchrow.bblocked .btn-open::after{content:' ✕ blocked'}
+.batchft{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--bdr)}
+.tpltoggle{padding:8px 18px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;border-bottom:1px solid var(--bdr);user-select:none}
+.tpltoggle:hover{background:var(--sur2)}
 .gradepop{position:fixed;z-index:1000;display:none;background:#fff;border:1px solid var(--bdr2);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.22);padding:10px 0;width:360px;max-height:calc(100vh - 30px);overflow-y:auto}
 .gp-title{font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;padding:2px 14px 8px;border-bottom:1px solid var(--bdr);margin-bottom:4px}
 .gp-row{display:flex;align-items:baseline;gap:8px;padding:5px 14px;font-size:12px}
@@ -337,6 +365,34 @@ body{
 .spark.s4{top:44px;left:96px;font-size:9px;animation-delay:2.2s}
 .spark.s5{top:6px;left:58px;font-size:7px;animation-delay:1.7s}
 .spark.s6{top:40px;left:175px;font-size:8px;animation-delay:2.8s}
+/* Animated mascot that walks around the SUBCONHUB title */
+.mascot{position:absolute;top:0;width:40px;height:auto;z-index:6;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));animation:mascotWalk 11s ease-in-out infinite}
+@keyframes mascotWalk{
+  0%{left:-46px;transform:scaleX(1) translateY(0) rotate(-3deg)}
+  24%{transform:scaleX(1) translateY(-4px) rotate(3deg)}
+  48%{left:calc(100% + 6px);transform:scaleX(1) translateY(0) rotate(-3deg)}
+  50%{left:calc(100% + 6px);transform:scaleX(-1) translateY(0) rotate(3deg)}
+  74%{transform:scaleX(-1) translateY(-4px) rotate(-3deg)}
+  98%{left:-46px;transform:scaleX(-1) translateY(0) rotate(3deg)}
+  100%{left:-46px;transform:scaleX(1) translateY(0) rotate(-3deg)}
+}
+.setmascot{margin-top:6px;font-size:10px;color:var(--tx3);cursor:pointer;display:inline-block;opacity:.7}
+.setmascot:hover{opacity:1;color:var(--blue);text-decoration:underline}
+/* Animated cartoon buddy in the header corner (walk / read / music) */
+.buddy{position:absolute;top:2px;right:8px;z-index:6;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.3))}
+.b-bob{animation:bBob 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes bBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+.b-legL{transform-box:fill-box;transform-origin:top center;animation:bLegL 18s ease-in-out infinite}
+.b-legR{transform-box:fill-box;transform-origin:top center;animation:bLegR 18s ease-in-out infinite}
+@keyframes bLegL{0%{transform:rotate(14deg)}6%{transform:rotate(-14deg)}12%{transform:rotate(14deg)}18%{transform:rotate(-14deg)}24%{transform:rotate(10deg)}30%,100%{transform:rotate(0)}}
+@keyframes bLegR{0%{transform:rotate(-14deg)}6%{transform:rotate(14deg)}12%{transform:rotate(-14deg)}18%{transform:rotate(14deg)}24%{transform:rotate(-10deg)}30%,100%{transform:rotate(0)}}
+.b-book{opacity:0;animation:bShowBook 18s ease-in-out infinite}
+@keyframes bShowBook{0%,33%{opacity:0}37%,63%{opacity:1}67%,100%{opacity:0}}
+.b-music{opacity:0;animation:bShowMusic 18s ease-in-out infinite}
+@keyframes bShowMusic{0%,66%{opacity:0}70%,96%{opacity:1}100%{opacity:0}}
+.b-note{animation:bNote 1.5s ease-in infinite;transform-box:fill-box}
+.b-note.n2{animation-delay:.75s}
+@keyframes bNote{0%{opacity:0;transform:translateY(4px)}35%{opacity:1}100%{opacity:0;transform:translateY(-11px)}}
 
 /* Sync dot pulse */
 @keyframes dotPulse{
@@ -562,6 +618,13 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       </div>
       <div class="tr">
         <span class="rc" id="rc"></span>
+        <select id="sortSel" onchange="setSort(this.value)" title="Sort by" style="padding:5px 8px;font-size:11.5px;border:1px solid var(--bdr2);border-radius:var(--r);background:var(--sur);color:var(--tx2);font-family:inherit;cursor:pointer">
+          <option value="default">Sort: Default</option>
+          <option value="phone-asc">Contact no. ↑</option>
+          <option value="phone-desc">Contact no. ↓</option>
+          <option value="company-az">Company A–Z</option>
+          <option value="company-za">Company Z–A</option>
+        </select>
         <button class="vb act" id="vbG" onclick="setView('grid')" title="Cards"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
         <button class="vb" id="vbT" onclick="setView('table')" title="Table"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></button>
         <div class="upill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" id="uname" placeholder="Your name" /></div>
@@ -638,6 +701,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <button class="btn btn-blue" onclick="saveRec()">Save to Team</button>
   </div>
 </div></div>
+<div class="emailbar" id="emailbar"><span id="emailbarTxt">0 selected</span><button class="btn btn-blue" onclick="emailSelectedSend(event)">✉ Send email (separate)</button><button class="btn" onclick="clearEmailSel()" style="background:#444;color:#fff;border-color:#555">Clear</button></div>
 <div class="toast" id="toast"></div>
 <div class="epicker" id="epicker">
   <div class="epicker-title">Open email with</div>
@@ -1000,8 +1064,12 @@ async function loadAll(){
   await loadStatusForProject();
   loadBcaCache();
   buildBakedIndex();
+  applyTradeRenames();
   renderSB();render();
+  loadTradeRenames(); // shared trade renames (Firebase)
   refreshBcaGrades(); // auto-update grades from BCA in background (7-day cache)
+  loadTplsFromCloud(); // shared email templates (Firebase)
+  loadMascot(); // shared mascot image (Firebase)
 }
 
 async function saveRecords(){
@@ -1035,10 +1103,37 @@ function renderSB(){
   const f=all.filter(([t])=>!tq||t.toLowerCase().includes(tq));
   const ac=tq?records.filter(r=>r.trade.toLowerCase().includes(tq)).length:total;
   let h=`<div class="ti${activeTrade==='ALL'?' act':''}" onclick="setTrade('ALL')"><span class="tn">All Trades</span><span class="tc">${ac}</span></div>`;
-  f.forEach(([t,c])=>{const e=t.replace(/'/g,"\'").replace(/"/g,'&quot;');h+=`<div class="ti${activeTrade===t?' act':''}" onclick="setTrade('${e}')"><span class="tn">${t}</span><span class="tc">${c}</span></div>`;});
+  f.forEach(([t,c])=>{const e=t.replace(/'/g,"\'").replace(/"/g,'&quot;');h+=`<div class="ti${activeTrade===t?' act':''}" onclick="setTrade('${e}')"><span class="tn">${t}</span><span class="trename" title="Rename this trade" onclick="renameTrade(event,'${e}')">✎</span><span class="tc">${c}</span></div>`;});
   document.getElementById('tlist').innerHTML=h;
 }
 function setTrade(t){activeTrade=t;renderSB();render();}
+// ── Rename a whole trade category (persists + syncs to team) ────
+let tradeRenames={};
+function applyTradeRenames(){
+  records.forEach(r=>{let t=r.trade,n=0;while(tradeRenames[t]&&n<10){t=tradeRenames[t];n++;}r.trade=t;});
+}
+function saveTradeRenames(){
+  try{localStorage.setItem('hdb_trade_renames',JSON.stringify(tradeRenames));}catch(e){}
+  try{if(typeof sset==='function')sset('hdb_trade_renames',tradeRenames);}catch(e){}
+}
+async function loadTradeRenames(){
+  try{const l=JSON.parse(localStorage.getItem('hdb_trade_renames'));if(l&&typeof l==='object')tradeRenames=l;}catch(e){}
+  applyTradeRenames();
+  try{if(typeof sget==='function'){const c=await sget('hdb_trade_renames');if(c&&typeof c==='object'){tradeRenames=c;try{localStorage.setItem('hdb_trade_renames',JSON.stringify(c));}catch(e){}applyTradeRenames();renderSB();render();}}}catch(e){}
+  try{if(typeof listenKey==='function')listenKey('hdb_trade_renames',v=>{if(v&&typeof v==='object'){tradeRenames=v;applyTradeRenames();renderSB();render();}});}catch(e){}
+}
+function renameTrade(ev,oldName){
+  ev.stopPropagation();
+  const n=prompt('Rename trade "'+oldName+'" to:\n(applies to every subcontractor in this trade)',oldName);
+  if(!n||!n.trim()||n.trim()===oldName)return;
+  const nn=n.trim();
+  tradeRenames[oldName]=nn;
+  saveTradeRenames();
+  applyTradeRenames();
+  if(activeTrade===oldName)activeTrade=nn;
+  renderSB();render();
+  toast('Trade renamed to “'+nn+'”');
+}
 
 // === BCA grade auto-refresh from data.gov.sg (official open data) ===
 const BCA_RESOURCE='d_dcda79be4aded5f9e769b8e23ff69b47';
@@ -1162,15 +1257,25 @@ async function refreshBcaGrades(force){
   }
 }
 
+let sortMode='default';
+function setSort(v){sortMode=v;render();}
+function phoneKey(r){return (''+(r.phone||r.tel||r.hp||'')).replace(/\D/g,'');}
+function sortList(arr){
+  if(sortMode==='phone-asc'||sortMode==='phone-desc'){
+    arr.sort((a,b)=>{const x=phoneKey(a),y=phoneKey(b);if(!x&&!y)return 0;if(!x)return 1;if(!y)return -1;const c=x.localeCompare(y,undefined,{numeric:true});return sortMode==='phone-desc'?-c:c;});
+  } else if(sortMode==='company-az'){arr.sort((a,b)=>(a.company||'').localeCompare(b.company||''));}
+  else if(sortMode==='company-za'){arr.sort((a,b)=>(b.company||'').localeCompare(a.company||''));}
+  return arr;
+}
 function getFilt(){
   const q=document.getElementById('mq').value.toLowerCase();
-  return records.filter(r=>{
+  return sortList(records.filter(r=>{
     const mt=activeTrade==='ALL'||r.trade===activeTrade;
     const ms=!q||r.company.toLowerCase().includes(q)||(r.contact||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.hp||'').includes(q)||(r.email||'').toLowerCase().includes(q)||r.trade.toLowerCase().includes(q)||(r.remark||'').toLowerCase().includes(q)||getGrade(r).toLowerCase().includes(q);
     const st=statusMap[r.id]||{};
     const mc=cf==='all'||(cf==='yes'&&!!st.invDate)||(cf==='no'&&!st.invDate)||(cf==='qr'&&!!st.qrcDate)||(cf==='nq'&&!!st.noqDate);
     return mt&&ms&&mc;
-  });
+  }));
 }
 function upProg(){
   const tot=records.length;
@@ -1200,9 +1305,10 @@ function render(){
       const eH=em.map(e=>`<a href="#" class="demail" onclick="openEmail('${allEmails.replace(/'/g,"\\'")}',event)" title="Click to email all contacts at ${r.company}">${e}</a>`).join('<br>');
       const nt=st.note||'';
       // Card highlight priority: Not Quote = red > Quote received = amber > Invited = blue
-      const cardCls=noq?' nq':qrc?' qrcv':inv?' inv':'';
+      const cardCls=(noq?' nq':qrc?' qrcv':inv?' inv':'')+(emailSel.has(r.id)?' selem':'');
       return`<div class="card${cardCls}">
         <div class="cth">
+          <input type="checkbox" class="selcb" ${emailSel.has(r.id)?'checked':''} onclick="toggleEmailSel(${r.id},this)" title="Select to email" />
           <div class="ctag">${r.trade}</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
             ${noq?`<span class="nqbadge">✕ No quote</span>`:''}
@@ -1278,7 +1384,7 @@ function render(){
         return (prevOk&&!noq) ? cbTd(ads[n-1],`add${n}Date`,'#6c4fc7',st[`add${n}Date`]||'') : dash;
       }).join('');
       return`<tr style="${rowBg}">
-        <td style="${namColor}">${r.company}${noq?` <span style="font-size:10px;background:#fdeaea;color:#a02020;border:1px solid #f5a5a5;border-radius:6px;padding:1px 6px;vertical-align:middle;font-weight:400">✕ No quote</span>`:''}</td>
+        <td style="${namColor}"><input type="checkbox" class="selcb" ${emailSel.has(r.id)?'checked':''} onclick="toggleEmailSel(${r.id},this)" title="Select to email" style="vertical-align:middle;margin-right:7px" />${r.company}${noq?` <span style="font-size:10px;background:#fdeaea;color:#a02020;border:1px solid #f5a5a5;border-radius:6px;padding:1px 6px;vertical-align:middle;font-weight:400">✕ No quote</span>`:''}</td>
         <td style="font-size:11px;color:var(--tx2)">${r.trade}</td>
         <td>${r.contact||'—'}</td>
         <td style="white-space:nowrap;font-size:11px">${ph||'—'}</td>
@@ -1374,14 +1480,45 @@ let _moDownTarget=null;
 document.getElementById('mo').addEventListener('mousedown',e=>{_moDownTarget=e.target;});
 document.getElementById('mo').addEventListener('click',e=>{if(e.target===e.currentTarget&&_moDownTarget===e.currentTarget)closeMo();});
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+// ── Mascot image (upload + shared via Firebase) ─────────────────
+function setMascot(url){const m=document.querySelector('.mascot');if(m&&url){m.src=url;m.style.display='';}}
+function uploadMascot(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=160;let w=img.width,h=img.height;const sc=Math.min(1,max/Math.max(w,h));w=Math.round(w*sc);h=Math.round(h*sc);
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);
+      const url=cv.toDataURL('image/png');
+      setMascot(url);
+      try{localStorage.setItem('hdb_mascot',url);}catch(e){}
+      try{if(typeof sset==='function')sset('hdb_mascot',url);}catch(e){}
+      toast('Mascot updated ✓');
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(f);
+  inp.value='';
+}
+async function loadMascot(){
+  let url=null;try{url=localStorage.getItem('hdb_mascot');}catch(e){}
+  if(url)setMascot(url);
+  try{if(typeof sget==='function'){const c=await sget('hdb_mascot');if(c){setMascot(c);try{localStorage.setItem('hdb_mascot',c);}catch(e){}}}}catch(e){}
+}
 
 // ── Email client picker ──────────────────────────────────────────
 let _epEmail='';
+let _epBatchItems=null; // [{company,emails}] when batch-sending
 function openEmail(emails,event){
   event.preventDefault();event.stopPropagation();
+  _epBatchItems=null;
   const def=localStorage.getItem('hdb_email_client');
   if(def&&def!=='ask'){openWithClient(emails,def);return;}
   _epEmail=emails;
+  showPicker(event);
+}
+function showPicker(event){
   const p=document.getElementById('epicker');
   document.getElementById('epdefchk').checked=false;
   const x=Math.min(event.clientX,window.innerWidth-225);
@@ -1391,16 +1528,169 @@ function openEmail(emails,event){
 }
 function pickClient(client){
   if(document.getElementById('epdefchk').checked){localStorage.setItem('hdb_email_client',client);updateEmailLabel();}
-  openWithClient(_epEmail,client);
+  if(_epBatchItems){showBatchModal(_epBatchItems,client);_epBatchItems=null;}
+  else openWithClient(_epEmail,client);
   closeEPicker();
 }
-function openWithClient(emails,client){
-  const sub='Enquiry - HDB Subcontractor';
+function emailUrl(emails,client,subject,body){
+  const sub=encodeURIComponent(subject||'Enquiry - HDB Subcontractor');
+  const bd=body?encodeURIComponent(body):'';
   const to=encodeURIComponent(emails);
-  if(client==='gmail')window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${encodeURIComponent(sub)}`,'_blank');
-  else if(client==='yahoo')window.open(`https://compose.mail.yahoo.com/?to=${to}&subject=${encodeURIComponent(sub)}`,'_blank');
-  else if(client==='hotmail')window.open(`https://outlook.live.com/mail/0/deeplink/compose?to=${to}&subject=${encodeURIComponent(sub)}`,'_blank');
-  else location.href=`mailto:${emails}`;
+  if(client==='gmail')return `https://mail.google.com/mail/?view=cm&to=${to}&su=${sub}${bd?'&body='+bd:''}`;
+  if(client==='yahoo')return `https://compose.mail.yahoo.com/?to=${to}&subject=${sub}${bd?'&body='+bd:''}`;
+  if(client==='hotmail')return `https://outlook.office.com/mail/deeplink/compose?to=${to}&subject=${sub}${bd?'&body='+bd:''}`;
+  return `mailto:${emails}?subject=${sub}${bd?'&body='+bd:''}`;
+}
+// ── Email templates (multiple, used for batch sending) ──────────
+const TPLS_KEY='hdb_email_tpls';
+const DEFAULT_TPLS=[
+  {name:'Invitation to Quote',subject:'Invitation to Quote - {trade} - {project}',body:'Dear {contact},\n\nWe would like to invite {company} to submit a quotation for the {trade} works on our project, {project}.\n\nPlease find the relevant tender documents attached for your review. We would appreciate it if you could furnish us with your most competitive price by {date}.\n\nShould you require any clarification, please do not hesitate to contact us. We look forward to receiving your quotation and thank you in advance for your participation.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
+  {name:'Quotation Reminder',subject:'Reminder: Quotation for {trade} - {project}',body:'Dear {contact},\n\nWe refer to our earlier invitation for the {trade} works on {project}.\n\nThis is a gentle reminder that your quotation is due by {date}. Kindly let us know if you require any further information or additional time.\n\nWe look forward to receiving your submission.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
+  {name:'Addendum Issued',subject:'Tender Addendum - {trade} - {project}',body:'Dear {contact},\n\nPlease be informed that an addendum has been issued for the {trade} works on {project}.\n\nKindly find the addendum documents attached and incorporate the revisions into your quotation accordingly. If the addendum affects your pricing, please submit your revised quotation by {date}.\n\nShould you have any queries, please do not hesitate to contact us.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
+  {name:'Tender Clarification',subject:'Tender Clarification - {trade} - {project}',body:'Dear {contact},\n\nWe refer to your quotation for the {trade} works on {project} and would like to seek your clarification on the following:\n\n1. \n2. \n3. \n\nKindly revert with your response by {date}. Thank you for your cooperation.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'}
+];
+let _tpls=[],_tplIdx=0;
+function getTpls(){
+  try{const a=JSON.parse(localStorage.getItem(TPLS_KEY));if(Array.isArray(a)&&a.length)return a;}catch(e){}
+  try{const old=JSON.parse(localStorage.getItem('hdb_email_tpl2'));if(old&&old.subject!==undefined)return [{name:'My Template',subject:old.subject,body:old.body}].concat(DEFAULT_TPLS.slice(1));}catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_TPLS));
+}
+const TPLS_CLOUD='hdb_email_templates'; // shared across the whole team (Firebase)
+function saveTpls(){
+  try{localStorage.setItem(TPLS_KEY,JSON.stringify(_tpls));}catch(e){}
+  try{if(typeof sset==='function')sset(TPLS_CLOUD,_tpls);}catch(e){}
+}
+function refreshTplUI(reloadFields){
+  const sel=document.getElementById('tplSel');if(!sel)return;
+  if(_tplIdx>=_tpls.length)_tplIdx=0;
+  sel.innerHTML=tplOptions();
+  if(reloadFields)loadTplInto();
+}
+async function loadTplsFromCloud(){
+  try{
+    if(typeof sget!=='function')return;
+    const cloud=await sget(TPLS_CLOUD);
+    const local=getTpls();
+    // MERGE by name — never drop a template; also ensure built-in templates are always present
+    let merged=Array.isArray(cloud)?cloud.slice():[];
+    const have=new Set(merged.map(t=>((t&&t.name)||'').toLowerCase()));
+    [].concat(local,DEFAULT_TPLS).forEach(t=>{const nm=((t&&t.name)||'').toLowerCase();if(nm&&!have.has(nm)){merged.push(t);have.add(nm);}});
+    _tpls=merged;
+    try{localStorage.setItem(TPLS_KEY,JSON.stringify(merged));}catch(e){}
+    if(typeof sset==='function')sset(TPLS_CLOUD,merged); // push merged set back up
+    const box=document.getElementById('tplBox');
+    refreshTplUI(!box||box.style.display==='none'); // don't clobber fields while editing
+  }catch(e){}
+  // live updates from teammates
+  try{if(typeof listenKey==='function')listenKey(TPLS_CLOUD,val=>{if(Array.isArray(val)&&val.length){_tpls=val;try{localStorage.setItem(TPLS_KEY,JSON.stringify(val));}catch(e){}const box=document.getElementById('tplBox');refreshTplUI(!box||box.style.display==='none');}});}catch(e){}
+}
+function tplOptions(){return _tpls.map((t,i)=>`<option value="${i}"${i===_tplIdx?' selected':''}>${(t.name||'Template '+(i+1)).replace(/</g,'&lt;').replace(/"/g,'&quot;')}</option>`).join('');}
+function loadTplInto(){const t=_tpls[_tplIdx]||{subject:'',body:''};const s=document.getElementById('tplSubj'),b=document.getElementById('tplBody');if(s)s.value=t.subject||'';if(b)b.value=t.body||'';}
+function selectTpl(idx){_tplIdx=+idx;loadTplInto();}
+function saveTpl(){if(!_tpls[_tplIdx])return;_tpls[_tplIdx].subject=document.getElementById('tplSubj').value;_tpls[_tplIdx].body=document.getElementById('tplBody').value;saveTpls();}
+function newTpl(){const n=prompt('Name for the new template:','New template');if(!n)return;_tpls.push({name:n.trim(),subject:'',body:''});_tplIdx=_tpls.length-1;saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();toast('Template added — edit it below');}
+function renameTpl(){if(!_tpls[_tplIdx])return;const n=prompt('Rename template:',_tpls[_tplIdx].name||'');if(!n)return;_tpls[_tplIdx].name=n.trim();saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();}
+function delTpl(){if(_tpls.length<=1){toast('Keep at least one template');return;}if(!confirm('Delete this template?'))return;_tpls.splice(_tplIdx,1);_tplIdx=0;saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();}
+function fillTpl(s,it){
+  const proj=(typeof currentProject!=='undefined'&&currentProject)?currentProject.name:'';
+  const un=document.getElementById('uname')?document.getElementById('uname').value.trim():'';
+  const dt=document.getElementById('tplDate')&&document.getElementById('tplDate').value?document.getElementById('tplDate').value:'______';
+  return (s||'').replace(/\{company\}/g,it.company||'').replace(/\{contact\}/g,it.contact||'').replace(/\{trade\}/g,it.trade||'').replace(/\{project\}/g,proj).replace(/\{name\}/g,un).replace(/\{date\}/g,dt);
+}
+function toggleTplBox(){
+  const b=document.getElementById('tplBox');const a=document.getElementById('tplArrow');
+  const open=b.style.display==='none';
+  b.style.display=open?'block':'none';
+  if(a)a.textContent=open?'▾':'▸';
+}
+function openWithClient(emails,client){
+  if(client==='system'){location.href=emailUrl(emails,client);return;}
+  window.open(emailUrl(emails,client),'_blank');
+}
+// Batch: show a list where each company has its own Open button.
+// Each click is a real user action, so the mail app reliably opens a
+// separate compose window per company (even for System Default).
+let _batchItems=[],_batchClient='system';
+function showBatchModal(items,client){
+  _batchItems=items;_batchClient=client;
+  let ov=document.getElementById('batchOv');
+  if(!ov){
+    ov=document.createElement('div');ov.id='batchOv';ov.className='batchov';
+    ov.innerHTML='<div class="batchbox"><div class="batchhd"><span id="batchTitle"></span><span class="batchx" onclick="closeBatch()">✕</span></div><div class="batchsub" id="batchSub"></div>'
+      +'<div class="tpltoggle" onclick="toggleTplBox()"><span id="tplArrow">▸</span> Email template <span style="color:var(--tx3);font-weight:400">(applied to every email)</span></div>'
+      +'<div id="tplBox" style="display:none;padding:0 18px 10px">'
+      +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:7px"><select id="tplSel" onchange="selectTpl(this.value)" style="flex:1;padding:5px 8px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit"></select><button class="btn" style="padding:5px 9px;font-size:11px" onclick="newTpl()">+ New</button><button class="btn" style="padding:5px 9px;font-size:11px" onclick="renameTpl()">Rename</button><button class="btn" style="padding:5px 9px;font-size:11px;color:var(--red)" onclick="delTpl()">Delete</button></div>'
+      +'<input id="tplSubj" oninput="saveTpl()" placeholder="Subject" style="width:100%;padding:6px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;margin-bottom:6px;font-family:inherit" />'
+      +'<textarea id="tplBody" oninput="saveTpl()" rows="8" placeholder="Message body" style="width:100%;padding:7px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea>'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-top:7px"><label style="font-size:11.5px;color:var(--tx2);font-weight:500;white-space:nowrap">Quote deadline {date}:</label><input id="tplDate" placeholder="e.g. 20 Jun 2026" style="flex:1;padding:5px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit" /></div>'
+      +'<div style="font-size:10.5px;color:var(--tx3);margin-top:6px">Placeholders auto-fill per subcontractor: <b>{company}</b> <b>{contact}</b> <b>{trade}</b> <b>{project}</b> <b>{name}</b> <b>{date}</b>.</div>'
+      +'</div>'
+      +'<div id="batchList"></div><div class="batchft"><button class="btn" id="openAllBtn" onclick="openAllBatch()">⚡ Open all</button><button class="btn btn-blue" onclick="closeBatch()">Done</button></div></div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('mousedown',e=>{if(e.target===ov)closeBatch();});
+  }
+  _tpls=getTpls();if(_tplIdx>=_tpls.length)_tplIdx=0;
+  document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();
+  const cl={gmail:'Gmail',yahoo:'Yahoo Mail',hotmail:'Outlook',system:'your mail app'}[client]||client;
+  document.getElementById('batchTitle').textContent=`Send ${items.length} email${items.length>1?'s':''}`;
+  document.getElementById('batchSub').textContent=(client==='system')?`Click each ✉ Open below — ${cl} opens one compose window per click. (One-click "Open all" isn't possible with a desktop mail app.)`:`Click each ✉ Open, or use "Open all" to open all in ${cl}.`;
+  const oab=document.getElementById('openAllBtn');if(oab)oab.style.display=(client==='system')?'none':'';
+  document.getElementById('batchList').innerHTML=items.map((it,i)=>`<div class="batchrow" id="brow${i}"><span class="bname" title="${(it.emails||'').replace(/"/g,'&quot;')}">${it.company}</span><button class="btn btn-open" onclick="openOneBatch(${i})">✉ Open</button></div>`).join('');
+  ov.classList.add('open');
+}
+function openOneBatch(i){
+  const it=_batchItems[i];if(!it)return true;
+  const cur=_tpls[_tplIdx]||{subject:'',body:''};
+  const tpl={subject:document.getElementById('tplSubj')?document.getElementById('tplSubj').value:cur.subject,body:document.getElementById('tplBody')?document.getElementById('tplBody').value:cur.body};
+  const subj=fillTpl(tpl.subject,it),body=fillTpl(tpl.body,it);
+  let ok=true;
+  if(_batchClient==='system'){const a=document.createElement('a');a.href=emailUrl(it.emails,'system',subj,body);document.body.appendChild(a);a.click();a.remove();}
+  else{const w=window.open(emailUrl(it.emails,_batchClient,subj,body),'_blank');ok=!!w;}
+  const row=document.getElementById('brow'+i);
+  if(row){row.classList.toggle('bdone',ok);row.classList.toggle('bblocked',!ok);}
+  return ok;
+}
+function openAllBatch(){
+  if(_batchClient==='system'){ // desktop app: can't batch — stagger as best-effort
+    _batchItems.forEach((it,i)=>setTimeout(()=>openOneBatch(i), i*900));
+    return;
+  }
+  let blocked=0;
+  _batchItems.forEach((it,i)=>{ if(!openOneBatch(i))blocked++; });
+  const sub=document.getElementById('batchSub');
+  if(blocked>0){
+    if(sub){sub.innerHTML='<b style="color:#a02020">⚠ '+blocked+' tab(s) blocked by your browser.</b> Click the <b>pop-up blocked icon</b> at the right end of the address bar → choose <b>"Always allow pop-ups from this site"</b> → then press Open all again.';}
+    toast(blocked+' blocked — allow pop-ups in the address bar, then retry');
+  } else {
+    toast(`Opened ${_batchItems.length} email tabs ✓`);
+  }
+}
+function closeBatch(){const ov=document.getElementById('batchOv');if(ov)ov.classList.remove('open');}
+// ── Multi-select for batch email ────────────────────────────────
+let emailSel=new Set();
+function toggleEmailSel(id,cb){
+  if(cb.checked)emailSel.add(id);else emailSel.delete(id);
+  const card=cb.closest('.card');if(card)card.classList.toggle('selem',cb.checked);
+  const row=cb.closest('tr');if(row)row.classList.toggle('selrow-em',cb.checked);
+  updateEmailBar();
+}
+function updateEmailBar(){
+  const bar=document.getElementById('emailbar');if(!bar)return;
+  const n=emailSel.size;
+  document.getElementById('emailbarTxt').textContent=n+' selected';
+  bar.style.display=n>0?'flex':'none';
+}
+function clearEmailSel(){emailSel.clear();render();updateEmailBar();}
+function emailSelectedSend(event){
+  event.preventDefault();event.stopPropagation();
+  if(!emailSel.size){toast('Tick some subcontractors first');return;}
+  const items=[];
+  emailSel.forEach(id=>{const r=records.find(x=>x.id===id);if(!r)return;const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(ems.length)items.push({company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(',')});});
+  if(!items.length){toast('Selected subcontractors have no email on file');return;}
+  const def=localStorage.getItem('hdb_email_client');
+  if(def&&def!=='ask'){showBatchModal(items,def);return;}
+  _epBatchItems=items;
+  showPicker(event);
 }
 function closeEPicker(){document.getElementById('epicker').classList.remove('open');}
 function resetEmailDefault(){localStorage.removeItem('hdb_email_client');updateEmailLabel();toast('Email default cleared - choose next time');}
