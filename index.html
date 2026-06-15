@@ -885,6 +885,7 @@ function renderProjList(){
         <div class="proj-item-name">${p.name}</div>
         <div class="proj-item-meta">Created ${new Date(p.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})}</div>
       </div>
+      <button class="proj-item-del" onclick="event.stopPropagation();renameProject('${p.id}')" title="Rename project" style="color:var(--blue);border-color:#b5d4f4">✎</button>
       <button class="proj-item-del" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete project">✕</button>
     </div>`).join('');
 }
@@ -1019,6 +1020,7 @@ function renderProjList(){
         <div class="proj-item-name">${p.name}</div>
         <div class="proj-item-meta">Created ${new Date(p.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})}</div>
       </div>
+      <button class="proj-item-del" onclick="event.stopPropagation();renameProject('${p.id}')" title="Rename project" style="color:var(--blue);border-color:#b5d4f4">✎</button>
       <button class="proj-item-del" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete project">✕</button>
     </div>`).join('');
 }
@@ -1173,6 +1175,16 @@ function renameTrade(ev,oldName){
   if(activeTrade===oldName)activeTrade=nn;
   renderSB();render();
   toast('Trade renamed to “'+nn+'”');
+}
+async function renameProject(id){
+  const proj=projects.find(p=>p.id===id);if(!proj)return;
+  const n=prompt('Edit project title:',proj.name);
+  if(!n||!n.trim()||n.trim()===proj.name)return;
+  proj.name=n.trim();
+  await saveProjects();
+  renderProjList();
+  if(currentProject&&currentProject.id===id)updateProjUI();
+  toast('Project renamed ✓');
 }
 
 // === BCA grade auto-refresh from data.gov.sg (official open data) ===
@@ -1588,10 +1600,10 @@ function emailUrl(emails,client,subject,body){
 function tplsLocalKey(){return currentProject?'hdb_email_tpls_'+currentProject.id:'hdb_email_tpls';}
 function tplsCloudKey(){return currentProject?'hdb_email_templates_'+currentProject.id:'hdb_email_templates';}
 const DEFAULT_TPLS=[
-  {name:'Invitation to Quote',subject:'Invitation to Quote - {trade} - {project}',body:'Dear {contact},\n\nWe would like to invite {company} to submit a quotation for the {trade} works on our project, {project}.\n\nPlease find the relevant tender documents attached for your review. We would appreciate it if you could furnish us with your most competitive price by {date}.\n\nShould you require any clarification, please do not hesitate to contact us. We look forward to receiving your quotation and thank you in advance for your participation.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
-  {name:'Quotation Reminder',subject:'Reminder: Quotation for {trade} - {project}',body:'Dear {contact},\n\nWe refer to our earlier invitation for the {trade} works on {project}.\n\nThis is a gentle reminder that your quotation is due by {date}. Kindly let us know if you require any further information or additional time.\n\nWe look forward to receiving your submission.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
-  {name:'Addendum Issued',subject:'Tender Addendum - {trade} - {project}',body:'Dear {contact},\n\nPlease be informed that an addendum has been issued for the {trade} works on {project}.\n\nKindly find the addendum documents attached and incorporate the revisions into your quotation accordingly. If the addendum affects your pricing, please submit your revised quotation by {date}.\n\nShould you have any queries, please do not hesitate to contact us.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
-  {name:'Tender Clarification',subject:'Tender Clarification - {trade} - {project}',body:'Dear {contact},\n\nWe refer to your quotation for the {trade} works on {project} and would like to seek your clarification on the following:\n\n1. \n2. \n3. \n\nKindly revert with your response by {date}. Thank you for your cooperation.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'}
+  {name:'Invitation to Quote',subject:'{project} - Invitation to Quote - {trade}',body:'Dear {contact},\n\nWe would like to invite {company} to submit a quotation for the {trade} works on our project, {project}.\n\nPlease find the relevant tender documents attached for your review. We would appreciate it if you could furnish us with your most competitive price by {date}.\n\nShould you require any clarification, please do not hesitate to contact us. We look forward to receiving your quotation and thank you in advance for your participation.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
+  {name:'Quotation Reminder',subject:'{project} - Quotation Reminder - {trade}',body:'Dear {contact},\n\nWe refer to our earlier invitation for the {trade} works on {project}.\n\nThis is a gentle reminder that your quotation is due by {date}. Kindly let us know if you require any further information or additional time.\n\nWe look forward to receiving your submission.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
+  {name:'Addendum Issued',subject:'{project} - Tender Addendum - {trade}',body:'Dear {contact},\n\nPlease be informed that an addendum has been issued for the {trade} works on {project}.\n\nKindly find the addendum documents attached and incorporate the revisions into your quotation accordingly. If the addendum affects your pricing, please submit your revised quotation by {date}.\n\nShould you have any queries, please do not hesitate to contact us.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
+  {name:'Tender Clarification',subject:'{project} - Tender Clarification - {trade}',body:'Dear {contact},\n\nWe refer to your quotation for the {trade} works on {project} and would like to seek your clarification on the following:\n\n1. \n2. \n3. \n\nKindly revert with your response by {date}. Thank you for your cooperation.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'}
 ];
 let _tpls=[],_tplIdx=0;
 function getTpls(){
@@ -1601,6 +1613,12 @@ function getTpls(){
 function saveTpls(){
   try{localStorage.setItem(tplsLocalKey(),JSON.stringify(_tpls));}catch(e){}
   try{if(typeof sset==='function')sset(tplsCloudKey(),_tpls);}catch(e){}
+}
+function enforceProjectFirst(s){
+  if(!s)return s; s=(''+s).trim();
+  if(s.indexOf('{project}')===0)return s;
+  s=s.replace(/\{project\}/g,'').replace(/^[\s-]+/,'').replace(/[\s-]+$/,'').replace(/\s*-\s*-\s*/g,' - ').replace(/\s{2,}/g,' ').trim();
+  return '{project} - '+s;
 }
 function refreshTplUI(reloadFields){
   const sel=document.getElementById('tplSel');if(!sel)return;
@@ -1619,6 +1637,7 @@ async function loadTplsFromCloud(){
     let merged=Array.isArray(cloud)?cloud.slice():[];
     const have=new Set(merged.map(t=>((t&&t.name)||'').toLowerCase()));
     [].concat(local,DEFAULT_TPLS).forEach(t=>{const nm=((t&&t.name)||'').toLowerCase();if(nm&&!have.has(nm)){merged.push(t);have.add(nm);}});
+    merged.forEach(t=>{if(t&&t.subject!==undefined)t.subject=enforceProjectFirst(t.subject);}); // every subject leads with {project}
     _tpls=merged;
     try{localStorage.setItem(lkey,JSON.stringify(merged));}catch(e){}
     if(typeof sset==='function')sset(ckey,merged); // push merged set back up
