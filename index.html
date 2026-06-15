@@ -911,8 +911,7 @@ async function selectProject(id){
   try{localStorage.setItem('hdb_last_project',id);}catch(e){}
   hideProjScreen();
   updateProjUI();
-  await loadStatusForProject();
-  renderSB();render();
+  await loadAll(); // reloads status, per-project templates, and clears selection for the new project
 }
 
 async function deleteProject(id){
@@ -1053,8 +1052,7 @@ async function selectProject(id){
   try{localStorage.setItem('hdb_last_project',id);}catch(e){}
   hideProjScreen();
   updateProjUI();
-  await loadStatusForProject();
-  renderSB();render();
+  await loadAll(); // reloads status, per-project templates, and clears selection for the new project
 }
 
 async function deleteProject(id){
@@ -1105,7 +1103,9 @@ async function loadAll(){
   loadBcaCache();
   buildBakedIndex();
   applyTradeRenames();
+  try{loadEmailSel();}catch(e){} // restore THIS project's own ticks (kept per-project, not shared)
   renderSB();render();
+  try{updateEmailBar();}catch(e){}
   loadTradeRenames(); // shared trade renames (Firebase)
   refreshBcaGrades(); // auto-update grades from BCA in background (7-day cache)
   loadTplsFromCloud(); // shared email templates (Firebase)
@@ -1585,7 +1585,8 @@ function emailUrl(emails,client,subject,body){
   return `mailto:${emails}?subject=${sub}${bd?'&body='+bd:''}`;
 }
 // ── Email templates (multiple, used for batch sending) ──────────
-const TPLS_KEY='hdb_email_tpls';
+function tplsLocalKey(){return currentProject?'hdb_email_tpls_'+currentProject.id:'hdb_email_tpls';}
+function tplsCloudKey(){return currentProject?'hdb_email_templates_'+currentProject.id:'hdb_email_templates';}
 const DEFAULT_TPLS=[
   {name:'Invitation to Quote',subject:'Invitation to Quote - {trade} - {project}',body:'Dear {contact},\n\nWe would like to invite {company} to submit a quotation for the {trade} works on our project, {project}.\n\nPlease find the relevant tender documents attached for your review. We would appreciate it if you could furnish us with your most competitive price by {date}.\n\nShould you require any clarification, please do not hesitate to contact us. We look forward to receiving your quotation and thank you in advance for your participation.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
   {name:'Quotation Reminder',subject:'Reminder: Quotation for {trade} - {project}',body:'Dear {contact},\n\nWe refer to our earlier invitation for the {trade} works on {project}.\n\nThis is a gentle reminder that your quotation is due by {date}. Kindly let us know if you require any further information or additional time.\n\nWe look forward to receiving your submission.\n\nThank you and best regards,\n\n{name}\nWee Hur Construction Pte Ltd'},
@@ -1594,14 +1595,12 @@ const DEFAULT_TPLS=[
 ];
 let _tpls=[],_tplIdx=0;
 function getTpls(){
-  try{const a=JSON.parse(localStorage.getItem(TPLS_KEY));if(Array.isArray(a)&&a.length)return a;}catch(e){}
-  try{const old=JSON.parse(localStorage.getItem('hdb_email_tpl2'));if(old&&old.subject!==undefined)return [{name:'My Template',subject:old.subject,body:old.body}].concat(DEFAULT_TPLS.slice(1));}catch(e){}
+  try{const a=JSON.parse(localStorage.getItem(tplsLocalKey()));if(Array.isArray(a)&&a.length)return a;}catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT_TPLS));
 }
-const TPLS_CLOUD='hdb_email_templates'; // shared across the whole team (Firebase)
 function saveTpls(){
-  try{localStorage.setItem(TPLS_KEY,JSON.stringify(_tpls));}catch(e){}
-  try{if(typeof sset==='function')sset(TPLS_CLOUD,_tpls);}catch(e){}
+  try{localStorage.setItem(tplsLocalKey(),JSON.stringify(_tpls));}catch(e){}
+  try{if(typeof sset==='function')sset(tplsCloudKey(),_tpls);}catch(e){}
 }
 function refreshTplUI(reloadFields){
   const sel=document.getElementById('tplSel');if(!sel)return;
@@ -1610,22 +1609,24 @@ function refreshTplUI(reloadFields){
   if(reloadFields)loadTplInto();
 }
 async function loadTplsFromCloud(){
+  const ckey=tplsCloudKey(), lkey=tplsLocalKey();
   try{
     if(typeof sget!=='function')return;
-    const cloud=await sget(TPLS_CLOUD);
+    let cloud=await sget(ckey);
+    if((!cloud||!cloud.length)){ try{const legacy=await sget('hdb_email_templates'); if(Array.isArray(legacy)&&legacy.length) cloud=legacy;}catch(e){} } // seed new per-project set from your previous templates
     const local=getTpls();
     // MERGE by name — never drop a template; also ensure built-in templates are always present
     let merged=Array.isArray(cloud)?cloud.slice():[];
     const have=new Set(merged.map(t=>((t&&t.name)||'').toLowerCase()));
     [].concat(local,DEFAULT_TPLS).forEach(t=>{const nm=((t&&t.name)||'').toLowerCase();if(nm&&!have.has(nm)){merged.push(t);have.add(nm);}});
     _tpls=merged;
-    try{localStorage.setItem(TPLS_KEY,JSON.stringify(merged));}catch(e){}
-    if(typeof sset==='function')sset(TPLS_CLOUD,merged); // push merged set back up
+    try{localStorage.setItem(lkey,JSON.stringify(merged));}catch(e){}
+    if(typeof sset==='function')sset(ckey,merged); // push merged set back up
     const box=document.getElementById('tplBox');
     refreshTplUI(!box||box.style.display==='none'); // don't clobber fields while editing
   }catch(e){}
-  // live updates from teammates
-  try{if(typeof listenKey==='function')listenKey(TPLS_CLOUD,val=>{if(Array.isArray(val)&&val.length){_tpls=val;try{localStorage.setItem(TPLS_KEY,JSON.stringify(val));}catch(e){}const box=document.getElementById('tplBox');refreshTplUI(!box||box.style.display==='none');}});}catch(e){}
+  // live updates for this project
+  try{if(typeof listenKey==='function')listenKey(ckey,val=>{if(ckey!==tplsCloudKey())return;if(Array.isArray(val)&&val.length){_tpls=val;try{localStorage.setItem(lkey,JSON.stringify(val));}catch(e){}const box=document.getElementById('tplBox');refreshTplUI(!box||box.style.display==='none');}});}catch(e){}
 }
 function tplOptions(){return _tpls.map((t,i)=>`<option value="${i}"${i===_tplIdx?' selected':''}>${(t.name||'Template '+(i+1)).replace(/</g,'&lt;').replace(/"/g,'&quot;')}</option>`).join('');}
 function loadTplInto(){const t=_tpls[_tplIdx]||{subject:'',body:''};const s=document.getElementById('tplSubj'),b=document.getElementById('tplBody');if(s)s.value=t.subject||'';if(b)b.value=t.body||'';}
@@ -1711,11 +1712,14 @@ function openAllBatch(){
 function closeBatch(){const ov=document.getElementById('batchOv');if(ov)ov.classList.remove('open');}
 // ── Multi-select for batch email ────────────────────────────────
 let emailSel=new Set();
+function emailSelKey(){return 'hdb_emailsel_'+(currentProject?currentProject.id:'none');}
+function saveEmailSel(){try{localStorage.setItem(emailSelKey(),JSON.stringify([...emailSel]));}catch(e){}}
+function loadEmailSel(){emailSel=new Set();try{const a=JSON.parse(localStorage.getItem(emailSelKey()));if(Array.isArray(a))emailSel=new Set(a);}catch(e){}}
 function toggleEmailSel(id,cb){
   if(cb.checked)emailSel.add(id);else emailSel.delete(id);
   const card=cb.closest('.card');if(card)card.classList.toggle('selem',cb.checked);
   const row=cb.closest('tr');if(row)row.classList.toggle('selrow-em',cb.checked);
-  updateEmailBar();
+  saveEmailSel();updateEmailBar();
 }
 function updateEmailBar(){
   const bar=document.getElementById('emailbar');if(!bar)return;
@@ -1723,7 +1727,7 @@ function updateEmailBar(){
   document.getElementById('emailbarTxt').textContent=n+' selected';
   bar.style.display=n>0?'flex':'none';
 }
-function clearEmailSel(){emailSel.clear();render();updateEmailBar();}
+function clearEmailSel(){emailSel.clear();saveEmailSel();render();updateEmailBar();}
 function emailSelectedSend(event){
   event.preventDefault();event.stopPropagation();
   if(!emailSel.size){toast('Tick some subcontractors first');return;}
