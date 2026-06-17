@@ -1718,6 +1718,11 @@ function showBatchModal(items,client){
       +'<div style="display:flex;align-items:center;gap:7px;margin-top:7px"><label style="font-size:11.5px;color:var(--tx2);font-weight:500;white-space:nowrap">Quote deadline {date}:</label><input id="tplDate" placeholder="e.g. 20 Jun 2026" style="flex:1;padding:5px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit" /></div>'
       +'<div style="font-size:10.5px;color:var(--tx3);margin-top:6px">Placeholders auto-fill per subcontractor: <b>{company}</b> <b>{contact}</b> <b>{trade}</b> <b>{project}</b> <b>{name}</b> <b>{date}</b>.</div>'
       +'</div>'
+      +'<div id="attBox" style="padding:10px 18px 12px;border-top:1px solid var(--bdr);margin-top:4px">'
+      +'<div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:4px">🔗 Document links <span style="font-weight:400;color:var(--tx3)">— added to every email body (works with “Open all” / webmail too)</span></div>'
+      +'<textarea id="docLinks" oninput="saveDocLinks()" rows="2" placeholder="Paste share links (OneDrive / SharePoint / Drive), one per line" style="width:100%;padding:6px 9px;font-size:11.5px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea>'
+      +'<label style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;color:var(--tx2);font-size:11.5px;margin-top:9px"><input type="checkbox" id="replyChk" onchange="saveReplyMode()" style="margin-top:2px" /><span>↩ <b>Reply mode</b> — quote each subcontractor’s previous email below the new message <span style="color:var(--tx3)">(uses the last email you sent them in this project)</span></span></label>'
+      +'</div>'
       +'<div id="batchList"></div><div class="batchft"><button class="btn" id="openAllBtn" onclick="openAllBatch()">⚡ Open all</button><button class="btn btn-blue" onclick="closeBatch()">Done</button></div></div>';
     document.body.appendChild(ov);
     ov.addEventListener('mousedown',e=>{if(e.target===ov)closeBatch();});
@@ -1729,13 +1734,14 @@ function showBatchModal(items,client){
   document.getElementById('batchSub').textContent=(client==='system')?`Click each ✉ Open below — ${cl} opens one compose window per click. (One-click "Open all" isn't possible with a desktop mail app.)`:`Click each ✉ Open, or use "Open all" to open all in ${cl}.`;
   const oab=document.getElementById('openAllBtn');if(oab)oab.style.display=(client==='system')?'none':'';
   document.getElementById('batchList').innerHTML=items.map((it,i)=>`<div class="batchrow" id="brow${i}"><span class="bname" title="${(it.emails||'').replace(/"/g,'&quot;')}">${it.company}</span><button class="btn" style="padding:5px 9px;font-size:12px" onclick="copyOneBatch(${i})" title="Copy this email to paste into your mail">📋</button><button class="btn btn-open" onclick="openOneBatch(${i})">✉ Open</button></div>`).join('');
+  loadDocLinks();loadReplyMode();
   ov.classList.add('open');
 }
 function openOneBatch(i){
   const it=_batchItems[i];if(!it)return true;
   const cur=_tpls[_tplIdx]||{subject:'',body:''};
   const tpl={subject:document.getElementById('tplSubj')?document.getElementById('tplSubj').value:cur.subject,body:document.getElementById('tplBody')?document.getElementById('tplBody').value:cur.body};
-  const subj=fillTpl(tpl.subject,it),body=fillTpl(tpl.body,it,true);
+  const subj=fillTpl(tpl.subject,it),body=quoteWith(bodyWithLinks(fillTpl(tpl.body,it,true)),it);setLastEmail(it.company,subj,body);
   let ok=true;
   if(_batchClient==='system'){const a=document.createElement('a');a.href=emailUrl(it.emails,'system',subj,body);document.body.appendChild(a);a.click();a.remove();}
   else{const w=window.open(emailUrl(it.emails,_batchClient,subj,body),'_blank');ok=!!w;}
@@ -1747,7 +1753,7 @@ function copyOneBatch(i){
   const it=_batchItems[i];if(!it)return;
   const cur=_tpls[_tplIdx]||{subject:'',body:''};
   const sEl=document.getElementById('tplSubj'),bEl=document.getElementById('tplBody');
-  const subj=fillTpl(sEl?sEl.value:cur.subject,it), body=fillTpl(bEl?bEl.value:cur.body,it,true);
+  const subj=fillTpl(sEl?sEl.value:cur.subject,it), body=quoteWith(bodyWithLinks(fillTpl(bEl?bEl.value:cur.body,it,true)),it);setLastEmail(it.company,subj,body);
   copyText('To: '+it.emails+'\nSubject: '+subj+'\n\n'+body, 'Email copied — paste into your mail ✓');
   const r=document.getElementById('brow'+i);if(r)r.classList.add('bdone');
 }
@@ -1767,6 +1773,27 @@ function openAllBatch(){
   }
 }
 function closeBatch(){const ov=document.getElementById('batchOv');if(ov)ov.classList.remove('open');}
+// ── Document links (added to email body; works with webmail too) ──
+function docLinksKey(){return 'hdb_doclinks_'+(currentProject?currentProject.id:'none');}
+function loadDocLinks(){const el=document.getElementById('docLinks');if(!el)return;try{el.value=localStorage.getItem(docLinksKey())||'';}catch(e){}}
+function saveDocLinks(){const el=document.getElementById('docLinks');if(!el)return;try{localStorage.setItem(docLinksKey(),el.value);}catch(e){}}
+function getDocLinks(){const el=document.getElementById('docLinks');let raw=el?el.value:'';if(!raw){try{raw=localStorage.getItem(docLinksKey())||'';}catch(e){}}return raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);}
+function bodyWithLinks(body){const lk=getDocLinks();return lk.length?body+'\n\nDocuments:\n'+lk.join('\n'):body;}
+// ── Reply mode: remember the last email per subcontractor & quote it below the next ──
+function lastEmailKey(){return 'hdb_lastemail_'+(currentProject?currentProject.id:'none');}
+function _coKey(c){return (c||'').toLowerCase().trim();}
+function getLastEmails(){try{return JSON.parse(localStorage.getItem(lastEmailKey()))||{};}catch(e){return {};}}
+function setLastEmail(company,subject,body){try{const m=getLastEmails();m[_coKey(company)]={subject,body,date:new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})};localStorage.setItem(lastEmailKey(),JSON.stringify(m));}catch(e){}}
+function prevEmailFor(company){return getLastEmails()[_coKey(company)]||null;}
+function replyMode(){const c=document.getElementById('replyChk');return !!(c&&c.checked);}
+function saveReplyMode(){try{localStorage.setItem('hdb_replymode',replyMode()?'1':'0');}catch(e){}}
+function loadReplyMode(){const c=document.getElementById('replyChk');if(!c)return;try{c.checked=localStorage.getItem('hdb_replymode')==='1';}catch(e){}}
+function quoteWith(body,it){
+  if(!replyMode())return body;
+  const p=prevEmailFor(it.company);
+  if(!p)return body;
+  return body+'\n\n-----Original Message-----\nSent: '+(p.date||'')+'\nSubject: '+(p.subject||'')+'\n\n'+(p.body||'');
+}
 // ── Multi-select for batch email ────────────────────────────────
 let emailSel=new Set();
 function emailSelKey(){return 'hdb_emailsel_'+(currentProject?currentProject.id:'none');}
