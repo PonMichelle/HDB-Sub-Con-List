@@ -659,6 +659,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       </div>
       <div class="tr">
         <span class="rc" id="rc"></span>
+        <button class="btn" id="selAllBtn" onclick="toggleSelectAllShown()" title="Tick / untick every subcontractor currently shown (the selected trade)">☑ Select all</button>
         <select id="sortSel" onchange="setSort(this.value)" title="Sort by" style="padding:5px 8px;font-size:11.5px;border:1px solid var(--bdr2);border-radius:var(--r);background:var(--sur);color:var(--tx2);font-family:inherit;cursor:pointer">
           <option value="default">Sort: Default</option>
           <option value="phone-asc">Contact no. ↑</option>
@@ -699,7 +700,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <div class="cards-area" id="ca"><div class="cgrid" id="cg"></div></div>
     <div class="tw" id="ta" style="display:none">
       <table id="mainTable"><thead><tr id="theadRow">
-        <th data-col="0" style="width:160px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Company</div><div class="col-resize"></div></th>
+        <th data-col="0" style="width:160px"><div class="th-content"><input type="checkbox" id="selAllTh" onmousedown="event.stopPropagation()" onclick="toggleSelectAllShown()" title="Select / deselect all shown" style="margin-right:6px;vertical-align:middle;cursor:pointer" /><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Company</div><div class="col-resize"></div></th>
         <th data-col="1" style="width:140px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Trade</div><div class="col-resize"></div></th>
         <th data-col="2" style="width:130px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Contact</div><div class="col-resize"></div></th>
         <th data-col="3" style="width:130px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Tel/HP</div><div class="col-resize"></div></th>
@@ -1363,6 +1364,7 @@ function render(){
   upProg();
   const list=getFilt();
   document.getElementById('rc').textContent=`${list.length} result${list.length!==1?'s':''}`;
+  try{updateSelAllBtn();}catch(e){}
   if(view==='grid'){
     if(!list.length){document.getElementById('cg').innerHTML=`<div class="empty"><div style="font-size:32px;margin-bottom:10px">🔍</div><div style="font-size:13px;color:var(--tx2)">No subcontractors found</div></div>`;return;}
     document.getElementById('cg').innerHTML=list.map(r=>{
@@ -1781,8 +1783,27 @@ function updateEmailBar(){
   const n=emailSel.size;
   document.getElementById('emailbarTxt').textContent=n+' selected';
   bar.style.display=n>0?'flex':'none';
+  try{updateSelAllBtn();}catch(e){}
 }
 function clearEmailSel(){emailSel.clear();saveEmailSel();render();updateEmailBar();}
+function shownIds(){return getFilt().map(r=>r.id);}
+function toggleSelectAllShown(){
+  const ids=shownIds();
+  if(!ids.length){toast('Nothing to select');return;}
+  const allSel=ids.every(id=>emailSel.has(id));
+  if(allSel){ids.forEach(id=>emailSel.delete(id));toast('Cleared '+ids.length+' selected');}
+  else{ids.forEach(id=>emailSel.add(id));toast('Selected '+ids.length+(activeTrade==='ALL'?' (all shown)':' in '+activeTrade));}
+  saveEmailSel();render();updateEmailBar();
+}
+function updateSelAllBtn(){
+  const ids=shownIds();
+  const allSel=ids.length&&ids.every(id=>emailSel.has(id));
+  const someSel=ids.some(id=>emailSel.has(id));
+  const b=document.getElementById('selAllBtn');
+  if(b)b.innerHTML=allSel?'☐ Deselect all':'☑ Select all';
+  const cb=document.getElementById('selAllTh');
+  if(cb){cb.checked=!!allSel;cb.indeterminate=!allSel&&someSel;}
+}
 function emailSelectedSend(event){
   event.preventDefault();event.stopPropagation();
   if(!emailSel.size){toast('Tick some subcontractors first');return;}
