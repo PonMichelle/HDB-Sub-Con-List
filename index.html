@@ -234,6 +234,14 @@ tr.selrow-em td{background:var(--bblue)!important}
 .drow span{color:var(--tx);word-break:break-word}
 .demail{color:var(--blue)!important;word-break:break-all;font-size:11px}
 .demail.vfy,.tde.vfy{font-weight:800!important;color:#c0392b!important;text-decoration:underline wavy #c0392b}
+.lnkrow{display:flex;gap:14px;flex-wrap:wrap;margin:3px 0 1px;font-size:11px}
+.lnkpill{color:var(--blue);text-decoration:none;font-weight:600}
+.lnkpill:hover{text-decoration:underline}
+.cctag{font-size:9px;font-weight:700;background:#eef2ff;color:#5b6bb5;border:1px solid #d3dcff;border-radius:4px;padding:0 4px;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em}
+.rtag{font-size:9px;font-weight:700;border-radius:4px;padding:0 5px;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em;cursor:pointer;border:1px solid;user-select:none}
+.rtag.rcc{background:#eef2ff;color:#5b6bb5;border-color:#d3dcff}
+.rtag.rto{background:#eafaf0;color:#2e8b57;border-color:#cdeed9}
+.rtag:hover{filter:brightness(.94)}
 .demail:hover{color:var(--purple)!important}
 .rtag{display:inline-block;margin-top:5px;padding:2px 8px;background:var(--bamber);color:var(--amber);font-size:10.5px;border-radius:6px;border:1px solid #fcd34d;font-style:italic}
 .email-all-hint{font-size:10px;color:var(--tx3);margin-top:2px;font-style:italic}
@@ -763,6 +771,8 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <div class="fg"><label>Mobile / HP</label><input type="text" id="fhp" /></div>
   </div>
   <div class="fg"><label>Email</label><input type="text" id="fem" /></div>
+  <div class="fg"><label>Website <span style="color:var(--tx3);font-weight:400">(optional — auto-detected from email if blank)</span></label><input type="text" id="fsite" placeholder="https://company.com.sg" /></div>
+  <div class="fg"><label>Track record link <span style="color:var(--tx3);font-weight:400">(paste a OneDrive / SharePoint share link to the PDF)</span></label><input type="text" id="ftrk" placeholder="https://weehur.sharepoint.com/..." /></div>
   <div class="fg"><label>Remark</label><textarea id="frm" rows="2"></textarea></div>
   <div class="mfoot">
     <button class="btn" onclick="closeMo()">Cancel</button>
@@ -1387,6 +1397,13 @@ function upProg(){
 function pIco(){return`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5 19.79 19.79 0 0 1 1.61 5 2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.6a16 16 0 0 0 6 6l.9-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 18z"/></svg>`;}
 function mIco(){return`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>`;}
 function cIco(){return`<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;}
+function siteUrl(r){if(!r.site)return '';let s=r.site.trim();if(!s)return '';return /^https?:\/\//i.test(s)?s:'https://'+s;} // only show a website link that was entered manually (no error-prone auto-guessing)
+function trackUrl(r){if(!r.track)return '';let s=r.track.trim();return /^https?:\/\//i.test(s)?s:'https://'+s;}
+function linksRow(r){const w=siteUrl(r),t=trackUrl(r);const p=[];
+  const web=w||(r.company?'https://www.google.com/search?q='+encodeURIComponent((r.company||'')+' Singapore'):'');
+  if(web)p.push(`<a href="${web.replace(/"/g,'&quot;')}" target="_blank" rel="noopener" class="lnkpill" onclick="event.stopPropagation()" title="${w?'Open company website':'Search the web for this company'}">🌐 Website</a>`);
+  if(t)p.push(`<a href="${t.replace(/"/g,'&quot;')}" target="_blank" rel="noopener" class="lnkpill" onclick="event.stopPropagation()">📄 Track record</a>`);
+  return p.length?`<div class="lnkrow">${p.join('')}</div>`:'';}
 function render(){
   upProg();
   const list=getFilt();
@@ -1401,7 +1418,8 @@ function render(){
       const ph=r.tel||r.hp;
       const em=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
       const allEmails=em.join(',');
-      const eH=em.map(e=>`<a href="#" class="demail${r.vfy?' vfy':''}" onclick="openEmail(${r.id},event)" title="${r.vfy?'⚠ Please verify — this address may be wrong or unconfirmed':'Click to email '+r.company}">${e}</a>`).join('<br>');
+      const _sp=splitToCc(r.email,r.contact,r.roles);const _toSet=new Set((_sp.to||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean));const _multi=em.length>1;
+      const eH=em.map(e=>{const isTo=_toSet.has(e.toLowerCase());const tag=_multi?` <span class="rtag ${isTo?'rto':'rcc'}" title="Now ${isTo?'To':'Cc'} — click to move to ${isTo?'Cc':'To'}" onclick="event.stopPropagation();toggleRole(${r.id},'${btoa(e)}')">${isTo?'to':'cc'}</span>`:'';return `<a href="#" class="demail${r.vfy?' vfy':''}" onclick="openEmail(${r.id},event)" title="${r.vfy?'⚠ Please verify — this address may be wrong or unconfirmed':'Click to email '+r.company}">${e}</a>${tag}`;}).join('<br>');
       const nt=st.note||'';
       // Card highlight priority: Not Quote = red > Quote received = amber > Invited = blue
       const cardCls=(noq?' nq':qrc?' qrcv':inv?' inv':'')+(emailSel.has(r.id)?' selem':'');
@@ -1417,6 +1435,7 @@ function render(){
         </div>
         <div class="cname" onclick="copyCompany('${(r.company||'').replace(/'/g,"\\'")}')" title="Click to copy company name" style="cursor:pointer">${r.company}</div>
         <div class="cperson">${r.contact||''}</div>
+        ${linksRow(r)}
         ${getGrade(r)?`<div class="gradechip" title="${gradeBreakdown(getGrade(r))}" onclick="showGradePop(event,'${getGrade(r).replace(/'/g,"\\'")}')">🏅 BCA: ${getGrade(r)}</div>`:''}
         <hr class="cdiv"/>
         <div class="cdet">
@@ -1551,6 +1570,8 @@ function openEdit(id){
   document.getElementById('ftel').value=r.tel||'';
   document.getElementById('fhp').value=r.hp||'';
   document.getElementById('fem').value=r.email||'';
+  document.getElementById('fsite').value=r.site||'';
+  document.getElementById('ftrk').value=r.track||'';
   document.getElementById('frm').value=r.remark||'';
   document.getElementById('mo').classList.add('open');
 }
@@ -1562,7 +1583,9 @@ function saveRec(){
   const d={company:co,trade:tr,contact:document.getElementById('fct').value.trim(),
     tel:document.getElementById('ftel').value.trim(),hp:document.getElementById('fhp').value.trim(),
     phone:document.getElementById('ftel').value.trim()||document.getElementById('fhp').value.trim(),
-    email:document.getElementById('fem').value.trim(),remark:document.getElementById('frm').value.trim()};
+    email:document.getElementById('fem').value.trim(),
+    site:document.getElementById('fsite').value.trim(),track:document.getElementById('ftrk').value.trim(),
+    remark:document.getElementById('frm').value.trim()};
   if(eid){const i=records.findIndex(x=>x.id===eid);records[i]={...records[i],...d};delete records[i].vfy;/* editing = you've reviewed it, clear the verify highlight */}
   else{records.push({id:nextId++,...d,addedBy:getUser(),addedAt:new Date().toISOString()});}
   closeMo();renderSB();render();saveRecords();
@@ -1613,7 +1636,7 @@ function openEmail(idOrEmails,event){
   event.preventDefault();event.stopPropagation();
   let item;
   const r=(typeof idOrEmails==='number')?records.find(x=>x.id===idOrEmails):null;
-  if(r){const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(!ems.length){toast('No email on file');return;}item={company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(',')};}
+  if(r){const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(!ems.length){toast('No email on file');return;}item={company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(','),roles:r.roles||null};}
   else{const ems=(''+idOrEmails).split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(!ems.length)return;item={company:'',contact:'',trade:'',emails:ems.join(',')};}
   const def=localStorage.getItem('hdb_email_client');
   if(def&&def!=='ask'){showBatchModal([item],def);return;}
@@ -1634,14 +1657,49 @@ function pickClient(client){
   else openWithClient(_epEmail,client);
   closeEPicker();
 }
-function emailUrl(emails,client,subject,body){
+// General/role inboxes → Cc; named-person emails → To. If only general emails exist, they go in To.
+const _GENERIC=new Set(['enquiry','enquiries','sales','tender','tenders','info','admin','administration','contract','contracts','project','projects','general','office','accounts','account','hr','marketing','quotation','quotations','quote','quotes','contact','contactus','mail','email','finance','purchasing','procurement','corporate','cs','customerservice','support','biz','business','ar','ap']);
+function _isGeneric(addr){let lp=((addr||'').split('@')[0]||'').toLowerCase().replace(/\d+$/,'');const lp2=lp.replace(/[._-]/g,'');return _GENERIC.has(lp)||_GENERIC.has(lp2);}
+// Attention person(s) from the contact field = To; everyone else (other staff + general inboxes) = Cc.
+function _attnNames(contact){return (contact||'').split(/[\/,;&]|\band\b/i).map(s=>s.replace(/\b(mr|mrs|ms|mdm|dr|miss|ir|er|sr|prof)\b\.?/gi,'').replace(/[^a-z\s]/gi,' ').replace(/\s+/g,' ').trim().toLowerCase()).filter(s=>s.length>=2);}
+function _ename(addr){return ((addr||'').split('@')[0]||'').replace(/[._\-]+/g,' ').replace(/\d+/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
+function _isAttn(addr,names){if(!names.length)return false;const en=_ename(addr);if(!en)return false;const ec=en.replace(/\s+/g,'');const et=en.split(' ').filter(Boolean);return names.some(nm=>{const nc=nm.replace(/\s+/g,'');const nt=nm.split(' ').filter(Boolean);if(ec===nc)return true;if(nt.length>=2&&ec.includes(nc))return true;const shared=nt.filter(t=>t.length>=3&&et.indexOf(t)>=0).length;return shared>=Math.min(2,nt.length);});}
+function splitToCc(emailsStr,contact,roles){
+  const all=(emailsStr||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
+  const names=_attnNames(contact);
+  let to,cc;
+  const attn=all.filter(e=>_isAttn(e,names));
+  if(attn.length){ to=attn.slice(); cc=all.filter(e=>attn.indexOf(e)<0); }
+  else { const personal=all.filter(e=>!_isGeneric(e)); if(personal.length){ to=personal.slice(); cc=all.filter(e=>personal.indexOf(e)<0); } else { to=all.slice(); cc=[]; } }
+  if(roles){ // manual overrides (click-to-flip), keyed by lowercased email
+    const lc=s=>s.toLowerCase();
+    all.forEach(e=>{const rr=roles[lc(e)];
+      if(rr==='to'){ cc=cc.filter(x=>lc(x)!==lc(e)); if(!to.some(x=>lc(x)===lc(e)))to.push(e); }
+      else if(rr==='cc'){ to=to.filter(x=>lc(x)!==lc(e)); if(!cc.some(x=>lc(x)===lc(e)))cc.push(e); }
+    });
+  }
+  if(!to.length && cc.length){ to=[cc.shift()]; } // always keep at least one To
+  return {to:to.join(','), cc:cc.join(',')};
+}
+function toggleRole(id,b64){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  let email;try{email=atob(b64);}catch(e){return;}
+  const key=email.toLowerCase();
+  if(!r.roles)r.roles={};
+  const sp=splitToCc(r.email,r.contact,r.roles);
+  const inTo=(sp.to||'').split(',').map(s=>s.trim().toLowerCase()).indexOf(key)>=0;
+  r.roles[key]=inTo?'cc':'to';
+  render();saveRecords();
+}
+function emailUrl(emails,client,subject,body,contact,roles){
   const sub=encodeURIComponent(subject||'Enquiry - HDB Subcontractor');
   const bd=body?encodeURIComponent(body):'';
-  const to=encodeURIComponent(emails);
-  if(client==='gmail')return `https://mail.google.com/mail/?view=cm&to=${to}&su=${sub}${bd?'&body='+bd:''}`;
-  if(client==='yahoo')return `https://compose.mail.yahoo.com/?to=${to}&subject=${sub}${bd?'&body='+bd:''}`;
-  if(client==='hotmail')return `https://outlook.office.com/mail/deeplink/compose?to=${to}&subject=${sub}${bd?'&body='+bd:''}`;
-  return `mailto:${emails}?subject=${sub}${bd?'&body='+bd:''}`;
+  const sp=splitToCc(emails,contact,roles);
+  const to=encodeURIComponent(sp.to), ccp=sp.cc?encodeURIComponent(sp.cc):'';
+  if(client==='gmail')return `https://mail.google.com/mail/?view=cm&to=${to}${ccp?'&cc='+ccp:''}&su=${sub}${bd?'&body='+bd:''}`;
+  if(client==='yahoo')return `https://compose.mail.yahoo.com/?to=${to}${ccp?'&cc='+ccp:''}&subject=${sub}${bd?'&body='+bd:''}`;
+  if(client==='hotmail')return `https://outlook.office.com/mail/deeplink/compose?to=${to}${ccp?'&cc='+ccp:''}&subject=${sub}${bd?'&body='+bd:''}`;
+  return `mailto:${sp.to}${ccp?'?cc='+ccp+'&':'?'}subject=${sub}${bd?'&body='+bd:''}`;
 }
 // ── Email templates (multiple, used for batch sending) ──────────
 function tplsLocalKey(){return currentProject?'hdb_email_tpls_'+currentProject.id:'hdb_email_tpls';}
@@ -1769,8 +1827,8 @@ function openOneBatch(i){
   const tpl={subject:document.getElementById('tplSubj')?document.getElementById('tplSubj').value:cur.subject,body:document.getElementById('tplBody')?document.getElementById('tplBody').value:cur.body};
   const subj=fillTpl(tpl.subject,it),body=bodyWithLinks(fillTpl(tpl.body,it,true));
   let ok=true;
-  if(_batchClient==='system'){const a=document.createElement('a');a.href=emailUrl(it.emails,'system',subj,body);document.body.appendChild(a);a.click();a.remove();}
-  else{const w=window.open(emailUrl(it.emails,_batchClient,subj,body),'_blank');ok=!!w;}
+  if(_batchClient==='system'){const a=document.createElement('a');a.href=emailUrl(it.emails,'system',subj,body,it.contact,it.roles);document.body.appendChild(a);a.click();a.remove();}
+  else{const w=window.open(emailUrl(it.emails,_batchClient,subj,body,it.contact,it.roles),'_blank');ok=!!w;}
   const row=document.getElementById('brow'+i);
   if(row){row.classList.toggle('bdone',ok);row.classList.toggle('bblocked',!ok);}
   return ok;
@@ -1780,7 +1838,8 @@ function copyOneBatch(i){
   const cur=_tpls[_tplIdx]||{subject:'',body:''};
   const sEl=document.getElementById('tplSubj'),bEl=document.getElementById('tplBody');
   const subj=fillTpl(sEl?sEl.value:cur.subject,it), body=bodyWithLinks(fillTpl(bEl?bEl.value:cur.body,it,true));
-  copyText('To: '+it.emails+'\nSubject: '+subj+'\n\n'+body, 'Email copied — paste into your mail ✓');
+  const sp=splitToCc(it.emails,it.contact,it.roles);
+  copyText('To: '+sp.to+(sp.cc?'\nCc: '+sp.cc:'')+'\nSubject: '+subj+'\n\n'+body, 'Email copied — paste into your mail ✓');
   const r=document.getElementById('brow'+i);if(r)r.classList.add('bdone');
 }
 function openAllBatch(){
@@ -1846,7 +1905,7 @@ function emailSelectedSend(event){
   event.preventDefault();event.stopPropagation();
   if(!emailSel.size){toast('Tick some subcontractors first');return;}
   const items=[];
-  emailSel.forEach(id=>{const r=records.find(x=>x.id===id);if(!r)return;const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(ems.length)items.push({company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(',')});});
+  emailSel.forEach(id=>{const r=records.find(x=>x.id===id);if(!r)return;const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(ems.length)items.push({company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(','),roles:r.roles||null});});
   if(!items.length){toast('Selected subcontractors have no email on file');return;}
   const def=localStorage.getItem('hdb_email_client');
   if(def&&def!=='ask'){showBatchModal(items,def);return;}
