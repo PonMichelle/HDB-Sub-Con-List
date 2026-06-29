@@ -186,7 +186,11 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .card.nq .cname{color:var(--red)}
 .cth{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:7px}
 .ctag{font-size:9.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
-.cbadge,.qrbadge,.invbadge,.nqbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.cbadge,.qrbadge,.invbadge,.nqbadge,.nfabadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.nfabadge{background:#ffe3ef;color:#c2185b;border:1px solid #f8b5d0}
+.card.nfa{opacity:.92;background:linear-gradient(0deg,#fff,#fff)}
+.card.nfa .cname{color:#e91e8c!important;font-weight:800!important}
+td.nfa-name{color:#e91e8c!important;font-weight:800!important}
 .cbadge{background:var(--bgreen);color:var(--green);border:1px solid #a7f3d0}
 .qrbadge{background:var(--bamber);color:var(--amber);border:1px solid #fcd34d}
 .invbadge{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
@@ -729,6 +733,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       <button class="fc" id="fc-no" onclick="setCF('no')">○ Not invited</button>
       <button class="fc" id="fc-qr" onclick="setCF('qr')">📥 Quotation received</button>
       <button class="fc" id="fc-nq" onclick="setCF('nq')">✕ Not Quote</button>
+      <button class="fc" id="fc-nfa" onclick="setCF('nfa')">✕ Not for ask quote</button>
       <div class="pw"><div class="pbb"><div class="pbf" id="pbf" style="width:0%"></div></div><span class="pt" id="pbt">0 / 0 contacted</span></div>
     </div>
     <div class="cards-area" id="ca"><div class="cgrid" id="cg"></div></div>
@@ -1381,9 +1386,9 @@ function getFilt(){
     const mt=activeTrade==='ALL'||r.trade===activeTrade;
     const ms=!q||r.company.toLowerCase().includes(q)||(r.contact||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.hp||'').includes(q)||(r.email||'').toLowerCase().includes(q)||r.trade.toLowerCase().includes(q)||(r.remark||'').toLowerCase().includes(q)||getGrade(r).toLowerCase().includes(q);
     const st=statusMap[r.id]||{};
-    const mc=cf==='all'||(cf==='yes'&&!!st.invDate)||(cf==='no'&&!st.invDate)||(cf==='qr'&&!!st.qrcDate)||(cf==='nq'&&!!st.noqDate);
+    const mc=cf==='all'||(cf==='yes'&&!!st.invDate)||(cf==='no'&&!st.invDate)||(cf==='qr'&&!!st.qrcDate)||(cf==='nq'&&!!st.noqDate)||(cf==='nfa'&&!!st.nfa);
     return mt&&ms&&mc;
-  }));
+  })).sort((a,b)=>(isNfa(a)?1:0)-(isNfa(b)?1:0)); // "not for ask quote" always at the bottom (stable)
 }
 function upProg(){
   const tot=records.length;
@@ -1413,6 +1418,7 @@ function render(){
     if(!list.length){document.getElementById('cg').innerHTML=`<div class="empty"><div style="font-size:32px;margin-bottom:10px">🔍</div><div style="font-size:13px;color:var(--tx2)">No subcontractors found</div></div>`;return;}
     document.getElementById('cg').innerHTML=list.map(r=>{
       const st=statusMap[r.id]||{};
+      const nfa=!!st.nfa;
       const inv=!!st.invDate; const noq=!!st.noqDate; const qrc=!!st.qrcDate;
       const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const ph=r.tel||r.hp;
@@ -1422,18 +1428,19 @@ function render(){
       const eH=em.map(e=>{const isTo=_toSet.has(e.toLowerCase());const tag=_multi?` <span class="rtag ${isTo?'rto':'rcc'}" title="Now ${isTo?'To':'Cc'} — click to move to ${isTo?'Cc':'To'}" onclick="event.stopPropagation();toggleRole(${r.id},'${btoa(e)}')">${isTo?'to':'cc'}</span>`:'';return `<a href="#" class="demail${r.vfy?' vfy':''}" onclick="openEmail(${r.id},event)" title="${r.vfy?'⚠ Please verify — this address may be wrong or unconfirmed':'Click to email '+r.company}">${e}</a>${tag}`;}).join('<br>');
       const nt=st.note||'';
       // Card highlight priority: Not Quote = red > Quote received = amber > Invited = blue
-      const cardCls=(noq?' nq':qrc?' qrcv':inv?' inv':'')+(emailSel.has(r.id)?' selem':'');
+      const cardCls=(nfa?' nfa':noq?' nq':qrc?' qrcv':inv?' inv':'')+(emailSel.has(r.id)?' selem':'');
       return`<div class="card${cardCls}">
         <div class="cth">
           <input type="checkbox" class="selcb" ${emailSel.has(r.id)?'checked':''} onclick="toggleEmailSel(${r.id},this)" title="Select to email" />
           <div class="ctag">${r.trade}</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-            ${noq?`<span class="nqbadge">✕ No quote</span>`:''}
-            ${qrc&&!noq?`<span class="qrbadge">📥 Quote rcvd</span>`:''}
-            ${inv&&!qrc&&!noq?`<span class="invbadge">✉ Invited</span>`:''}
+            ${nfa?`<span class="nfabadge">✕ Not for quote</span>`:''}
+            ${!nfa&&noq?`<span class="nqbadge">✕ No quote</span>`:''}
+            ${!nfa&&qrc&&!noq?`<span class="qrbadge">📥 Quote rcvd</span>`:''}
+            ${!nfa&&inv&&!qrc&&!noq?`<span class="invbadge">✉ Invited</span>`:''}
           </div>
         </div>
-        <div class="cname" onclick="copyCompany('${(r.company||'').replace(/'/g,"\\'")}')" title="Click to copy company name" style="cursor:pointer">${r.company}</div>
+        <div class="cname" onclick="copyCompany('${(r.company||'').replace(/'/g,"\\'")}')" title="Click to copy company name" style="cursor:pointer">${nfa?'✕ ':''}${r.company}</div>
         <div class="cperson">${r.contact||''}</div>
         ${linksRow(r)}
         ${getGrade(r)?`<div class="gradechip" title="${gradeBreakdown(getGrade(r))}" onclick="showGradePop(event,'${getGrade(r).replace(/'/g,"\\'")}')">🏅 BCA: ${getGrade(r)}</div>`:''}
@@ -1445,16 +1452,22 @@ function render(){
         </div>
         <div class="csec">
           <div class="cbrow2">
+            <input type="checkbox" id="cb_nfa${r.id}" ${nfa?'checked':''} onchange="toggleNfa(${r.id},this)" style="accent-color:#d6336c;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
+            <label class="cblbl2" for="cb_nfa${r.id}" style="${nfa?'color:#d6336c;font-weight:700':''}">Not for ask quote</label>
+          </div>
+          ${nfa?'':`
+          <div class="cbrow2">
             <input type="checkbox" id="cb_inv${r.id}" ${inv?'checked':''} onchange="toggleField(${r.id},'invDate')" style="accent-color:#1a56a0;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
             <label class="cblbl2" for="cb_inv${r.id}" style="${inv?'color:#1a56a0;font-weight:500':''}">Invitation</label>
             ${inv?`<input type="date" class="dinput" value="${st.invDate||''}" onchange="uf(${r.id},'invDate',this.value)" style="border-color:#1a56a0;width:130px" />`:''}
-          </div>
+          </div>`}
+          ${nfa?'':`
           <div class="cbrow2">
             <input type="checkbox" id="cb_nq${r.id}" ${noq?'checked':''} onchange="toggleField(${r.id},'noqDate')" style="accent-color:#a02020;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
             <label class="cblbl2" for="cb_nq${r.id}" style="${noq?'color:#a02020;font-weight:500':''}">Not Quote</label>
             ${noq?`<input type="date" class="dinput" value="${st.noqDate||''}" onchange="uf(${r.id},'noqDate',this.value)" style="border-color:#a02020;width:130px" />`:''}
-          </div>
-          ${inv&&!noq ? [1,2,3,4,5,6,7,8,9,10].filter(n=> n===1 || ads[n-2]).map(n=>{
+          </div>`}
+          ${!nfa&&inv&&!noq ? [1,2,3,4,5,6,7,8,9,10].filter(n=> n===1 || ads[n-2]).map(n=>{
             const fld=`add${n}Date`; const checked=ads[n-1]; const d=st[fld]||'';
             return`<div class="cbrow2">
               <input type="checkbox" id="cb_a${n}_${r.id}" ${checked?'checked':''} onchange="toggleField(${r.id},'${fld}')" style="accent-color:#6c4fc7;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
@@ -1462,7 +1475,7 @@ function render(){
               ${checked?`<input type="date" class="dinput" value="${d}" onchange="uf(${r.id},'${fld}',this.value)" style="border-color:#6c4fc7;width:130px" />`:''}
             </div>`;
           }).join('') : ''}
-          ${inv&&!noq?`
+          ${!nfa&&inv&&!noq?`
           <div class="cbrow2">
             <input type="checkbox" id="cb_qr${r.id}" ${qrc?'checked':''} onchange="toggleField(${r.id},'qrcDate')" style="accent-color:#8a5c00;width:14px;height:14px;flex-shrink:0;cursor:pointer" />
             <label class="cblbl2" for="cb_qr${r.id}" style="${qrc?'color:#8a5c00;font-weight:500':''}">Quotation received</label>
@@ -1481,6 +1494,7 @@ function render(){
     if(!list.length){document.getElementById('tb').innerHTML=`<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--tx3)">No results</td></tr>`;return;}
     document.getElementById('tb').innerHTML=list.map(r=>{
       const st=statusMap[r.id]||{};
+      const nfa=!!st.nfa;
       const inv=!!st.invDate; const noq=!!st.noqDate; const qrc=!!st.qrcDate;
       const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const emList=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
@@ -1502,7 +1516,7 @@ function render(){
         return (prevOk&&!noq) ? cbTd(ads[n-1],`add${n}Date`,'#6c4fc7',st[`add${n}Date`]||'') : dash;
       }).join('');
       return`<tr style="${rowBg}">
-        <td style="${namColor}"><input type="checkbox" class="selcb" ${emailSel.has(r.id)?'checked':''} onclick="toggleEmailSel(${r.id},this)" title="Select to email" style="vertical-align:middle;margin-right:7px" />${r.company}${noq?` <span style="font-size:10px;background:#fdeaea;color:#a02020;border:1px solid #f5a5a5;border-radius:6px;padding:1px 6px;vertical-align:middle;font-weight:400">✕ No quote</span>`:''}</td>
+        <td class="${nfa?'nfa-name':''}" style="${nfa?'':namColor}"><input type="checkbox" class="selcb" ${emailSel.has(r.id)?'checked':''} onclick="toggleEmailSel(${r.id},this)" title="Select to email" style="vertical-align:middle;margin-right:7px" />${nfa?'✕ ':''}${r.company}${nfa?` <span style="font-size:10px;background:#ffe3ef;color:#c2185b;border:1px solid #f8b5d0;border-radius:6px;padding:1px 6px;vertical-align:middle;font-weight:600">Not for quote</span>`:noq?` <span style="font-size:10px;background:#fdeaea;color:#a02020;border:1px solid #f5a5a5;border-radius:6px;padding:1px 6px;vertical-align:middle;font-weight:400">✕ No quote</span>`:''}</td>
         <td style="font-size:11px;color:var(--tx2)">${r.trade}</td>
         <td>${r.contact||'—'}</td>
         <td style="white-space:nowrap;font-size:11px">${ph||'—'}</td>
@@ -1527,8 +1541,8 @@ function setView(v){
   render();
 }
 function setCF(f){
-  cf=f;['all','yes','no','qr','nq'].forEach(k=>{const el=document.getElementById('fc-'+k);if(el)el.classList.remove('act','actg','acta','actr');});
-  const cls=f==='yes'?'actb':f==='qr'?'acta':f==='nq'?'actr':'act';
+  cf=f;['all','yes','no','qr','nq','nfa'].forEach(k=>{const el=document.getElementById('fc-'+k);if(el)el.classList.remove('act','actg','acta','actr');});
+  const cls=f==='yes'?'actb':f==='qr'?'acta':(f==='nq'||f==='nfa')?'actr':'act';
   document.getElementById('fc-'+f).classList.add(cls);
   render();
 }
@@ -1537,6 +1551,13 @@ function toggleField(id, field){
   const today=new Date().toISOString().slice(0,10);
   const newVal=st[field]?'':today;
   statusMap[id]={...st,[field]:newVal};
+  saveStatus();
+  render();
+}
+function isNfa(r){const s=statusMap[r.id]; return !!(s&&s.nfa);}
+function toggleNfa(id, cb){
+  const st=statusMap[id]||{};
+  statusMap[id]={...st,nfa:cb.checked};
   saveStatus();
   render();
 }
