@@ -1664,6 +1664,7 @@ function _isGeneric(addr){let lp=((addr||'').split('@')[0]||'').toLowerCase().re
 function _attnNames(contact){return (contact||'').split(/[\/,;&]|\band\b/i).map(s=>s.replace(/\b(mr|mrs|ms|mdm|dr|miss|ir|er|sr|prof)\b\.?/gi,'').replace(/[^a-z\s]/gi,' ').replace(/\s+/g,' ').trim().toLowerCase()).filter(s=>s.length>=2);}
 function _ename(addr){return ((addr||'').split('@')[0]||'').replace(/[._\-]+/g,' ').replace(/\d+/g,'').replace(/\s+/g,' ').trim().toLowerCase();}
 function _isAttn(addr,names){if(!names.length)return false;const en=_ename(addr);if(!en)return false;const ec=en.replace(/\s+/g,'');const et=en.split(' ').filter(Boolean);return names.some(nm=>{const nc=nm.replace(/\s+/g,'');const nt=nm.split(' ').filter(Boolean);if(ec===nc)return true;if(nt.length>=2&&ec.includes(nc))return true;const shared=nt.filter(t=>t.length>=3&&et.indexOf(t)>=0).length;return shared>=Math.min(2,nt.length);});}
+function _rk(s){return (s||'').toLowerCase().replace(/[.#$\[\]\/@]/g,'_');} // Firebase-safe key (no dots/@ etc.)
 function splitToCc(emailsStr,contact,roles){
   const all=(emailsStr||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
   const names=_attnNames(contact);
@@ -1673,7 +1674,7 @@ function splitToCc(emailsStr,contact,roles){
   else { const personal=all.filter(e=>!_isGeneric(e)); if(personal.length){ to=personal.slice(); cc=all.filter(e=>personal.indexOf(e)<0); } else { to=all.slice(); cc=[]; } }
   if(roles){ // manual overrides (click-to-flip), keyed by lowercased email
     const lc=s=>s.toLowerCase();
-    all.forEach(e=>{const rr=roles[lc(e)];
+    all.forEach(e=>{const rr=roles[_rk(e)];
       if(rr==='to'){ cc=cc.filter(x=>lc(x)!==lc(e)); if(!to.some(x=>lc(x)===lc(e)))to.push(e); }
       else if(rr==='cc'){ to=to.filter(x=>lc(x)!==lc(e)); if(!cc.some(x=>lc(x)===lc(e)))cc.push(e); }
     });
@@ -1681,15 +1682,19 @@ function splitToCc(emailsStr,contact,roles){
   if(!to.length && cc.length){ to=[cc.shift()]; } // always keep at least one To
   return {to:to.join(','), cc:cc.join(',')};
 }
-function toggleRole(id,b64){
+async function toggleRole(id,b64){
   const r=records.find(x=>x.id===id);if(!r)return;
   let email;try{email=atob(b64);}catch(e){return;}
-  const key=email.toLowerCase();
   if(!r.roles)r.roles={};
+  const all=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
   const sp=splitToCc(r.email,r.contact,r.roles);
-  const inTo=(sp.to||'').split(',').map(s=>s.trim().toLowerCase()).indexOf(key)>=0;
-  r.roles[key]=inTo?'cc':'to';
-  render();saveRecords();
+  const toArr=(sp.to||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const inTo=toArr.some(x=>x.toLowerCase()===email.toLowerCase());
+  if(inTo){ // moving To -> Cc
+    if(toArr.length<=1){const other=all.find(e=>e.toLowerCase()!==email.toLowerCase());if(!other)return;r.roles[_rk(other)]='to';} // keep one To by promoting another
+    r.roles[_rk(email)]='cc';
+  } else { r.roles[_rk(email)]='to'; }
+  render();await saveRecords(); // wait for the shared save so switching projects keeps it
 }
 function emailUrl(emails,client,subject,body,contact,roles){
   const sub=encodeURIComponent(subject||'Enquiry - HDB Subcontractor');
