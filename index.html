@@ -191,6 +191,7 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .card.nfa{opacity:.92;background:linear-gradient(0deg,#fff,#fff)}
 .card.nfa .cname{color:#e91e8c!important;font-weight:800!important}
 td.nfa-name{color:#e91e8c!important;font-weight:800!important}
+.colchk{vertical-align:middle;margin-right:4px;cursor:pointer;accent-color:#1a56a0}
 .cbadge{background:var(--bgreen);color:var(--green);border:1px solid #a7f3d0}
 .qrbadge{background:var(--bamber);color:var(--amber);border:1px solid #fcd34d}
 .invbadge{background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd}
@@ -708,6 +709,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
         <button class="vb act" id="vbG" onclick="setView('grid')" title="Cards"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
         <button class="vb" id="vbT" onclick="setView('table')" title="Table"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg></button>
         <div class="upill"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><input type="text" id="uname" placeholder="Your name" /></div>
+        <button class="btn" id="undoBtn" onclick="doUndo()" title="Undo the last status change (single or bulk)" style="opacity:.45" disabled>↶ Undo</button>
         <button class="btn" onclick="syncNow()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,4 1,10 7,10"/><polyline points="23,20 23,14 17,14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Sync</button>
         <button class="btn" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn" id="emailDefBtn" onclick="resetEmailDefault()" title="Change default email app">📧 <span id="emailDefLabel">Email</span></button>
@@ -715,7 +717,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
         <span class="rc" id="bcaStat" style="font-size:10.5px;color:var(--tx3)"></span>
         <div style="position:relative">
           <button class="btn" id="colToggleBtn" onclick="toggleColPanel()" title="Show/hide columns"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Columns</button>
-          <div id="colPanel" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--sur);border:1.5px solid var(--bdr);border-radius:var(--rl);padding:10px;z-index:100;box-shadow:var(--shadow-md);min-width:200px;max-height:400px;overflow-y:auto">
+          <div id="colPanel" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--sur);border:1.5px solid var(--bdr);border-radius:var(--rl);padding:10px;z-index:9999;box-shadow:var(--shadow-md);min-width:200px;max-height:min(72vh,460px);overflow-y:auto">
             <div style="font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bdr)">Show / Hide Columns</div>
             <div id="colCheckList"></div>
             <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bdr);display:flex;gap:6px">
@@ -745,19 +747,19 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
         <th data-col="3" style="width:130px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Tel/HP</div><div class="col-resize"></div></th>
         <th data-col="4" style="width:200px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Email</div><div class="col-resize"></div></th>
         <th data-col="5" style="width:140px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Remark</div><div class="col-resize"></div></th>
-        <th data-col="6" style="width:110px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Invitation</div><div class="col-resize"></div></th>
-        <th data-col="7" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Not Quote</div><div class="col-resize"></div></th>
-        <th data-col="8"  style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.1</div><div class="col-resize"></div></th>
-        <th data-col="9"  style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.2</div><div class="col-resize"></div></th>
-        <th data-col="10" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.3</div><div class="col-resize"></div></th>
-        <th data-col="11" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.4</div><div class="col-resize"></div></th>
-        <th data-col="12" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.5</div><div class="col-resize"></div></th>
-        <th data-col="13" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.6</div><div class="col-resize"></div></th>
-        <th data-col="14" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.7</div><div class="col-resize"></div></th>
-        <th data-col="15" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.8</div><div class="col-resize"></div></th>
-        <th data-col="16" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.9</div><div class="col-resize"></div></th>
-        <th data-col="17" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Add.10</div><div class="col-resize"></div></th>
-        <th data-col="18" style="width:110px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Quotation Rcvd</div><div class="col-resize"></div></th>
+        <th data-col="6" style="width:110px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_invDate" onmousedown="event.stopPropagation()" onclick="bulkStatus('invDate')" title="Apply to all ticked rows"/>Invitation</div><div class="col-resize"></div></th>
+        <th data-col="7" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_noqDate" onmousedown="event.stopPropagation()" onclick="bulkStatus('noqDate')" title="Apply to all ticked rows"/>Not Quote</div><div class="col-resize"></div></th>
+        <th data-col="8"  style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add1Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add1Date')" title="Apply to all ticked rows"/>Add.1</div><div class="col-resize"></div></th>
+        <th data-col="9"  style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add2Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add2Date')" title="Apply to all ticked rows"/>Add.2</div><div class="col-resize"></div></th>
+        <th data-col="10" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add3Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add3Date')" title="Apply to all ticked rows"/>Add.3</div><div class="col-resize"></div></th>
+        <th data-col="11" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add4Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add4Date')" title="Apply to all ticked rows"/>Add.4</div><div class="col-resize"></div></th>
+        <th data-col="12" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add5Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add5Date')" title="Apply to all ticked rows"/>Add.5</div><div class="col-resize"></div></th>
+        <th data-col="13" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add6Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add6Date')" title="Apply to all ticked rows"/>Add.6</div><div class="col-resize"></div></th>
+        <th data-col="14" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add7Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add7Date')" title="Apply to all ticked rows"/>Add.7</div><div class="col-resize"></div></th>
+        <th data-col="15" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add8Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add8Date')" title="Apply to all ticked rows"/>Add.8</div><div class="col-resize"></div></th>
+        <th data-col="16" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add9Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add9Date')" title="Apply to all ticked rows"/>Add.9</div><div class="col-resize"></div></th>
+        <th data-col="17" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add10Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add10Date')" title="Apply to all ticked rows"/>Add.10</div><div class="col-resize"></div></th>
+        <th data-col="18" style="width:110px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_qrcDate" onmousedown="event.stopPropagation()" onclick="bulkStatus('qrcDate')" title="Apply to all ticked rows"/>Quotation Rcvd</div><div class="col-resize"></div></th>
         <th data-col="19" style="width:160px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Notes</div><div class="col-resize"></div></th>
         <th data-col="20" style="width:150px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>BCA Grade</div><div class="col-resize"></div></th>
       </tr></thead><tbody id="tb"></tbody></table>
@@ -1324,7 +1326,7 @@ function showGradePop(event,grade){
   p.style.top=Math.max(8,Math.min(event.clientY+8,window.innerHeight-h-8))+'px';
 }
 document.addEventListener('click',e=>{const p=document.getElementById('gradePop');if(p&&!e.target.closest('#gradePop')&&!e.target.closest('.gradechip'))p.style.display='none';});
-function setBcaStatus(txt){const el=document.getElementById('bcaStat');if(el)el.textContent=txt;}
+function setBcaStatus(txt){const el=document.getElementById('bcaStat');if(el){el.textContent='';el.style.display='none';}} // status line hidden — not needed
 async function refreshBcaGrades(force){
   if(location.protocol==='file:'){
     loadBcaCache();
@@ -1413,7 +1415,7 @@ function render(){
   upProg();
   const list=getFilt();
   document.getElementById('rc').textContent=`${list.length} result${list.length!==1?'s':''}`;
-  try{updateSelAllBtn();}catch(e){}
+  try{updateSelAllBtn();updateColChecks();}catch(e){}
   if(view==='grid'){
     if(!list.length){document.getElementById('cg').innerHTML=`<div class="empty"><div style="font-size:32px;margin-bottom:10px">🔍</div><div style="font-size:13px;color:var(--tx2)">No subcontractors found</div></div>`;return;}
     document.getElementById('cg').innerHTML=list.map(r=>{
@@ -1546,7 +1548,13 @@ function setCF(f){
   document.getElementById('fc-'+f).classList.add(cls);
   render();
 }
+// ── Undo (snapshots of statusMap before each status change) ──
+let _undoStack=[];
+function pushUndo(withRecords){try{_undoStack.push({s:JSON.stringify(statusMap),r:withRecords?JSON.stringify(records):null});if(_undoStack.length>40)_undoStack.shift();}catch(e){}updateUndoBtn();}
+function doUndo(){if(!_undoStack.length){toast('Nothing to undo');return;}const prev=_undoStack.pop();try{statusMap=JSON.parse(prev.s);if(prev.r)records=JSON.parse(prev.r);}catch(e){return;}saveStatus();if(prev.r){saveRecords();renderSB();}render();updateUndoBtn();toast('Undone ✓');}
+function updateUndoBtn(){const b=document.getElementById('undoBtn');if(b){b.disabled=!_undoStack.length;b.style.opacity=_undoStack.length?'1':'.45';}}
 function toggleField(id, field){
+  pushUndo();
   const st=statusMap[id]||{};
   const today=new Date().toISOString().slice(0,10);
   const newVal=st[field]?'':today;
@@ -1556,12 +1564,37 @@ function toggleField(id, field){
 }
 function isNfa(r){const s=statusMap[r.id]; return !!(s&&s.nfa);}
 function toggleNfa(id, cb){
+  pushUndo();
   const st=statusMap[id]||{};
   statusMap[id]={...st,nfa:cb.checked};
   saveStatus();
   render();
 }
+// Bulk-apply a status column to all ticked (selected) subcontractors
+const _STCOLS=['invDate','noqDate','add1Date','add2Date','add3Date','add4Date','add5Date','add6Date','add7Date','add8Date','add9Date','add10Date','qrcDate'];
+function bulkStatus(field){
+  let ids=[...emailSel];
+  if(!ids.length){ // nothing ticked → offer to apply to everyone shown
+    const shown=shownIds(); if(!shown.length){toast('Nothing shown');return;}
+    if(!confirm('No rows are ticked.\n\nApply this to ALL '+shown.length+' shown subcontractor(s)?\n(Or Cancel, tick the rows you want, then click again.)'))return;
+    ids=shown;
+  }
+  const today=new Date().toISOString().slice(0,10);
+  const allSet=ids.every(id=>{const s=statusMap[id];return s&&s[field];});
+  pushUndo();
+  ids.forEach(id=>{const s=statusMap[id]||{};statusMap[id]={...s,[field]:allSet?'':today};});
+  saveStatus();render();
+  toast((allSet?'Cleared on ':'Set today on ')+ids.length+' subcontractor(s)');
+}
+function updateColChecks(){
+  const ids=[...emailSel];
+  _STCOLS.forEach(f=>{const el=document.getElementById('th_'+f);if(!el)return;
+    if(!ids.length){el.checked=false;el.indeterminate=false;return;}
+    const set=ids.filter(id=>statusMap[id]&&statusMap[id][f]).length;
+    el.checked=set===ids.length; el.indeterminate=set>0&&set<ids.length;});
+}
 function uf(id,field,val){
+  if(field!=='note')pushUndo(); // undo manual date edits (not every note keystroke)
   const st=statusMap[id]||{};
   statusMap[id]={...st,[field]:val};
   clearTimeout(nTimers[id]);
@@ -1614,6 +1647,7 @@ function saveRec(){
 async function delRec(id){
   const r=records.find(x=>x.id===id);if(!r)return;
   if(!confirm(`Remove "${r.company}"?`))return;
+  pushUndo(true); // snapshot records too, so Remove can be undone
   records=records.filter(x=>x.id!==id);delete statusMap[id];
   renderSB();render();
   await saveRecords();await saveStatus();
@@ -1906,7 +1940,7 @@ function updateEmailBar(){
   const n=emailSel.size;
   document.getElementById('emailbarTxt').textContent=n+' selected';
   bar.style.display=n>0?'flex':'none';
-  try{updateSelAllBtn();}catch(e){}
+  try{updateSelAllBtn();updateColChecks();}catch(e){}
 }
 function clearEmailSel(){emailSel.clear();saveEmailSel();render();updateEmailBar();}
 function shownIds(){return getFilt().map(r=>r.id);}
