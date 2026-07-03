@@ -279,15 +279,16 @@ tr.selrow-em td{background:var(--bblue)!important}
 .tw::-webkit-scrollbar{width:5px;height:5px}
 .tw::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
 table{width:max-content;min-width:100%;border-collapse:collapse;font-size:12px;background:var(--sur)}
+#mainTable{min-width:0} /* column widths controlled at runtime, Private-style */
+#mainTable td{max-width:none;white-space:normal;word-break:break-word;overflow:visible;text-overflow:clip;vertical-align:top} /* wrap text so nothing is hidden when a column is narrowed */
+#mainTable th{white-space:normal} /* header labels wrap too when narrow */
 th{padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;background:var(--sur);border-bottom:2px solid var(--bdr);position:sticky;top:0;z-index:1;white-space:nowrap;font-family:'Plus Jakarta Sans',sans-serif;position:relative;user-select:none;overflow:visible;min-width:60px}
 td{padding:9px 12px;border-bottom:1px solid var(--bdr);color:var(--tx);vertical-align:middle;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis}
 td.wrap{white-space:normal;word-break:break-all}
 tr:hover td{background:var(--bblue)}
-/* Column resize handle */
-.col-resize{position:absolute;right:-3px;top:0;bottom:0;width:7px;cursor:col-resize;z-index:10;display:flex;align-items:stretch}
-.col-resize::after{content:'';width:3px;background:transparent;border-radius:2px;transition:background .15s;margin:auto}
-.col-resize:hover::after{background:var(--blue)}
-.col-resize.resizing::after{background:var(--blue)}
+/* Column resize handle (Private-style) */
+.cresize{position:absolute;right:0;top:0;height:100%;width:7px;cursor:col-resize;user-select:none;z-index:3}
+.cresize:hover{background:var(--blue);opacity:.35}
 /* Drag reorder */
 th.drag-over{border-left:3px solid var(--blue);background:var(--bblue)}
 th.dragging-col{opacity:0.5;cursor:grabbing}
@@ -715,17 +716,6 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
         <button class="btn" id="emailDefBtn" onclick="resetEmailDefault()" title="Change default email app">📧 <span id="emailDefLabel">Email</span></button>
         <button class="btn" id="bcaBtn" onclick="refreshBcaGrades(true)" title="Refresh BCA registration grades from data.gov.sg">BCA grades</button>
         <span class="rc" id="bcaStat" style="font-size:10.5px;color:var(--tx3)"></span>
-        <div style="position:relative">
-          <button class="btn" id="colToggleBtn" onclick="toggleColPanel()" title="Show/hide columns"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Columns</button>
-          <div id="colPanel" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--sur);border:1.5px solid var(--bdr);border-radius:var(--rl);padding:10px;z-index:9999;box-shadow:var(--shadow-md);min-width:200px;max-height:min(72vh,460px);overflow-y:auto">
-            <div style="font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bdr)">Show / Hide Columns</div>
-            <div id="colCheckList"></div>
-            <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bdr);display:flex;gap:6px">
-              <button class="btn" style="flex:1;font-size:11px;padding:4px 8px" onclick="setAllCols(true)">Show All</button>
-              <button class="btn" style="flex:1;font-size:11px;padding:4px 8px" onclick="setAllCols(false)">Hide All</button>
-            </div>
-          </div>
-        </div>
         <button class="btn btn-blue" onclick="openAdd()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add</button>
       </div>
     </div>
@@ -740,28 +730,23 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     </div>
     <div class="cards-area" id="ca"><div class="cgrid" id="cg"></div></div>
     <div class="tw" id="ta" style="display:none">
-      <table id="mainTable"><thead><tr id="theadRow">
-        <th data-col="0" style="width:160px"><div class="th-content"><input type="checkbox" id="selAllTh" onmousedown="event.stopPropagation()" onclick="toggleSelectAllShown()" title="Select / deselect all shown" style="margin-right:6px;vertical-align:middle;cursor:pointer" /><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Company</div><div class="col-resize"></div></th>
-        <th data-col="1" style="width:140px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Trade</div><div class="col-resize"></div></th>
-        <th data-col="2" style="width:130px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Contact</div><div class="col-resize"></div></th>
-        <th data-col="3" style="width:130px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Tel/HP</div><div class="col-resize"></div></th>
-        <th data-col="4" style="width:200px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Email</div><div class="col-resize"></div></th>
-        <th data-col="5" style="width:140px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Remark</div><div class="col-resize"></div></th>
-        <th data-col="6" style="width:110px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_invDate" onmousedown="event.stopPropagation()" onclick="bulkStatus('invDate')" title="Apply to all ticked rows"/>Invitation</div><div class="col-resize"></div></th>
-        <th data-col="7" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_noqDate" onmousedown="event.stopPropagation()" onclick="bulkStatus('noqDate')" title="Apply to all ticked rows"/>Not Quote</div><div class="col-resize"></div></th>
-        <th data-col="8"  style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add1Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add1Date')" title="Apply to all ticked rows"/>Add.1</div><div class="col-resize"></div></th>
-        <th data-col="9"  style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add2Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add2Date')" title="Apply to all ticked rows"/>Add.2</div><div class="col-resize"></div></th>
-        <th data-col="10" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add3Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add3Date')" title="Apply to all ticked rows"/>Add.3</div><div class="col-resize"></div></th>
-        <th data-col="11" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add4Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add4Date')" title="Apply to all ticked rows"/>Add.4</div><div class="col-resize"></div></th>
-        <th data-col="12" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add5Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add5Date')" title="Apply to all ticked rows"/>Add.5</div><div class="col-resize"></div></th>
-        <th data-col="13" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add6Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add6Date')" title="Apply to all ticked rows"/>Add.6</div><div class="col-resize"></div></th>
-        <th data-col="14" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add7Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add7Date')" title="Apply to all ticked rows"/>Add.7</div><div class="col-resize"></div></th>
-        <th data-col="15" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add8Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add8Date')" title="Apply to all ticked rows"/>Add.8</div><div class="col-resize"></div></th>
-        <th data-col="16" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add9Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add9Date')" title="Apply to all ticked rows"/>Add.9</div><div class="col-resize"></div></th>
-        <th data-col="17" style="width:100px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_add10Date" onmousedown="event.stopPropagation()" onclick="bulkStatus('add10Date')" title="Apply to all ticked rows"/>Add.10</div><div class="col-resize"></div></th>
-        <th data-col="18" style="width:110px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg><input type="checkbox" class="colchk" id="th_qrcDate" onmousedown="event.stopPropagation()" onclick="bulkStatus('qrcDate')" title="Apply to all ticked rows"/>Quotation Rcvd</div><div class="col-resize"></div></th>
-        <th data-col="19" style="width:160px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>Notes</div><div class="col-resize"></div></th>
-        <th data-col="20" style="width:150px"><div class="th-content"><svg class="drag-grip" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>BCA Grade</div><div class="col-resize"></div></th>
+      <table id="mainTable"><thead><tr>
+        <th><input type="checkbox" id="selAllTh" onclick="toggleSelectAllShown()" title="Select / deselect all shown" style="margin-right:6px;vertical-align:middle;cursor:pointer" />Company</th>
+        <th>Trade</th><th>Contact</th><th>Tel/HP</th><th>Email</th><th>Remark</th>
+        <th><input type="checkbox" class="colchk" id="th_invDate" onclick="bulkStatus('invDate')" title="Apply Invitation (today) to all ticked rows"/> Invitation</th>
+        <th><input type="checkbox" class="colchk" id="th_noqDate" onclick="bulkStatus('noqDate')" title="Apply to all ticked rows"/> Not Quote</th>
+        <th><input type="checkbox" class="colchk" id="th_add1Date" onclick="bulkStatus('add1Date')" title="Apply to all ticked rows"/> Add.1</th>
+        <th><input type="checkbox" class="colchk" id="th_add2Date" onclick="bulkStatus('add2Date')" title="Apply to all ticked rows"/> Add.2</th>
+        <th><input type="checkbox" class="colchk" id="th_add3Date" onclick="bulkStatus('add3Date')" title="Apply to all ticked rows"/> Add.3</th>
+        <th><input type="checkbox" class="colchk" id="th_add4Date" onclick="bulkStatus('add4Date')" title="Apply to all ticked rows"/> Add.4</th>
+        <th><input type="checkbox" class="colchk" id="th_add5Date" onclick="bulkStatus('add5Date')" title="Apply to all ticked rows"/> Add.5</th>
+        <th><input type="checkbox" class="colchk" id="th_add6Date" onclick="bulkStatus('add6Date')" title="Apply to all ticked rows"/> Add.6</th>
+        <th><input type="checkbox" class="colchk" id="th_add7Date" onclick="bulkStatus('add7Date')" title="Apply to all ticked rows"/> Add.7</th>
+        <th><input type="checkbox" class="colchk" id="th_add8Date" onclick="bulkStatus('add8Date')" title="Apply to all ticked rows"/> Add.8</th>
+        <th><input type="checkbox" class="colchk" id="th_add9Date" onclick="bulkStatus('add9Date')" title="Apply to all ticked rows"/> Add.9</th>
+        <th><input type="checkbox" class="colchk" id="th_add10Date" onclick="bulkStatus('add10Date')" title="Apply to all ticked rows"/> Add.10</th>
+        <th><input type="checkbox" class="colchk" id="th_qrcDate" onclick="bulkStatus('qrcDate')" title="Apply to all ticked rows"/> Quotation Rcvd</th>
+        <th>Notes</th><th>BCA Grade</th>
       </tr></thead><tbody id="tb"></tbody></table>
     </div>
   </div>
@@ -1541,6 +1526,7 @@ function setView(v){
   document.getElementById('vbG').classList.toggle('act',v==='grid');
   document.getElementById('vbT').classList.toggle('act',v==='table');
   render();
+  if(v==='table')setTimeout(initColResize,50);
 }
 function setCF(f){
   cf=f;['all','yes','no','qr','nq','nfa'].forEach(k=>{const el=document.getElementById('fc-'+k);if(el)el.classList.remove('act','actg','acta','actr');});
@@ -1771,6 +1757,11 @@ const DEFAULT_TPLS=[
   {name:'Tender Clarification',subject:'{project} - Tender Clarification - {trade}',body:'Dear {contact},\n\nWe refer to your quotation for the {trade} works on {project} and would like to seek your clarification on the following:\n\n1. \n2. \n3. \n\nKindly revert with your response by {date}. Thank you for your cooperation.'}
 ];
 let _tpls=[],_tplIdx=0;
+// Tombstone: names of templates the user deliberately deleted, so built-in
+// defaults don't get re-added on reload (per-project, synced like templates).
+function tplsDelKey(){return currentProject?'hdb_email_templates_del_'+currentProject.id:'hdb_email_templates_del';}
+let _tplDel=new Set();
+function saveTplDel(){const arr=[..._tplDel];try{localStorage.setItem(tplsDelKey(),JSON.stringify(arr));}catch(e){}try{if(typeof sset==='function')sset(tplsDelKey(),arr);}catch(e){}}
 function getTpls(){
   try{const a=JSON.parse(localStorage.getItem(tplsLocalKey()));if(Array.isArray(a)&&a.length)return a;}catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT_TPLS));
@@ -1801,13 +1792,17 @@ async function loadTplsFromCloud(){
   const ckey=tplsCloudKey(), lkey=tplsLocalKey();
   try{
     if(typeof sget!=='function')return;
+    // load the deleted-templates tombstone (cloud + local) first
+    _tplDel=new Set();
+    try{const cd=await sget(tplsDelKey());if(Array.isArray(cd))cd.forEach(n=>_tplDel.add((''+n).toLowerCase()));}catch(e){}
+    try{const ld=JSON.parse(localStorage.getItem(tplsDelKey()));if(Array.isArray(ld))ld.forEach(n=>_tplDel.add((''+n).toLowerCase()));}catch(e){}
     let cloud=await sget(ckey);
     if((!cloud||!cloud.length)){ try{const legacy=await sget('hdb_email_templates'); if(Array.isArray(legacy)&&legacy.length) cloud=legacy;}catch(e){} } // seed new per-project set from your previous templates
     const local=getTpls();
     // MERGE by name — never drop a template; also ensure built-in templates are always present
     let merged=Array.isArray(cloud)?cloud.slice():[];
     const have=new Set(merged.map(t=>((t&&t.name)||'').toLowerCase()));
-    [].concat(local,DEFAULT_TPLS).forEach(t=>{const nm=((t&&t.name)||'').toLowerCase();if(nm&&!have.has(nm)){merged.push(t);have.add(nm);}});
+    [].concat(local,DEFAULT_TPLS).forEach(t=>{const nm=((t&&t.name)||'').toLowerCase();if(nm&&!have.has(nm)&&!_tplDel.has(nm)){merged.push(t);have.add(nm);}}); // don't resurrect a deliberately-deleted template
     merged.forEach(t=>{if(t&&t.subject!==undefined)t.subject=enforceProjectFirst(t.subject);}); // every subject leads with {project}
     merged.forEach(t=>{if(t&&t.body)t.body=t.body.replace(/\s*Thank you and best regards,?\s*\{name\}\s*Wee Hur Construction Pte Ltd\s*$/i,'').replace(/\s+$/,'');}); // strip old closing signature
     _tpls=merged;
@@ -1823,16 +1818,18 @@ function tplOptions(){return _tpls.map((t,i)=>`<option value="${i}"${i===_tplIdx
 function loadTplInto(){const t=_tpls[_tplIdx]||{subject:'',body:''};const s=document.getElementById('tplSubj'),b=document.getElementById('tplBody');if(s)s.value=t.subject||'';if(b)b.value=t.body||'';updateTplLinks();}
 function selectTpl(idx){_tplIdx=+idx;loadTplInto();}
 function saveTpl(){if(!_tpls[_tplIdx])return;_tpls[_tplIdx].subject=document.getElementById('tplSubj').value;_tpls[_tplIdx].body=document.getElementById('tplBody').value;saveTpls();}
-function newTpl(){const n=prompt('Name for the new template:','New template');if(!n)return;_tpls.push({name:n.trim(),subject:'',body:''});_tplIdx=_tpls.length-1;saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();toast('Template added — edit it below');}
-function renameTpl(){if(!_tpls[_tplIdx])return;const n=prompt('Rename template:',_tpls[_tplIdx].name||'');if(!n)return;_tpls[_tplIdx].name=n.trim();saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();}
-function delTpl(){if(_tpls.length<=1){toast('Keep at least one template');return;}if(!confirm('Delete this template?'))return;_tpls.splice(_tplIdx,1);_tplIdx=0;saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();}
+function newTpl(){const n=prompt('Name for the new template:','New template');if(!n)return;const nm=n.trim().toLowerCase();if(_tplDel.has(nm)){_tplDel.delete(nm);saveTplDel();}_tpls.push({name:n.trim(),subject:'',body:''});_tplIdx=_tpls.length-1;saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();toast('Template added — edit it below');}
+function renameTpl(){if(!_tpls[_tplIdx])return;const n=prompt('Rename template:',_tpls[_tplIdx].name||'');if(!n)return;const nm=n.trim().toLowerCase();if(_tplDel.has(nm)){_tplDel.delete(nm);saveTplDel();}_tpls[_tplIdx].name=n.trim();saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();}
+function delTpl(){if(_tpls.length<=1){toast('Keep at least one template');return;}if(!confirm('Delete this template?'))return;const dn=((_tpls[_tplIdx]&&_tpls[_tplIdx].name)||'').toLowerCase();if(dn){_tplDel.add(dn);saveTplDel();}_tpls.splice(_tplIdx,1);_tplIdx=0;saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();}
 function toBold(s){if(!s)return s;let o='';for(const ch of(''+s)){const c=ch.codePointAt(0);if(c>=65&&c<=90)o+=String.fromCodePoint(0x1D400+(c-65));else if(c>=97&&c<=122)o+=String.fromCodePoint(0x1D41A+(c-97));else if(c>=48&&c<=57)o+=String.fromCodePoint(0x1D7CE+(c-48));else o+=ch;}return o;}
 function fillTpl(s,it,bold){
   const proj=(typeof currentProject!=='undefined'&&currentProject)?currentProject.name:'';
   const un=document.getElementById('uname')?document.getElementById('uname').value.trim():'';
   const dt=document.getElementById('tplDate')&&document.getElementById('tplDate').value?document.getElementById('tplDate').value:'______';
   const B=bold?toBold:(x=>x); // bold {project}/{trade}/{date} only in the body
-  return (s||'').replace(/\{company\}/g,it.company||'').replace(/\{contact\}/g,it.contact||'').replace(/\{trade\}/g,B(it.trade||'')).replace(/\{project\}/g,B(proj)).replace(/\{name\}/g,un).replace(/\{date\}/g,B(dt));
+  const ft=(typeof getFullTitle==='function')?getFullTitle():'';
+  const dl=(typeof getDocLinks==='function'?getDocLinks():[]).join('\n'); // plain URLs (not bold, so they stay clickable)
+  return (s||'').replace(/\{documentlinks?\}/gi,dl).replace(/\{fulltitle\}/gi,B(ft)).replace(/\{company\}/g,it.company||'').replace(/\{contact\}/g,it.contact||'').replace(/\{trade\}/g,B(it.trade||'')).replace(/\{project\}/g,B(proj)).replace(/\{name\}/g,un).replace(/\{date\}/g,B(dt));
 }
 function toggleTplBox(){
   const b=document.getElementById('tplBox');const a=document.getElementById('tplArrow');
@@ -1857,11 +1854,12 @@ function showBatchModal(items,client){
       +'<div class="tpltoggle" onclick="toggleTplBox()"><span id="tplArrow">▸</span> Email template <span style="color:var(--tx3);font-weight:400">(applied to every email)</span></div>'
       +'<div id="tplBox" style="display:none;padding:0 18px 10px">'
       +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:7px"><select id="tplSel" onchange="selectTpl(this.value)" style="flex:1;padding:5px 8px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit"></select><button class="btn" style="padding:5px 9px;font-size:11px" onclick="newTpl()">+ New</button><button class="btn" style="padding:5px 9px;font-size:11px" onclick="renameTpl()">Rename</button><button class="btn" style="padding:5px 9px;font-size:11px;color:var(--red)" onclick="delTpl()">Delete</button></div>'
+      +'<div style="margin-bottom:7px"><label style="font-size:11.5px;color:var(--tx2);font-weight:600;display:block;margin-bottom:3px">📋 Project full title / reference <span style="font-weight:400;color:var(--tx3)">— set once per project; insert with {fulltitle}</span></label><textarea id="tplFullTitle" oninput="saveFullTitle()" rows="2" placeholder="e.g. DESIGN AND BUILD OF COASTAL DORMITORY EXPANSION FOR CHANGI EAST DEVELOPMENT&#10;REFERENCE NO.: CE/25/T5/P/896" style="width:100%;padding:6px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea></div>'
       +'<input id="tplSubj" oninput="saveTpl()" placeholder="Subject" style="width:100%;padding:6px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;margin-bottom:6px;font-family:inherit" />'
       +'<textarea id="tplBody" oninput="saveTpl();updateTplLinks()" rows="8" placeholder="Message body" style="width:100%;padding:7px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea>'
       +'<div id="tplLinks" style="font-size:10.5px;margin-top:5px;word-break:break-all"></div>'
       +'<div style="display:flex;align-items:center;gap:7px;margin-top:7px"><label style="font-size:11.5px;color:var(--tx2);font-weight:500;white-space:nowrap">Quote deadline {date}:</label><input id="tplDate" placeholder="e.g. 20 Jun 2026" style="flex:1;padding:5px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit" /></div>'
-      +'<div style="font-size:10.5px;color:var(--tx3);margin-top:6px">Placeholders auto-fill per subcontractor: <b>{company}</b> <b>{contact}</b> <b>{trade}</b> <b>{project}</b> <b>{name}</b> <b>{date}</b>.</div>'
+      +'<div style="font-size:10.5px;color:var(--tx3);margin-top:6px">Placeholders auto-fill per subcontractor: <b>{company}</b> <b>{contact}</b> <b>{trade}</b> <b>{project}</b> <b>{fulltitle}</b> <b>{documentlink}</b> <b>{name}</b> <b>{date}</b>.</div>'
       +'</div>'
       +'<div id="attBox" style="padding:10px 18px 12px;border-top:1px solid var(--bdr);margin-top:4px">'
       +'<div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:4px">🔗 Document links <span style="font-weight:400;color:var(--tx3)">— added to every email body (works with “Open all” / webmail too)</span></div>'
@@ -1878,7 +1876,7 @@ function showBatchModal(items,client){
   document.getElementById('batchSub').textContent=(client==='system')?`Click each ✉ Open below — ${cl} opens one compose window per click. (One-click "Open all" isn't possible with a desktop mail app.)`:`Click each ✉ Open, or use "Open all" to open all in ${cl}.`;
   const oab=document.getElementById('openAllBtn');if(oab)oab.style.display=(client==='system')?'none':'';
   document.getElementById('batchList').innerHTML=items.map((it,i)=>`<div class="batchrow" id="brow${i}"><span class="bname" title="${(it.emails||'').replace(/"/g,'&quot;')}">${it.company}</span><button class="btn" style="padding:5px 9px;font-size:12px" onclick="copyOneBatch(${i})" title="Copy this email to paste into your mail">📋</button><button class="btn btn-open" onclick="openOneBatch(${i})">✉ Open</button></div>`).join('');
-  loadDocLinks();
+  loadFullTitle();loadDocLinks();
   ov.classList.add('open');
 }
 function openOneBatch(i){
@@ -1919,11 +1917,16 @@ function openAllBatch(){
 }
 function closeBatch(){const ov=document.getElementById('batchOv');if(ov)ov.classList.remove('open');}
 // ── Document links (added to email body; works with webmail too) ──
+// Project full title / reference (per-project; inserted via {fulltitle})
+function fullTitleKey(){return 'hdb_fulltitle_'+(currentProject?currentProject.id:'none');}
+function loadFullTitle(){const el=document.getElementById('tplFullTitle');if(!el)return;try{el.value=localStorage.getItem(fullTitleKey())||'';}catch(e){}}
+function saveFullTitle(){const el=document.getElementById('tplFullTitle');if(!el)return;try{localStorage.setItem(fullTitleKey(),el.value);}catch(e){}}
+function getFullTitle(){const el=document.getElementById('tplFullTitle');let v=el?el.value:'';if(!v){try{v=localStorage.getItem(fullTitleKey())||'';}catch(e){}}return v;}
 function docLinksKey(){return 'hdb_doclinks_'+(currentProject?currentProject.id:'none');}
 function loadDocLinks(){const el=document.getElementById('docLinks');if(!el)return;try{el.value=localStorage.getItem(docLinksKey())||'';}catch(e){}}
 function saveDocLinks(){const el=document.getElementById('docLinks');if(!el)return;try{localStorage.setItem(docLinksKey(),el.value);}catch(e){}}
 function getDocLinks(){const el=document.getElementById('docLinks');let raw=el?el.value:'';if(!raw){try{raw=localStorage.getItem(docLinksKey())||'';}catch(e){}}return raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);}
-function bodyWithLinks(body){const lk=getDocLinks();return lk.length?body+'\n\nDocuments:\n'+lk.join('\n'):body;}
+function bodyWithLinks(body){const lk=getDocLinks();if(!lk.length)return body;if(body.indexOf(lk[0])>=0)return body;/* links already placed inline via {documentlink} */return body+'\n\nDocuments:\n'+lk.join('\n');}
 // ── Multi-select for batch email ────────────────────────────────
 let emailSel=new Set();
 function emailSelKey(){return 'hdb_emailsel_'+(currentProject?currentProject.id:'none');}
@@ -2282,21 +2285,9 @@ function saveColVisibility(){
 }
 
 function applyColVisibility(){
-  const table=document.getElementById('mainTable');
-  if(!table)return;
-  const ths=[...table.querySelectorAll('thead th')];
-  const rows=[...table.querySelectorAll('tbody tr')];
-  ths.forEach((th,i)=>{
-    const vis=colVisible[i]!==false;
-    th.style.display=vis?'':'none';
-  });
-  rows.forEach(row=>{
-    const tds=[...row.querySelectorAll('td')];
-    tds.forEach((td,i)=>{
-      const vis=colVisible[i]!==false;
-      td.style.display=vis?'':'none';
-    });
-  });
+  // Columns feature removed — force EVERY column visible so old hidden-column
+  // memory can't misalign the fixed-layout table (was causing giant gaps).
+  document.querySelectorAll('#mainTable th,#mainTable td').forEach(c=>{if(c.style.display==='none')c.style.display='';});
 }
 
 function buildColPanel(){
@@ -2331,7 +2322,7 @@ function toggleColPanel(){
   btn.style.background=isOpen?'':'var(--bblue)';
   btn.style.borderColor=isOpen?'':'var(--blue)';
   btn.style.color=isOpen?'':'var(--blue)';
-  if(!isOpen) buildColPanel();
+  if(!isOpen){if(panel.parentNode!==document.body)document.body.appendChild(panel);const r=btn.getBoundingClientRect();panel.style.top=(r.bottom+6)+'px';panel.style.right=Math.max(8,window.innerWidth-r.right)+'px';buildColPanel();}
 }
 
 // Close col panel when clicking outside
@@ -2355,61 +2346,30 @@ render=function(){
 loadColVisibility();
 setTimeout(applyColVisibility,500);
 
-// ── Table column resize ───────────────────────────────────────────
-(function initColResize(){
-  let resizing=false, startX=0, startW=0, targetTh=null;
-
-  function onMouseDown(e){
-    const handle=e.target.closest('.col-resize');
-    if(!handle) return;
-    e.preventDefault(); e.stopPropagation();
-    targetTh=handle.closest('th');
-    startX=e.clientX; startW=targetTh.offsetWidth;
-    resizing=true;
-    handle.classList.add('resizing');
-    document.body.style.cursor='col-resize';
-    document.body.style.userSelect='none';
-  }
-
-  function onMouseMove(e){
-    if(!resizing||!targetTh) return;
-    const w=Math.max(60, startW+(e.clientX-startX));
-    targetTh.style.width=w+'px';
-    targetTh.style.minWidth=w+'px';
-  }
-
-  function onMouseUp(){
-    if(!resizing) return;
-    resizing=false;
-    document.body.style.cursor='';
-    document.body.style.userSelect='';
-    document.querySelectorAll('.col-resize.resizing').forEach(h=>h.classList.remove('resizing'));
-    targetTh=null;
-    saveColWidths();
-  }
-
-  document.addEventListener('mousedown', onMouseDown, true);
-  document.addEventListener('mousemove', onMouseMove);
-  document.addEventListener('mouseup', onMouseUp);
-
-  function saveColWidths(){
-    try{
-      const ths=[...document.querySelectorAll('#mainTable thead th')];
-      localStorage.setItem('tableColWidths', JSON.stringify(ths.map(t=>t.offsetWidth)));
-    }catch(e){}
-  }
-
-  function restoreColWidths(){
-    try{
-      const saved=localStorage.getItem('tableColWidths');
-      if(!saved) return;
-      const widths=JSON.parse(saved);
-      const ths=[...document.querySelectorAll('#mainTable thead th')];
-      ths.forEach((th,i)=>{ if(widths[i]){th.style.width=widths[i]+'px'; th.style.minWidth=widths[i]+'px';} });
-    }catch(e){}
-  }
-  setTimeout(restoreColWidths, 600);
-})();
+// ── Table column resize (Private-style: drag th edge, mouse-based) ──
+function saveColW(table){
+  try{ localStorage.setItem('hdb_colw', JSON.stringify([...table.querySelectorAll('thead th')].map(th=>th.offsetWidth))); }catch(e){}
+}
+function initColResize(){
+  const tb=document.getElementById('tb');if(!tb)return;
+  const table=tb.closest('table');if(!table)return;
+  const ths=[...table.querySelectorAll('thead th')];
+  if(!ths.length||ths[0].offsetWidth===0)return; // table not visible yet
+  let saved=null;try{saved=JSON.parse(localStorage.getItem('hdb_colw'));}catch(e){}
+  ths.forEach((th,i)=>{ const w=(saved&&saved[i])?saved[i]:th.offsetWidth; th.style.width=w+'px'; });
+  table.style.tableLayout='fixed';
+  if(table._cr)return; table._cr=true; // wire handles only once
+  ths.forEach(th=>{
+    const h=document.createElement('div');h.className='cresize';th.appendChild(h);
+    h.addEventListener('mousedown',e=>{
+      e.preventDefault();e.stopPropagation();
+      const startX=e.pageX,startW=th.offsetWidth;
+      function move(ev){th.style.width=Math.max(48,startW+ev.pageX-startX)+'px';}
+      function up(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);saveColW(table);}
+      document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
+    });
+  });
+}
 
 // ── Table column drag-to-reorder ──────────────────────────────────
 (function initColReorder(){
@@ -2716,9 +2676,9 @@ document.addEventListener('mouseup',()=>{
 (function(){
   if(typeof render!=='function')return;
   const _r=render;
-  window.render=function(){const ret=_r.apply(this,arguments);applyColOrder();initColDrag();return ret;};
+  window.render=function(){const ret=_r.apply(this,arguments);applyColOrder();applyColVisibility();initColDrag();return ret;};
 })();
-setTimeout(()=>{initColDrag();applyColOrder();},200);
+setTimeout(()=>{initColDrag();applyColOrder();applyColVisibility();},200);
 </script>
 </body>
 </html>
