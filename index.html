@@ -1803,6 +1803,8 @@ async function loadTplsFromCloud(){
     let merged=Array.isArray(cloud)?cloud.slice():[];
     const have=new Set(merged.map(t=>((t&&t.name)||'').toLowerCase()));
     [].concat(local,DEFAULT_TPLS).forEach(t=>{const nm=((t&&t.name)||'').toLowerCase();if(nm&&!have.has(nm)&&!_tplDel.has(nm)){merged.push(t);have.add(nm);}}); // don't resurrect a deliberately-deleted template
+    if(_tplDel.size)merged=merged.filter(t=>!_tplDel.has(((t&&t.name)||'').toLowerCase())); // deletion wins even if a stale copy/old client pushed it back to the cloud
+    if(!merged.length)merged=JSON.parse(JSON.stringify(DEFAULT_TPLS)); // never end up with no templates
     merged.forEach(t=>{if(t&&t.subject!==undefined)t.subject=enforceProjectFirst(t.subject);}); // every subject leads with {project}
     merged.forEach(t=>{if(t&&t.body)t.body=t.body.replace(/\s*Thank you and best regards,?\s*\{name\}\s*Wee Hur Construction Pte Ltd\s*$/i,'').replace(/\s+$/,'');}); // strip old closing signature
     _tpls=merged;
@@ -1812,7 +1814,7 @@ async function loadTplsFromCloud(){
     refreshTplUI(!box||box.style.display==='none'); // don't clobber fields while editing
   }catch(e){}
   // live updates for this project
-  try{if(typeof listenKey==='function')listenKey(ckey,val=>{if(ckey!==tplsCloudKey())return;if(Array.isArray(val)&&val.length){_tpls=val;try{localStorage.setItem(lkey,JSON.stringify(val));}catch(e){}const box=document.getElementById('tplBox');refreshTplUI(!box||box.style.display==='none');}});}catch(e){}
+  try{if(typeof listenKey==='function')listenKey(ckey,val=>{if(ckey!==tplsCloudKey())return;if(Array.isArray(val)&&val.length){let f=_tplDel.size?val.filter(t=>!_tplDel.has(((t&&t.name)||'').toLowerCase())):val;if(!f.length)f=val;_tpls=f;try{localStorage.setItem(lkey,JSON.stringify(f));}catch(e){}const box=document.getElementById('tplBox');refreshTplUI(!box||box.style.display==='none');}});}catch(e){}
 }
 function tplOptions(){return _tpls.map((t,i)=>`<option value="${i}"${i===_tplIdx?' selected':''}>${(t.name||'Template '+(i+1)).replace(/</g,'&lt;').replace(/"/g,'&quot;')}</option>`).join('');}
 function loadTplInto(){const t=_tpls[_tplIdx]||{subject:'',body:''};const s=document.getElementById('tplSubj'),b=document.getElementById('tplBody');if(s)s.value=t.subject||'';if(b)b.value=t.body||'';updateTplLinks();}
