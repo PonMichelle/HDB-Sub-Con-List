@@ -1146,8 +1146,15 @@ async function loadStatusForProject(){
   }
 }
 
+function migrateNfaFromStatus(){
+  // one-time carry-forward: "Not for ask quote" used to be per-project (statusMap); now it's shared on the record.
+  let changed=false;
+  records.forEach(rec=>{const st=statusMap[rec.id];if(st&&st.nfa&&!rec.nfa){rec.nfa=true;changed=true;}});
+  if(changed)saveRecords();
+}
 async function loadAll(){
   await loadStatusForProject();
+  migrateNfaFromStatus();
   loadBcaCache();
   buildBakedIndex();
   applyTradeRenames();
@@ -1372,8 +1379,8 @@ function sortList(arr){
   else if(sortMode==='trade-za'){arr.sort((a,b)=>(b.trade||'').localeCompare(a.trade||'')||(a.company||'').localeCompare(b.company||''));}
   return arr;
 }
-function cfMatch(st){
-  const p={yes:!!st.invDate,no:!st.invDate,qr:!!st.qrcDate,nq:!!st.noqDate,nfa:!!st.nfa};
+function cfMatch(st,r){
+  const p={yes:!!st.invDate,no:!st.invDate,qr:!!st.qrcDate,nq:!!st.noqDate,nfa:!!(r&&r.nfa)};
   for(const k in cf){if(cf[k]===1&&!p[k])return false;if(cf[k]===-1&&p[k])return false;}
   return true;
 }
@@ -1383,7 +1390,7 @@ function getFilt(){
     const mt=activeTrade==='ALL'||r.trade===activeTrade;
     const ms=!q||r.company.toLowerCase().includes(q)||(r.contact||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.hp||'').includes(q)||(r.email||'').toLowerCase().includes(q)||r.trade.toLowerCase().includes(q)||(r.remark||'').toLowerCase().includes(q)||getGrade(r).toLowerCase().includes(q);
     const st=statusMap[r.id]||{};
-    const mc=cfMatch(st);
+    const mc=cfMatch(st,r);
     return mt&&ms&&mc;
   })).sort((a,b)=>(isNfa(a)?1:0)-(isNfa(b)?1:0)); // "not for ask quote" always at the bottom (stable)
 }
@@ -1415,7 +1422,7 @@ function render(){
     if(!list.length){document.getElementById('cg').innerHTML=`<div class="empty"><div style="font-size:32px;margin-bottom:10px">🔍</div><div style="font-size:13px;color:var(--tx2)">No subcontractors found</div></div>`;return;}
     document.getElementById('cg').innerHTML=list.map(r=>{
       const st=statusMap[r.id]||{};
-      const nfa=!!st.nfa;
+      const nfa=!!r.nfa;
       const inv=!!st.invDate; const noq=!!st.noqDate; const qrc=!!st.qrcDate;
       const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const ph=r.tel||r.hp;
@@ -1491,7 +1498,7 @@ function render(){
     if(!list.length){document.getElementById('tb').innerHTML=`<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--tx3)">No results</td></tr>`;return;}
     document.getElementById('tb').innerHTML=list.map(r=>{
       const st=statusMap[r.id]||{};
-      const nfa=!!st.nfa;
+      const nfa=!!r.nfa;
       const inv=!!st.invDate; const noq=!!st.noqDate; const qrc=!!st.qrcDate;
       const ads=[1,2,3,4,5,6,7,8,9,10].map(n=>!!st[`add${n}Date`]);
       const emList=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);
@@ -1571,12 +1578,13 @@ function toggleField(id, field){
   saveStatus();
   render();
 }
-function isNfa(r){const s=statusMap[r.id]; return !!(s&&s.nfa);}
+function isNfa(r){return !!(r&&r.nfa);}
 function toggleNfa(id, cb){
-  pushUndo();
-  const st=statusMap[id]||{};
-  statusMap[id]={...st,nfa:cb.checked};
-  saveStatus();
+  const rec=records.find(x=>x.id===id);
+  if(!rec)return;
+  pushUndo(true);
+  rec.nfa=cb.checked;
+  saveRecords();
   render();
 }
 // Bulk-apply a status column to all ticked (selected) subcontractors
