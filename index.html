@@ -1551,6 +1551,7 @@ function render(){
           <input type="text" class="ni" placeholder="Remarks / notes..." value="${nt.replace(/"/g,'&quot;')}" oninput="uf(${r.id},'note',this.value)" style="margin-top:8px" />
           <div class="cfoot">
             <button class="btn" onclick="openEdit(${r.id})">Edit</button>
+            <button class="btn" onclick="openDuplicate(${r.id})" title="Copy this subcontractor's details into a new record under a different trade">⧉ Duplicate</button>
             <button class="btn" style="color:var(--red)" onclick="delRec(${r.id})">Remove</button>
           </div>
         </div>
@@ -1700,6 +1701,21 @@ function openEdit(id){
   document.getElementById('fco').value=r.company||'';
   document.getElementById('fct').value=r.contact||'';
   document.getElementById('ftr').value=r.trade||'';
+  document.getElementById('ftel').value=r.tel||'';
+  document.getElementById('fhp').value=r.hp||'';
+  document.getElementById('fem').value=r.email||'';
+  document.getElementById('fsite').value=r.site||'';
+  document.getElementById('ftrk').value=r.track||'';
+  document.getElementById('frm').value=r.remark||'';
+  document.getElementById('mo').classList.add('open');
+}
+function openDuplicate(id){
+  const r=records.find(x=>x.id===id);if(!r)return;
+  eid=null;document.getElementById('mt').textContent='Duplicate Subcontractor — pick the new trade';
+  popTr();
+  document.getElementById('fco').value=r.company||'';
+  document.getElementById('fct').value=r.contact||'';
+  document.getElementById('ftr').value=''; // force picking a different trade
   document.getElementById('ftel').value=r.tel||'';
   document.getElementById('fhp').value=r.hp||'';
   document.getElementById('fem').value=r.email||'';
