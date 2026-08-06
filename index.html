@@ -104,6 +104,7 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .sdot.err{background:var(--red)}
 .stxt{font-size:10.5px;color:var(--tx3)}
 .sbcnt{font-size:10.5px;color:var(--tx3);margin-top:2px}
+.sbver{font-size:9.5px;color:var(--tx3);opacity:.6;margin-top:2px}
 
 /* Trade search */
 .tsw{padding:10px 12px;border-bottom:1px solid var(--bdr);background:var(--sur)}
@@ -688,6 +689,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-08-06</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -769,6 +771,12 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
   <div class="fg"><label>Website <span style="color:var(--tx3);font-weight:400">(optional — auto-detected from email if blank)</span></label><input type="text" id="fsite" placeholder="https://company.com.sg" /></div>
   <div class="fg"><label>Track record link <span style="color:var(--tx3);font-weight:400">(paste a OneDrive / SharePoint share link to the PDF)</span></label><input type="text" id="ftrk" placeholder="https://weehur.sharepoint.com/..." /></div>
   <div class="fg"><label>Remark</label><textarea id="frm" rows="2"></textarea></div>
+  <div class="fg" id="fsibRow" style="display:none;background:var(--sur2);border:1px solid var(--bdr2);border-radius:6px;padding:8px 10px">
+    <label style="display:flex;align-items:flex-start;gap:7px;font-weight:400;cursor:pointer">
+      <input type="checkbox" id="fsibSync" style="margin-top:2px" />
+      <span id="fsibLabel" style="font-size:11.5px;color:var(--tx2)"></span>
+    </label>
+  </div>
   <div class="mfoot">
     <button class="btn" onclick="closeMo()">Cancel</button>
     <button class="btn btn-blue" onclick="saveRec()">Save to Team</button>
@@ -1336,6 +1344,20 @@ function getGrade(r){
   if(BCA_MANUAL[raw]!==undefined)return BCA_MANUAL[raw];
   return '';
 }
+// Where a shown grade actually came from — 'baked' means it's never been cross-checked against the live BCA registry
+// (the source of every past staleness bug), so the UI flags it quietly for a manual bca.gov.sg check.
+function getGradeSource(r){
+  if(r.bcaOverride)return 'override';
+  const raw=bcaNorm(r.company);
+  const k=BCA_ALIAS[raw]||raw;
+  if(bcaGradeMap){const g=bcaGradeMap[k];if(g!==undefined&&g!=='')return 'live';}
+  if(r.grade||bakedGradeIndex[k])return 'baked';
+  if(BCA_MANUAL[raw]!==undefined)return 'manual';
+  return 'none';
+}
+function gradeWarnIcon(r){
+  return getGradeSource(r)==='baked' ? `<span title="Not yet cross-checked against the live BCA registry — worth a quick look on bca.gov.sg" style="margin-left:4px;opacity:.75;cursor:help">⚠</span>` : '';
+}
 // Official BCA workhead descriptions
 const WORKHEAD_DESC={'CW01':'General Building','CW02':'Civil Engineering','CR01':'Minor Construction Works','CR02':'Corrosion Protection','CR03':'Demolition','CR04':'Fencing & Ironworks','CR05':'Concrete Repairs','CR06':'Interior Decoration & Finishing Works','CR07':'Cable/Pipe Laying & Road Reinstatement','CR08':'Piling Works','CR09':'Repairs & Redecoration','CR10A':'Automated Precast Concrete Production','CR10B':'Precast Concrete Production','CR11':'Signcraft Installation','CR12':'Ground Support & Stabilisation Works','CR13':'Waterproofing Installation','CR14':'Asphalt Works & Road Marking','CR15':'Site Investigation, Instrumentation and Monitoring Works','CR16':'Curtain Walls','CR17':'Windows','CR18':'Doors','ME01':'Air-Conditioning, Refrigeration & Ventilation Works','ME02':'Building Automation, Industrial & Process Control Systems','ME03':'Solar PV and System Integration','ME04':'Communication & Security Systems','ME05':'Electrical Engineering','ME06':'Fire Prevention & Protection Systems','ME07':'High- & Low-Tension Overhead Line Installation','ME08':'Internal Wiring for Telecommunications','ME09':'Lift & Escalator and Mechanised Car Parking Systems Installation and Maintenance','ME10':'Line Plant Cabling/Wiring for Telecommunications','ME11':'Mechanical Engineering','ME12':'Plumbing, Gas Piping & Sanitary Works','ME13':'Traffic Light Systems','ME15':'Integrated Building Services','FM01':'Integrated Facilities Management','FM02':'Housekeeping, Cleansing, Desilting & Conservancy Services','FM03':'Landscaping Maintenance Works','FM04':'Pest Control','SY01A':'Essential Construction Materials','SY01B':'Ready-Mixed Concrete','SY01C':'Other Basic Construction Materials','SY02':'Chemicals','SY04':'Electrical Equipment','SY05':'Electrical & Electronic Materials, Products & Components','SY06':'Finishing & Building Products','SY07':'Gases','SY08':'Mechanical Equipment, Plant & Machinery','SY09':'Mechanical Materials, Products & Components','SY10':'Metal & Timber Structures','SY14':'Sanitary Products','RW00':'Regulatory Works','RW01':'Window Contractors','RW02A':'Lift Installation Contractors','RW02B':'Lift Maintenance Contractors','RW03A':'Escalator Installation Contractors','RW03B':'Escalator Maintenance Contractors','RW04A':'MCPS Installation Contractors','RW04B':'MCPS Maintenance Contractors','TR01':'Formwork','TR02':'Steel Reinforcement Work','TR03':'Concreting Work','TR04':'Drywall Installation','TR05':'Precast Installation','TR06':'Ceiling Work','TR07':'Tile/Marble/Stone Work','TR08':'Timber, Vinyl and Laminate Flooring Work','TR09':'Plastering/Skimming','TR10':'Ironmongery & Metalwork'};
 function copyText(t,msg){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast(msg)).catch(()=>fallbackCopy(t,msg));}else fallbackCopy(t,msg);}
@@ -1509,7 +1531,7 @@ function render(){
         <div class="cname" onclick="copyCompany('${(r.company||'').replace(/'/g,"\\'")}')" title="Click to copy company name" style="cursor:pointer">${nfa?'✕ ':''}${r.company}</div>
         <div class="cperson">${r.contact||''}</div>
         ${linksRow(r)}
-        ${getGrade(r)?`<div class="gradechip" title="${gradeBreakdown(getGrade(r))}" onclick="showGradePop(event,'${getGrade(r).replace(/'/g,"\\'")}',${r.id})">🏅 BCA: ${getGrade(r)}</div>`:`<div class="gradechip" style="opacity:.5;background:var(--sur2);border-style:dashed" onclick="showGradePop(event,'',${r.id})">+ Add BCA grade</div>`}
+        ${getGrade(r)?`<div class="gradechip" title="${gradeBreakdown(getGrade(r))}" onclick="showGradePop(event,'${getGrade(r).replace(/'/g,"\\'")}',${r.id})">🏅 BCA: ${getGrade(r)}${gradeWarnIcon(r)}</div>`:`<div class="gradechip" style="opacity:.5;background:var(--sur2);border-style:dashed" onclick="showGradePop(event,'',${r.id})">+ Add BCA grade</div>`}
         <hr class="cdiv"/>
         <div class="cdet">
           ${ph?`<div class="drow">${pIco()}<span>${ph}${r.tel&&r.hp&&r.tel!==r.hp?' · '+r.hp:''}</span></div>`:''}
@@ -1594,7 +1616,7 @@ function render(){
         ${addCells}
         ${inv&&!noq ? cbTd(qrc,'qrcDate','#8a5c00',st.qrcDate||'') : dash}
         <td><input type="text" class="ni" style="width:140px;margin:0" placeholder="Notes..." value="${(st.note||'').replace(/"/g,'&quot;')}" oninput="uf(${r.id},'note',this.value)" /></td>
-        <td>${getGrade(r)?`<span class="gradechip" style="margin:0" title="${gradeBreakdown(getGrade(r))}" onclick="showGradePop(event,'${getGrade(r).replace(/'/g,"\\'")}',${r.id})">${getGrade(r)}</span>`:`<span class="gradechip" style="margin:0;opacity:.5;background:var(--sur2);border-style:dashed" onclick="showGradePop(event,'',${r.id})">+ Add</span>`}</td>
+        <td>${getGrade(r)?`<span class="gradechip" style="margin:0" title="${gradeBreakdown(getGrade(r))}" onclick="showGradePop(event,'${getGrade(r).replace(/'/g,"\\'")}',${r.id})">${getGrade(r)}${gradeWarnIcon(r)}</span>`:`<span class="gradechip" style="margin:0;opacity:.5;background:var(--sur2);border-style:dashed" onclick="showGradePop(event,'',${r.id})">+ Add</span>`}</td>
       </tr>`;
     }).join('');
   }
@@ -1688,10 +1710,17 @@ function popTr(){
   tr.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sel.appendChild(o);});
   const c=document.createElement('option');c.value='__custom__';c.textContent='+ Add new trade...';sel.appendChild(c);
 }
+let _editSiblingIds=[];
+function hideSibRow(){document.getElementById('fsibRow').style.display='none';document.getElementById('fsibSync').checked=false;_editSiblingIds=[];}
+function findSiblings(company,ownId){
+  const k=bcaNorm(company);
+  return records.filter(x=>x.id!==ownId&&bcaNorm(x.company)===k).map(x=>x.id);
+}
 function openAdd(){
   eid=null;document.getElementById('mt').textContent='Add Subcontractor';
   ['fco','fct','ftel','fhp','fem','frm'].forEach(id=>document.getElementById(id).value='');
   popTr();if(activeTrade!=='ALL')document.getElementById('ftr').value=activeTrade;
+  hideSibRow();
   document.getElementById('mo').classList.add('open');
 }
 function openEdit(id){
@@ -1707,6 +1736,13 @@ function openEdit(id){
   document.getElementById('fsite').value=r.site||'';
   document.getElementById('ftrk').value=r.track||'';
   document.getElementById('frm').value=r.remark||'';
+  _editSiblingIds=findSiblings(r.company,r.id);
+  const sibRow=document.getElementById('fsibRow');
+  if(_editSiblingIds.length){
+    document.getElementById('fsibLabel').textContent=`This company also has ${_editSiblingIds.length} other trade ${_editSiblingIds.length===1?'entry':'entries'}. Also update contact/phone/email/website/track record on ${_editSiblingIds.length===1?'it':'all of them'}?`;
+    document.getElementById('fsibSync').checked=false;
+    sibRow.style.display='block';
+  } else hideSibRow();
   document.getElementById('mo').classList.add('open');
 }
 function openDuplicate(id){
@@ -1722,6 +1758,7 @@ function openDuplicate(id){
   document.getElementById('fsite').value=r.site||'';
   document.getElementById('ftrk').value=r.track||'';
   document.getElementById('frm').value=r.remark||'';
+  hideSibRow();
   document.getElementById('mo').classList.add('open');
 }
 function saveRec(){
@@ -1735,6 +1772,10 @@ function saveRec(){
     email:document.getElementById('fem').value.trim(),
     site:document.getElementById('fsite').value.trim(),track:document.getElementById('ftrk').value.trim(),
     remark:document.getElementById('frm').value.trim()};
+  if(eid&&_editSiblingIds.length&&document.getElementById('fsibSync').checked){
+    const shared={contact:d.contact,tel:d.tel,hp:d.hp,phone:d.phone,email:d.email,site:d.site,track:d.track};
+    _editSiblingIds.forEach(sid=>{const i=records.findIndex(x=>x.id===sid);if(i>=0)records[i]={...records[i],...shared};});
+  }
   if(eid){const i=records.findIndex(x=>x.id===eid);records[i]={...records[i],...d};delete records[i].vfy;/* editing = you've reviewed it, clear the verify highlight */}
   else{records.push({id:nextId++,...d,addedBy:getUser(),addedAt:new Date().toISOString()});}
   closeMo();renderSB();render();saveRecords();
