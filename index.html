@@ -270,6 +270,11 @@ tr.selrow-em td{background:var(--bblue)!important}
 .ni:focus{outline:none;border-color:var(--blue);background:var(--sur);box-shadow:0 0 0 3px rgba(67,97,238,0.1)}
 .ni::placeholder{color:var(--tx3)}
 .cfoot{display:flex;gap:5px;margin-top:6px}
+.sibinfo{font-size:10px;color:var(--tx3);margin-top:8px;padding-top:8px;border-top:1px dashed var(--bdr);display:flex;flex-wrap:wrap;align-items:center;gap:3px 0}
+.sibitem{display:inline-flex;align-items:center;gap:3px;margin-right:9px}
+.sibitem input{width:11px;height:11px;cursor:pointer;accent-color:var(--blue);flex-shrink:0}
+.sibchip{color:var(--blue);cursor:pointer;text-decoration:underline}
+.sibchip:hover{opacity:.75}
 .cfoot .btn{padding:4px 10px;font-size:11px}
 
 /* Empty state */
@@ -1576,6 +1581,7 @@ function render(){
             <button class="btn" onclick="openDuplicate(${r.id})" title="Copy this subcontractor's details into a new record under a different trade">⧉ Duplicate</button>
             <button class="btn" style="color:var(--red)" onclick="delRec(${r.id})">Remove</button>
           </div>
+          ${siblingTradesHtml(r)}
         </div>
       </div>`;
     }).join('');
@@ -1715,6 +1721,19 @@ function hideSibRow(){document.getElementById('fsibRow').style.display='none';do
 function findSiblings(company,ownId){
   const k=bcaNorm(company);
   return records.filter(x=>x.id!==ownId&&bcaNorm(x.company)===k).map(x=>x.id);
+}
+function siblingTradesHtml(r){
+  const sibIds=findSiblings(r.company,r.id);
+  if(!sibIds.length)return '';
+  const sibs=sibIds.map(id=>records.find(x=>x.id===id)).filter(Boolean);
+  if(!sibs.length)return '';
+  const items=sibs.map(s=>`<span class="sibitem"><input type="checkbox" ${emailSel.has(s.id)?'checked':''} onchange="toggleSiblingSel(${s.id},this)" title="Tick to include this trade in the bulk email" /><span class="sibchip" onclick="setTrade('${s.trade.replace(/'/g,"\\'")}')" title="Jump to this trade">${s.trade}</span></span>`).join('');
+  return `<div class="sibinfo">Also listed under: ${items}</div>`;
+}
+function toggleSiblingSel(id,cb){
+  if(cb.checked)emailSel.add(id); else emailSel.delete(id);
+  saveEmailSel();
+  render();
 }
 function openAdd(){
   eid=null;document.getElementById('mt').textContent='Add Subcontractor';
