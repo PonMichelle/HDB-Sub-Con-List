@@ -2116,15 +2116,37 @@ function updateSelAllBtn(){
   const cb=document.getElementById('selAllTh');
   if(cb){cb.checked=!!allSel;cb.indeterminate=!allSel&&someSel;}
 }
+// Same company/contact ticked under two+ trades (e.g. Loose Furniture + System Furniture) → one email listing both trades,
+// instead of two separate emails to the same person. Only merges when the email address also matches, so genuinely
+// different contacts per trade at the same company are left as separate emails.
+function joinTrades(trades){
+  if(trades.length<=1)return trades[0]||'';
+  if(trades.length===2)return trades.join(' and ');
+  return trades.slice(0,-1).join(', ')+' and '+trades[trades.length-1];
+}
+function mergeDuplicateTradeItems(items){
+  const groups=new Map();const order=[];
+  items.forEach(it=>{
+    const key=bcaNorm(it.company)+'|'+it.emails.toLowerCase();
+    if(!groups.has(key)){groups.set(key,{...it,trades:it.trade?[it.trade]:[]});order.push(key);}
+    else{const g=groups.get(key);if(it.trade&&g.trades.indexOf(it.trade)<0)g.trades.push(it.trade);if(!g.roles&&it.roles)g.roles=it.roles;}
+  });
+  return order.map(k=>{const g=groups.get(k);return {...g,trade:joinTrades(g.trades)};});
+}
 function emailSelectedSend(event){
   event.preventDefault();event.stopPropagation();
   if(!emailSel.size){toast('Tick some subcontractors first');return;}
   const items=[];
   emailSel.forEach(id=>{const r=records.find(x=>x.id===id);if(!r)return;const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(ems.length)items.push({company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(','),roles:r.roles||null});});
   if(!items.length){toast('Selected subcontractors have no email on file');return;}
+  // If you ticked subcontractors across 2+ different trades in one go (e.g. Loose Furniture + System Furniture),
+  // treat it as one combined-scope invitation: every email in the batch shows the full trade list, not just its own trade.
+  const distinctTrades=[...new Set(items.map(it=>it.trade).filter(Boolean))];
+  if(distinctTrades.length>1){const combo=joinTrades(distinctTrades);items.forEach(it=>it.trade=combo);}
+  const merged=mergeDuplicateTradeItems(items);
   const def=localStorage.getItem('hdb_email_client');
-  if(def&&def!=='ask'){showBatchModal(items,def);return;}
-  _epBatchItems=items;
+  if(def&&def!=='ask'){showBatchModal(merged,def);return;}
+  _epBatchItems=merged;
   showPicker(event);
 }
 function closeEPicker(){document.getElementById('epicker').classList.remove('open');}
