@@ -2166,10 +2166,8 @@ function emailSelectedSend(event){
   const items=[];
   emailSel.forEach(id=>{const r=records.find(x=>x.id===id);if(!r)return;const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(ems.length)items.push({company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(','),roles:r.roles||null});});
   if(!items.length){toast('Selected subcontractors have no email on file');return;}
-  // If you ticked subcontractors across 2+ different trades in one go (e.g. Loose Furniture + System Furniture),
-  // treat it as one combined-scope invitation: every email in the batch shows the full trade list, not just its own trade.
-  const distinctTrades=[...new Set(items.map(it=>it.trade).filter(Boolean))];
-  if(distinctTrades.length>1){const combo=joinTrades(distinctTrades);items.forEach(it=>it.trade=combo);}
+  // NOTE: trades are combined only per matching company+email (mergeDuplicateTradeItems below) — never across
+  // different companies. Showing an unrelated trade to a subcontractor that doesn't do it would be misleading.
   const merged=mergeDuplicateTradeItems(items);
   const def=localStorage.getItem('hdb_email_client');
   if(def&&def!=='ask'){showBatchModal(merged,def);return;}
