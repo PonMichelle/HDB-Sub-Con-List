@@ -1504,6 +1504,7 @@ function linksRow(r){const w=siteUrl(r),t=trackUrl(r);const p=[];
   return p.length?`<div class="lnkrow">${p.join('')}</div>`:'';}
 function render(){
   upProg();
+  buildCompanyIndex(); // rebuild once per render so sibling lookups stay O(1) instead of re-scanning all records per card
   const list=getFilt();
   document.getElementById('rc').textContent=`${list.length} result${list.length!==1?'s':''}`;
   try{updateSelAllBtn();updateColChecks();}catch(e){}
@@ -1718,9 +1719,16 @@ function popTr(){
 }
 let _editSiblingIds=[];
 function hideSibRow(){document.getElementById('fsibRow').style.display='none';document.getElementById('fsibSync').checked=false;_editSiblingIds=[];}
+// Indexed once per render (see render()) instead of re-scanning all records per card — O(n) instead of O(n^2), matters a lot at 900+ records.
+let _companyIndex=null;
+function buildCompanyIndex(){
+  _companyIndex=new Map();
+  records.forEach(r=>{const k=bcaNorm(r.company);if(!_companyIndex.has(k))_companyIndex.set(k,[]);_companyIndex.get(k).push(r.id);});
+}
 function findSiblings(company,ownId){
+  if(!_companyIndex)buildCompanyIndex();
   const k=bcaNorm(company);
-  return records.filter(x=>x.id!==ownId&&bcaNorm(x.company)===k).map(x=>x.id);
+  return (_companyIndex.get(k)||[]).filter(id=>id!==ownId);
 }
 function siblingTradesHtml(r){
   const sibIds=findSiblings(r.company,r.id);
