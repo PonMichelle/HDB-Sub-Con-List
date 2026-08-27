@@ -2044,6 +2044,10 @@ function showBatchModal(items,client){
       +'<div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:4px">🔗 Document links <span style="font-weight:400;color:var(--tx3)">— added to every email body (works with “Open all” / webmail too)</span></div>'
       +'<textarea id="docLinks" oninput="saveDocLinks()" rows="2" placeholder="Paste share links (OneDrive / SharePoint / Drive), one per line" style="width:100%;padding:6px 9px;font-size:11.5px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea>'
       +'</div>'
+      +'<div id="sigBox" style="padding:10px 18px 12px;border-top:1px solid var(--bdr)">'
+      +'<label style="display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:4px;cursor:pointer"><input type="checkbox" id="sigToggle" onchange="saveSigToggle()" /> ✍️ Signature <span style="font-weight:400;color:var(--tx3)">— added to the end of every email, after document links (webmail/mailto text only — no logo)</span></label>'
+      +'<textarea id="sigText" oninput="saveSigText()" rows="4" style="width:100%;padding:6px 9px;font-size:11.5px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea>'
+      +'</div>'
       +'<div id="batchList"></div><div class="batchft"><button class="btn" id="openAllBtn" onclick="openAllBatch()">⚡ Open all</button><button class="btn btn-blue" onclick="closeBatch()">Done</button></div></div>';
     document.body.appendChild(ov);
     ov.addEventListener('mousedown',e=>{if(e.target===ov)closeBatch();});
@@ -2055,14 +2059,14 @@ function showBatchModal(items,client){
   document.getElementById('batchSub').textContent=(client==='system')?`Click each ✉ Open below — ${cl} opens one compose window per click. (One-click "Open all" isn't possible with a desktop mail app.)`:`Click each ✉ Open, or use "Open all" to open all in ${cl}.`;
   const oab=document.getElementById('openAllBtn');if(oab)oab.style.display=(client==='system')?'none':'';
   document.getElementById('batchList').innerHTML=items.map((it,i)=>`<div class="batchrow" id="brow${i}"><span class="bname" title="${(it.emails||'').replace(/"/g,'&quot;')}">${it.company}</span><button class="btn" style="padding:5px 9px;font-size:12px" onclick="copyOneBatch(${i})" title="Copy this email to paste into your mail">📋</button><button class="btn btn-open" onclick="openOneBatch(${i})">✉ Open</button></div>`).join('');
-  loadFullTitle();loadDocLinks();
+  loadFullTitle();loadDocLinks();loadSignature();
   ov.classList.add('open');
 }
 function openOneBatch(i){
   const it=_batchItems[i];if(!it)return true;
   const cur=_tpls[_tplIdx]||{subject:'',body:''};
   const tpl={subject:document.getElementById('tplSubj')?document.getElementById('tplSubj').value:cur.subject,body:document.getElementById('tplBody')?document.getElementById('tplBody').value:cur.body};
-  const subj=fillTpl(tpl.subject,it),body=bodyWithLinks(fillTpl(tpl.body,it,true));
+  const subj=fillTpl(tpl.subject,it),body=withSignature(bodyWithLinks(fillTpl(tpl.body,it,true)));
   let ok=true;
   if(_batchClient==='system'){const a=document.createElement('a');a.href=emailUrl(it.emails,'system',subj,body,it.contact,it.roles);document.body.appendChild(a);a.click();a.remove();}
   else{const w=window.open(emailUrl(it.emails,_batchClient,subj,body,it.contact,it.roles),'_blank');ok=!!w;}
@@ -2074,7 +2078,7 @@ function copyOneBatch(i){
   const it=_batchItems[i];if(!it)return;
   const cur=_tpls[_tplIdx]||{subject:'',body:''};
   const sEl=document.getElementById('tplSubj'),bEl=document.getElementById('tplBody');
-  const subj=fillTpl(sEl?sEl.value:cur.subject,it), body=bodyWithLinks(fillTpl(bEl?bEl.value:cur.body,it,true));
+  const subj=fillTpl(sEl?sEl.value:cur.subject,it), body=withSignature(bodyWithLinks(fillTpl(bEl?bEl.value:cur.body,it,true)));
   const sp=splitToCc(it.emails,it.contact,it.roles);
   copyText('To: '+sp.to+(sp.cc?'\nCc: '+sp.cc:'')+'\nSubject: '+subj+'\n\n'+body, 'Email copied — paste into your mail ✓');
   const r=document.getElementById('brow'+i);if(r)r.classList.add('bdone');
@@ -2106,6 +2110,31 @@ function loadDocLinks(){const el=document.getElementById('docLinks');if(!el)retu
 function saveDocLinks(){const el=document.getElementById('docLinks');if(!el)return;try{localStorage.setItem(docLinksKey(),el.value);}catch(e){}}
 function getDocLinks(){const el=document.getElementById('docLinks');let raw=el?el.value:'';if(!raw){try{raw=localStorage.getItem(docLinksKey())||'';}catch(e){}}return raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);}
 function bodyWithLinks(body){const lk=getDocLinks();if(!lk.length)return body;if(body.indexOf(lk[0])>=0)return body;/* links already placed inline via {documentlink} */return body+'\n\nDocuments:\n'+lk.join('\n');}
+// Signature — global (same across all projects/tenders, unlike doc links), toggle-able per your preference; **bold** markers render as unicode bold like {project}/{trade}/{date}.
+const DEFAULT_SIGNATURE='Thank you.\n\nRegards\n**Michelle Pon, QS**\n\nWee Hur Construction Pte Ltd\n39 Kim Keat Road, Wee Hur Building, Singapore 328814\n📞 DID: 6357 0568\n📠 Fax: 6258 8283';
+function sigTextKey(){return 'hdb_sig_text';}
+function sigToggleKey(){return 'hdb_sig_on';}
+function loadSignature(){
+  const t=document.getElementById('sigText'),c=document.getElementById('sigToggle');
+  if(!t||!c)return;
+  let v=null;try{v=localStorage.getItem(sigTextKey());}catch(e){}
+  t.value=(v!==null)?v:DEFAULT_SIGNATURE;
+  let on=null;try{on=localStorage.getItem(sigToggleKey());}catch(e){}
+  c.checked=(on===null)?true:on==='1';
+}
+function saveSigText(){const t=document.getElementById('sigText');if(!t)return;try{localStorage.setItem(sigTextKey(),t.value);}catch(e){}}
+function saveSigToggle(){const c=document.getElementById('sigToggle');if(!c)return;try{localStorage.setItem(sigToggleKey(),c.checked?'1':'0');}catch(e){}}
+function boldMarkers(s){return (s||'').replace(/\*\*(.+?)\*\*/g,(m,g)=>toBold(g));}
+function getSignature(){
+  let on=null;try{on=localStorage.getItem(sigToggleKey());}catch(e){}
+  if(!((on===null)?true:on==='1'))return '';
+  const el=document.getElementById('sigText');
+  let v=el?el.value:null;
+  if(v===null||v===undefined){try{v=localStorage.getItem(sigTextKey());}catch(e){}}
+  if(v===null||v===undefined)v=DEFAULT_SIGNATURE;
+  return boldMarkers(v);
+}
+function withSignature(body){const sig=getSignature();if(!sig)return body;if(body.indexOf(sig)>=0)return body;return body+'\n\n'+sig;}
 // ── Multi-select for batch email ────────────────────────────────
 let emailSel=new Set();
 function emailSelKey(){return 'hdb_emailsel_'+(currentProject?currentProject.id:'none');}
