@@ -2181,13 +2181,19 @@ function joinTrades(trades){
   return trades.slice(0,-1).join(', ')+' and '+trades[trades.length-1];
 }
 function mergeDuplicateTradeItems(items){
+  // Group by company only (not by exact email match) — different trade entries for the same company often
+  // list different subsets of the same team's addresses (e.g. one contact vs. the full team), so merge by
+  // company and union all their emails together rather than requiring an identical email list.
   const groups=new Map();const order=[];
   items.forEach(it=>{
-    const key=bcaNorm(it.company)+'|'+it.emails.toLowerCase();
-    if(!groups.has(key)){groups.set(key,{...it,trades:it.trade?[it.trade]:[]});order.push(key);}
-    else{const g=groups.get(key);if(it.trade&&g.trades.indexOf(it.trade)<0)g.trades.push(it.trade);if(!g.roles&&it.roles)g.roles=it.roles;}
+    const key=bcaNorm(it.company);
+    if(!groups.has(key)){groups.set(key,{...it,trades:it.trade?[it.trade]:[],emailSet:new Map()});order.push(key);}
+    const g=groups.get(key);
+    if(it.trade&&g.trades.indexOf(it.trade)<0)g.trades.push(it.trade);
+    if(!g.roles&&it.roles)g.roles=it.roles;
+    (it.emails||'').split(',').map(e=>e.trim()).filter(Boolean).forEach(e=>{const lc=e.toLowerCase();if(!g.emailSet.has(lc))g.emailSet.set(lc,e);});
   });
-  return order.map(k=>{const g=groups.get(k);return {...g,trade:joinTrades(g.trades)};});
+  return order.map(k=>{const g=groups.get(k);return {...g,trade:joinTrades(g.trades),emails:[...g.emailSet.values()].join(',')};});
 }
 function emailSelectedSend(event){
   event.preventDefault();event.stopPropagation();
