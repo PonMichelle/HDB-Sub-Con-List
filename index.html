@@ -695,7 +695,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-08-06</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-09-29</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -704,7 +704,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <div class="toolbar">
       <div class="sw">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="mq" placeholder="Search company, contact, phone, email..." oninput="render()" />
+        <input type="text" id="mq" placeholder="Search company, contact, phone, email, track record..." oninput="render()" />
       </div>
       <div class="tr">
         <span class="rc" id="rc"></span>
@@ -737,6 +737,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       <button class="fc" id="fc-qr" onclick="setCF('qr')" title="Click to show only Quotation received, click again to hide Quotation received">📥 Quotation received</button>
       <button class="fc" id="fc-nq" onclick="setCF('nq')" title="Click to show only Not Quote, click again to hide Not Quote">✕ Not Quote</button>
       <button class="fc" id="fc-nfa" onclick="setCF('nfa')" title="Click to show only Not for ask quote, click again to hide Not for ask quote">✕ Not for ask quote</button>
+      <button class="fc" id="fc-track" onclick="toggleTrackFilter()" title="Show only subcontractors that have a Track record link on file">📎 Has track record</button>
       <div class="pw"><div class="pbb"><div class="pbf" id="pbf" style="width:0%"></div></div><span class="pt" id="pbt">0 / 0 contacted</span></div>
     </div>
     <div class="cards-area" id="ca"><div class="cgrid" id="cg"></div></div>
@@ -773,7 +774,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <div class="fg"><label>Office Tel</label><input type="text" id="ftel" /></div>
     <div class="fg"><label>Mobile / HP</label><input type="text" id="fhp" /></div>
   </div>
-  <div class="fg"><label>Email</label><input type="text" id="fem" /></div>
+  <div class="fg"><label>Email <span style="color:var(--tx3);font-weight:400">(one per line — do NOT put notes here, use Remark below instead)</span></label><textarea id="fem" rows="3" style="resize:vertical"></textarea></div>
   <div class="fg"><label>Website <span style="color:var(--tx3);font-weight:400">(optional — auto-detected from email if blank)</span></label><input type="text" id="fsite" placeholder="https://company.com.sg" /></div>
   <div class="fg"><label>Track record link <span style="color:var(--tx3);font-weight:400">(paste a OneDrive / SharePoint share link to the PDF)</span></label><input type="text" id="ftrk" placeholder="https://weehur.sharepoint.com/..." /></div>
   <div class="fg"><label>Remark</label><textarea id="frm" rows="2"></textarea></div>
@@ -1474,14 +1475,21 @@ function cfMatch(st,r){
   for(const k in cf){if(cf[k]===1&&!p[k])return false;if(cf[k]===-1&&p[k])return false;}
   return true;
 }
+let trackFilterOn=false;
+function toggleTrackFilter(){
+  trackFilterOn=!trackFilterOn;
+  const el=document.getElementById('fc-track');if(el)el.classList.toggle('act',trackFilterOn);
+  render();
+}
 function getFilt(){
   const q=document.getElementById('mq').value.toLowerCase();
   return sortList(records.filter(r=>{
     const mt=activeTrade==='ALL'||r.trade===activeTrade;
-    const ms=!q||r.company.toLowerCase().includes(q)||(r.contact||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.hp||'').includes(q)||(r.email||'').toLowerCase().includes(q)||r.trade.toLowerCase().includes(q)||(r.remark||'').toLowerCase().includes(q)||getGrade(r).toLowerCase().includes(q);
+    const ms=!q||r.company.toLowerCase().includes(q)||(r.contact||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.hp||'').includes(q)||(r.email||'').toLowerCase().includes(q)||r.trade.toLowerCase().includes(q)||(r.remark||'').toLowerCase().includes(q)||getGrade(r).toLowerCase().includes(q)||(r.track||'').toLowerCase().includes(q);
     const st=statusMap[r.id]||{};
     const mc=cfMatch(st,r);
-    return mt&&ms&&mc;
+    const mtr=!trackFilterOn||!!(r.track||'').trim();
+    return mt&&ms&&mc&&mtr;
   })).sort((a,b)=>(isNfa(a)?1:0)-(isNfa(b)?1:0)); // "not for ask quote" always at the bottom (stable)
 }
 function upProg(){
@@ -1577,7 +1585,7 @@ function render(){
             ${qrc?`<input type="date" class="dinput" value="${st.qrcDate||''}" onchange="uf(${r.id},'qrcDate',this.value)" style="border-color:#8a5c00;width:130px" />`:''}
           </div>
           `:''}
-          <input type="text" class="ni" placeholder="Remarks / notes..." value="${nt.replace(/"/g,'&quot;')}" oninput="uf(${r.id},'note',this.value)" style="margin-top:8px" />
+          <textarea class="ni" placeholder="Remarks / notes..." oninput="uf(${r.id},'note',this.value)" style="margin-top:8px;resize:vertical" rows="2">${nt.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
           <div class="cfoot">
             <button class="btn" onclick="openEdit(${r.id})">Edit</button>
             <button class="btn" onclick="openDuplicate(${r.id})" title="Copy this subcontractor's details into a new record under a different trade">⧉ Duplicate</button>
@@ -1623,7 +1631,7 @@ function render(){
         ${cbTd(noq,'noqDate','#a02020',st.noqDate||'')}
         ${addCells}
         ${inv&&!noq ? cbTd(qrc,'qrcDate','#8a5c00',st.qrcDate||'') : dash}
-        <td><input type="text" class="ni" style="width:140px;margin:0" placeholder="Notes..." value="${(st.note||'').replace(/"/g,'&quot;')}" oninput="uf(${r.id},'note',this.value)" /></td>
+        <td><textarea class="ni" style="width:140px;margin:0;resize:vertical" placeholder="Notes..." oninput="uf(${r.id},'note',this.value)" rows="2">${(st.note||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea></td>
         <td>${getGrade(r)?`<span class="gradechip" style="margin:0" title="${gradeBreakdown(getGrade(r))}" onclick="showGradePop(event,'${getGrade(r).replace(/'/g,"\\'")}',${r.id})">${getGrade(r)}${gradeWarnIcon(r)}</span>`:`<span class="gradechip" style="margin:0;opacity:.5;background:var(--sur2);border-style:dashed" onclick="showGradePop(event,'',${r.id})">+ Add</span>`}</td>
       </tr>`;
     }).join('');
@@ -1760,7 +1768,7 @@ function openEdit(id){
   document.getElementById('ftr').value=r.trade||'';
   document.getElementById('ftel').value=r.tel||'';
   document.getElementById('fhp').value=r.hp||'';
-  document.getElementById('fem').value=r.email||'';
+  document.getElementById('fem').value=(r.email||'').split(/[\n;,]/).map(e=>e.trim()).filter(Boolean).join('\n');
   document.getElementById('fsite').value=r.site||'';
   document.getElementById('ftrk').value=r.track||'';
   document.getElementById('frm').value=r.remark||'';
@@ -1782,7 +1790,7 @@ function openDuplicate(id){
   document.getElementById('ftr').value=''; // force picking a different trade
   document.getElementById('ftel').value=r.tel||'';
   document.getElementById('fhp').value=r.hp||'';
-  document.getElementById('fem').value=r.email||'';
+  document.getElementById('fem').value=(r.email||'').split(/[\n;,]/).map(e=>e.trim()).filter(Boolean).join('\n');
   document.getElementById('fsite').value=r.site||'';
   document.getElementById('ftrk').value=r.track||'';
   document.getElementById('frm').value=r.remark||'';
@@ -1798,7 +1806,7 @@ function saveRec(){
   const d={company:co,trade:tr,contact:document.getElementById('fct').value.trim(),
     tel:document.getElementById('ftel').value.trim(),hp:document.getElementById('fhp').value.trim(),
     phone:document.getElementById('ftel').value.trim()||document.getElementById('fhp').value.trim(),
-    email:document.getElementById('fem').value.trim(),
+    email:document.getElementById('fem').value.split(/[\n;,]/).map(e=>e.trim()).filter(Boolean).join('; '),
     site:document.getElementById('fsite').value.trim(),track:document.getElementById('ftrk').value.trim(),
     remark:document.getElementById('frm').value.trim()};
   if(eid&&_editSiblingIds.length&&document.getElementById('fsibSync').checked){
