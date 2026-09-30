@@ -251,7 +251,7 @@ tr.selrow-em td{background:var(--bblue)!important}
 .rtag.rto{background:#eafaf0;color:#2e8b57;border-color:#cdeed9}
 .rtag:hover{filter:brightness(.94)}
 .demail:hover{color:var(--purple)!important}
-.rtag{display:inline-block;margin-top:5px;padding:2px 8px;background:var(--bamber);color:var(--amber);font-size:10.5px;border-radius:6px;border:1px solid #fcd34d;font-style:italic}
+.rtag{display:inline-block;margin-top:5px;padding:2px 8px;background:var(--bamber);color:var(--amber);font-size:10.5px;border-radius:6px;border:1px solid #fcd34d;font-style:italic;white-space:pre-wrap}
 .email-all-hint{font-size:10px;color:var(--tx3);margin-top:2px;font-style:italic}
 .dpills{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .dpill{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:2px 8px;border-radius:6px;font-weight:500}
@@ -1626,7 +1626,7 @@ function render(){
         <td>${r.contact||'—'}</td>
         <td style="white-space:nowrap;font-size:11px">${ph||'—'}</td>
         <td class="wrap">${em||'—'}</td>
-        <td style="font-size:10.5px;color:var(--tx3);font-style:italic">${r.remark||''}</td>
+        <td style="font-size:10.5px;color:var(--tx3);font-style:italic;white-space:pre-wrap">${r.remark||''}</td>
         ${cbTd(inv,'invDate','#1a56a0',st.invDate||'')}
         ${cbTd(noq,'noqDate','#a02020',st.noqDate||'')}
         ${addCells}
