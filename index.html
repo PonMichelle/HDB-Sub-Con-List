@@ -695,7 +695,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-05</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-06</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -1713,10 +1713,13 @@ function updateColChecks(){
 }
 function uf(id,field,val){
   if(field!=='note')pushUndo(); // undo manual date edits (not every note keystroke)
-  const st=statusMap[id]||{};
-  statusMap[id]={...st,[field]:val};
+  // Editing a date on a ticked row changes that date on every ticked row that already has one (rows without that date are left alone).
+  const spread=(_STCOLS.indexOf(field)>=0&&emailSel.has(id)&&emailSel.size>1);
+  const ids=spread?[...emailSel].filter(i=>i===id||(statusMap[i]&&statusMap[i][field])):[id];
+  ids.forEach(i=>{const s=statusMap[i]||{};statusMap[i]={...s,[field]:val};});
   clearTimeout(nTimers[id]);
   nTimers[id]=setTimeout(()=>{saveStatus();},600);
+  if(spread&&ids.length>1){render();toast('Date changed on '+ids.length+' selected rows');}
 }
 function getUser(){return document.getElementById('uname').value.trim()||'Team';}
 function popTr(){
