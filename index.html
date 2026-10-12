@@ -695,7 +695,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-06</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-12</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -875,6 +875,27 @@ function lsPut(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch
 
 // Safe Firebase key (no dots, #, $, [, ], /)
 function fbKey(key){return key.replace(/[.#$\[\]/]/g,'_');}
+// Re-read the shared project list straight from the database right before changing it, so a stale or empty
+// in-memory list can never overwrite the real one (that is how the list got wiped on 6 Oct 2026).
+// Only the project owner can delete a project: asks for a passcode (stored scrambled, like the login passcode — a deterrent, not real security).
+const DEL_PW_B64='V2VlaHVyODg=';
+function askDeletePasscode(){
+  const p=prompt('Only the project owner can delete a project.\n\nEnter the delete passcode:');
+  if(p===null)return false;
+  let ok=false;try{ok=(btoa(p)===DEL_PW_B64);}catch(e){}
+  if(!ok){alert('Wrong passcode — project NOT deleted.');return false;}
+  return true;
+}
+async function freshProjects(){
+  try{
+    const db=await initFirebase();
+    const snap=await db.ref('hdb/'+fbKey(SK_PROJECTS)).get();
+    let v=snap.exists()?snap.val():[];
+    if(!Array.isArray(v))v=Object.values(v||{});
+    projects=v.filter(Boolean);
+    return true;
+  }catch(e){toast('Can’t reach the database — please try again in a moment');return false;}
+}
 
 async function sget(key){
   const cached=lsGet('fb_'+key);
@@ -1089,6 +1110,7 @@ async function createProj(){
   const inp=document.getElementById('newProjName');
   const name=inp.value.trim();
   if(!name){inp.focus();return;}
+  if(!await freshProjects())return; // always work from the real list in the database
   // If project already exists, just select it
   const existing=projects.find(p=>p.name.toLowerCase()===name.toLowerCase());
   if(existing){
@@ -1120,8 +1142,10 @@ async function selectProject(id){
 async function deleteProject(id){
   const proj=projects.find(p=>p.id===id);
   if(!proj)return;
+  if(!askDeletePasscode())return;
   if(!confirm(`Delete project "${proj.name}"? All tracking data for this project will be lost.`))return;
   try{localStorage.removeItem(`fb_hdb_status_${id}`);}catch(e){}
+  if(!await freshProjects())return;
   projects=projects.filter(p=>p.id!==id);
   await saveProjects();
   if(currentProject&&currentProject.id===id){
@@ -1253,7 +1277,10 @@ async function renameProject(id){
   const proj=projects.find(p=>p.id===id);if(!proj)return;
   const n=prompt('Edit project title:',proj.name);
   if(!n||!n.trim()||n.trim()===proj.name)return;
-  proj.name=n.trim();
+  if(!await freshProjects())return;
+  const fp=projects.find(p=>p.id===id);if(!fp)return;
+  fp.name=n.trim();
+  if(currentProject&&currentProject.id===id)currentProject=fp;
   await saveProjects();
   renderProjList();
   if(currentProject&&currentProject.id===id)updateProjUI();
@@ -1867,7 +1894,7 @@ function openEmail(idOrEmails,event){
   event.preventDefault();event.stopPropagation();
   let item;
   const r=(typeof idOrEmails==='number')?records.find(x=>x.id===idOrEmails):null;
-  if(r){const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(!ems.length){toast('No email on file');return;}item={company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(','),roles:r.roles||null};}
+  if(r){const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(!ems.length){toast('No email on file');return;}item={id:r.id,company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(','),roles:r.roles||null};}
   else{const ems=(''+idOrEmails).split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(!ems.length)return;item={company:'',contact:'',trade:'',emails:ems.join(',')};}
   const def=localStorage.getItem('hdb_email_client');
   if(def&&def!=='ask'){showBatchModal([item],def);return;}
@@ -1968,7 +1995,7 @@ function tplsLocalKey(){return currentProject?'hdb_email_tpls_'+currentProject.i
 function tplsCloudKey(){return currentProject?'hdb_email_templates_'+currentProject.id:'hdb_email_templates';}
 const DEFAULT_TPLS=[
   {name:'Invitation to Quote',subject:'{project} - Invitation to Quote - {trade}',body:'Dear {contact},\n\nWe would like to invite {company} to submit a quotation for the {trade} works on our project, {project}.\n\nPlease find the relevant tender documents attached for your review. We would appreciate it if you could furnish us with your most competitive price by {date}.\n\nShould you require any clarification, please do not hesitate to contact us. We look forward to receiving your quotation and thank you in advance for your participation.'},
-  {name:'Quotation Reminder',subject:'{project} - Quotation Reminder - {trade}',body:'Dear {contact},\n\nWe refer to our earlier invitation for the {trade} works on {project}.\n\nThis is a gentle reminder that your quotation is due by {date}. Kindly let us know if you require any further information or additional time.\n\nWe look forward to receiving your submission.'},
+  {name:'Quotation Reminder',subject:'{project} - Quotation Reminder - {trade}',body:'Dear {contact},\n\nFurther to our email dated {invdate} ("{invsubject}"), we refer to our earlier invitation for the {trade} works on {project}.\n\nThis is a gentle reminder that your quotation is due by {date}. Kindly let us know if you require any further information or additional time.\n\nWe look forward to receiving your submission.'},
   {name:'Addendum Issued',subject:'{project} - Tender Addendum - {trade}',body:'Dear {contact},\n\nPlease be informed that an addendum has been issued for the {trade} works on {project}.\n\nKindly find the addendum documents attached and incorporate the revisions into your quotation accordingly. If the addendum affects your pricing, please submit your revised quotation by {date}.\n\nShould you have any queries, please do not hesitate to contact us.'},
   {name:'Tender Clarification',subject:'{project} - Tender Clarification - {trade}',body:'Dear {contact},\n\nWe refer to your quotation for the {trade} works on {project} and would like to seek your clarification on the following:\n\n1. \n2. \n3. \n\nKindly revert with your response by {date}. Thank you for your cooperation.'}
 ];
@@ -2040,6 +2067,20 @@ function newTpl(){const n=prompt('Name for the new template:','New template');if
 function renameTpl(){if(!_tpls[_tplIdx])return;const n=prompt('Rename template:',_tpls[_tplIdx].name||'');if(!n)return;const nm=n.trim().toLowerCase();if(_tplDel.has(nm)){_tplDel.delete(nm);saveTplDel();}_tpls[_tplIdx].name=n.trim();saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();}
 function delTpl(){if(_tpls.length<=1){toast('Keep at least one template');return;}if(!confirm('Delete this template?'))return;const dn=((_tpls[_tplIdx]&&_tpls[_tplIdx].name)||'').toLowerCase();if(dn){_tplDel.add(dn);saveTplDel();}_tpls.splice(_tplIdx,1);_tplIdx=0;saveTpls();document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();}
 function toBold(s){if(!s)return s;let o='';for(const ch of(''+s)){const c=ch.codePointAt(0);if(c>=65&&c<=90)o+=String.fromCodePoint(0x1D400+(c-65));else if(c>=97&&c<=122)o+=String.fromCodePoint(0x1D41A+(c-97));else if(c>=48&&c<=57)o+=String.fromCodePoint(0x1D7CE+(c-48));else o+=ch;}return o;}
+// {invdate} = the date this subcontractor was marked "Invited" in THIS project (earliest, if several trades); {invsubject} = subject of your "Invitation…" template.
+function invDateFor(it){
+  const ids=(it.ids&&it.ids.length)?it.ids:(it.id!==undefined?[it.id]:[]);
+  const ds=ids.map(i=>(statusMap[i]||{}).invDate).filter(Boolean).sort();
+  if(!ds.length)return '';
+  const p=ds[0].split('-');if(p.length!==3)return ds[0];
+  return (+p[2])+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]-1]+' '+p[0];
+}
+function invSubjectFor(it){
+  const t=(typeof _tpls!=='undefined'?_tpls:[]).find(x=>/invitation/i.test(x.name||'')&&!/remind/i.test(x.name||''));
+  if(!t||!t.subject)return '';
+  const proj=(typeof currentProject!=='undefined'&&currentProject)?currentProject.name:'';
+  return t.subject.replace(/\{project\}/g,proj).replace(/\{trade\}/g,it.trade||'').replace(/\{company\}/g,it.company||'').replace(/\{contact\}/g,it.contact||'');
+}
 function fillTpl(s,it,bold){
   const proj=(typeof currentProject!=='undefined'&&currentProject)?currentProject.name:'';
   const un=document.getElementById('uname')?document.getElementById('uname').value.trim():'';
@@ -2047,7 +2088,7 @@ function fillTpl(s,it,bold){
   const B=bold?toBold:(x=>x); // bold {project}/{trade}/{date} only in the body
   const ft=(typeof getFullTitle==='function')?getFullTitle():'';
   const dl=(typeof getDocLinks==='function'?getDocLinks():[]).join('\n'); // plain URLs (not bold, so they stay clickable)
-  return (s||'').replace(/\{documentlinks?\}/gi,dl).replace(/\{fulltitle\}/gi,B(ft)).replace(/\{company\}/g,it.company||'').replace(/\{contact\}/g,it.contact||'').replace(/\{trade\}/g,B(it.trade||'')).replace(/\{project\}/g,B(proj)).replace(/\{name\}/g,un).replace(/\{date\}/g,B(dt));
+  return (s||'').replace(/\{invdate\}/gi,()=>B(invDateFor(it)||'______')).replace(/\{invsubject\}/gi,()=>invSubjectFor(it)).replace(/\{documentlinks?\}/gi,dl).replace(/\{fulltitle\}/gi,B(ft)).replace(/\{company\}/g,it.company||'').replace(/\{contact\}/g,it.contact||'').replace(/\{trade\}/g,B(it.trade||'')).replace(/\{project\}/g,B(proj)).replace(/\{name\}/g,un).replace(/\{date\}/g,B(dt));
 }
 function toggleTplBox(){
   const b=document.getElementById('tplBox');const a=document.getElementById('tplArrow');
@@ -2077,7 +2118,7 @@ function showBatchModal(items,client){
       +'<input id="tplSubj" oninput="saveTpl()" placeholder="Subject" style="width:100%;padding:6px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;margin-bottom:6px;font-family:inherit" />'
       +'<textarea id="tplBody" oninput="saveTpl();updateTplLinks()" rows="8" placeholder="Message body" style="width:100%;padding:7px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea>'
       +'<div id="tplLinks" style="font-size:10.5px;margin-top:5px;word-break:break-all"></div>'
-      +'<div style="display:flex;align-items:center;gap:7px;margin-top:7px"><label style="font-size:11.5px;color:var(--tx2);font-weight:500;white-space:nowrap">Quote deadline {date}:</label><input id="tplDate" placeholder="e.g. 20 Jun 2026" style="flex:1;padding:5px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit" /></div>'      +'<div style="font-size:10.5px;color:var(--tx3);margin-top:6px">Placeholders auto-fill per subcontractor: <b>{company}</b> <b>{contact}</b> <b>{trade}</b> <b>{project}</b> <b>{fulltitle}</b> <b>{documentlink}</b> <b>{name}</b> <b>{date}</b>.</div>'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-top:7px"><label style="font-size:11.5px;color:var(--tx2);font-weight:500;white-space:nowrap">Quote deadline {date}:</label><input id="tplDate" placeholder="e.g. 20 Jun 2026" style="flex:1;padding:5px 9px;font-size:12px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit" /></div>'      +'<div style="font-size:10.5px;color:var(--tx3);margin-top:6px">Placeholders auto-fill per subcontractor: <b>{company}</b> <b>{contact}</b> <b>{trade}</b> <b>{project}</b> <b>{fulltitle}</b> <b>{documentlink}</b> <b>{name}</b> <b>{date}</b> <b>{invdate}</b> <b>{invsubject}</b> (for reminders: the date you invited them, and the subject of the first email).</div>'
       +'</div>'
       +'<div id="attBox" style="padding:10px 18px 12px;border-top:1px solid var(--bdr);margin-top:4px">'
       +'<div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:4px">🔗 Document links <span style="font-weight:400;color:var(--tx3)">— added to every email body (works with “Open all” / webmail too)</span></div>'
@@ -2235,8 +2276,9 @@ function mergeDuplicateTradeItems(items){
   const groups=new Map();const order=[];
   items.forEach(it=>{
     const key=bcaNorm(it.company);
-    if(!groups.has(key)){groups.set(key,{...it,trades:it.trade?[it.trade]:[],emailSet:new Map()});order.push(key);}
+    if(!groups.has(key)){groups.set(key,{...it,trades:it.trade?[it.trade]:[],ids:[],emailSet:new Map()});order.push(key);}
     const g=groups.get(key);
+    if(it.id!==undefined)g.ids.push(it.id);
     if(it.trade&&g.trades.indexOf(it.trade)<0)g.trades.push(it.trade);
     if(!g.roles&&it.roles)g.roles=it.roles;
     (it.emails||'').split(',').map(e=>e.trim()).filter(Boolean).forEach(e=>{const lc=e.toLowerCase();if(!g.emailSet.has(lc))g.emailSet.set(lc,e);});
@@ -2247,7 +2289,7 @@ function emailSelectedSend(event){
   event.preventDefault();event.stopPropagation();
   if(!emailSel.size){toast('Tick some subcontractors first');return;}
   const items=[];
-  emailSel.forEach(id=>{const r=records.find(x=>x.id===id);if(!r)return;const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(ems.length)items.push({company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(','),roles:r.roles||null});});
+  emailSel.forEach(id=>{const r=records.find(x=>x.id===id);if(!r)return;const ems=(r.email||'').split(/[;,]/).map(e=>e.trim()).filter(Boolean);if(ems.length)items.push({id:r.id,company:r.company,contact:r.contact||'',trade:r.trade||'',emails:ems.join(','),roles:r.roles||null});});
   if(!items.length){toast('Selected subcontractors have no email on file');return;}
   // NOTE: trades are combined only per matching company+email (mergeDuplicateTradeItems below) — never across
   // different companies. Showing an unrelated trade to a subcontractor that doesn't do it would be misleading.
