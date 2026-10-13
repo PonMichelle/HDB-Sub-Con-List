@@ -657,6 +657,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <div class="proj-empty" id="projEmpty" style="display:none">No projects yet — create one below</div>
     <div class="proj-new">
       <input type="text" id="newProjName" placeholder="Enter new project title..." onkeydown="if(event.key==='Enter')createProj()" />
+      <input type="text" id="newProjBy" placeholder="Created by (your name)" style="flex:0 0 150px" onkeydown="if(event.key==='Enter')createProj()" />
       <button class="btn btn-blue" onclick="createProj()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Create
@@ -695,7 +696,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-12</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-13</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -964,7 +965,7 @@ function renderProjList(){
     <div class="proj-item${currentProject&&currentProject.id===p.id?' sel':''}" onclick="selectProject('${p.id}')">
       <div style="flex:1">
         <div class="proj-item-name">${p.name}</div>
-        <div class="proj-item-meta">Created ${new Date(p.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})}</div>
+        <div class="proj-item-meta">Created ${new Date(p.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})} · <span style="cursor:pointer;color:var(--blue)" title="Click to add / change the creator name" onclick="event.stopPropagation();setProjCreator('${p.id}')">${p.createdBy?('by '+String(p.createdBy).replace(/&/g,'&amp;').replace(/</g,'&lt;')):'+ add creator'}</span></div>
       </div>
       <button class="proj-item-del" onclick="event.stopPropagation();renameProject('${p.id}')" title="Rename project" style="color:var(--blue);border-color:#b5d4f4">✎</button>
       <button class="proj-item-del" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete project">✕</button>
@@ -1085,6 +1086,7 @@ async function saveProjects(){await sset(SK_PROJECTS,projects);}
 async function showProjScreen(){
   document.getElementById('projScreen').style.display='flex';
   document.getElementById('projList').innerHTML='<div style="text-align:center;padding:20px;color:var(--tx3);font-size:12px">Loading projects...</div>';
+  try{const b=document.getElementById('newProjBy');if(b&&!b.value){const u=document.getElementById('uname');b.value=(u&&u.value)||localStorage.getItem('hdb_uname')||'';}}catch(e){}
   await loadProjects();
   renderProjList();
 }
@@ -1099,7 +1101,7 @@ function renderProjList(){
     <div class="proj-item${currentProject&&currentProject.id===p.id?' sel':''}" onclick="selectProject('${p.id}')">
       <div style="flex:1">
         <div class="proj-item-name">${p.name}</div>
-        <div class="proj-item-meta">Created ${new Date(p.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})}</div>
+        <div class="proj-item-meta">Created ${new Date(p.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})} · <span style="cursor:pointer;color:var(--blue)" title="Click to add / change the creator name" onclick="event.stopPropagation();setProjCreator('${p.id}')">${p.createdBy?('by '+String(p.createdBy).replace(/&/g,'&amp;').replace(/</g,'&lt;')):'+ add creator'}</span></div>
       </div>
       <button class="proj-item-del" onclick="event.stopPropagation();renameProject('${p.id}')" title="Rename project" style="color:var(--blue);border-color:#b5d4f4">✎</button>
       <button class="proj-item-del" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete project">✕</button>
@@ -1118,12 +1120,27 @@ async function createProj(){
     await selectProject(existing.id);
     return;
   }
+  const byEl=document.getElementById('newProjBy');
+  const by=(byEl&&byEl.value.trim())||(document.getElementById('uname')?document.getElementById('uname').value.trim():'');
   const proj={id:'proj_'+Date.now(),name,createdAt:new Date().toISOString()};
+  if(by){proj.createdBy=by;try{localStorage.setItem('hdb_uname',by);const u=document.getElementById('uname');if(u&&!u.value)u.value=by;}catch(e){}}
   projects.push(proj);
   await saveProjects();
   inp.value='';
   renderProjList();
   await selectProject(proj.id);
+}
+async function setProjCreator(id){
+  const cur=(projects.find(p=>p.id===id)||{}).createdBy||'';
+  const n=prompt('Creator name for this project:',cur);
+  if(n===null)return;
+  if(!await freshProjects())return;
+  const fp=projects.find(p=>p.id===id);if(!fp)return;
+  if(n.trim())fp.createdBy=n.trim();else delete fp.createdBy;
+  if(currentProject&&currentProject.id===id)currentProject=fp;
+  await saveProjects();
+  renderProjList();
+  toast('Creator saved ✓');
 }
 
 async function selectProject(id){
