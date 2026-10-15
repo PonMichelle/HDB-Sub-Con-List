@@ -1035,7 +1035,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-15</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-15b</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -2007,7 +2007,7 @@ function render(){
         <td class="${nfa?'nfa-name':''}" style="${nfa?'':namColor}"><input type="checkbox" class="selcb" ${emailSel.has(r.id)?'checked':''} onclick="toggleEmailSel(${r.id},this)" title="Select to email" style="vertical-align:middle;margin-right:7px" />${nfa?'✕ ':''}${r.company}${nfa?` <span style="font-size:10px;background:#ffe3ef;color:#c2185b;border:1px solid #f8b5d0;border-radius:6px;padding:1px 6px;vertical-align:middle;font-weight:600">Not for quote</span>`:noq?` <span style="font-size:10px;background:#fdeaea;color:#a02020;border:1px solid #f5a5a5;border-radius:6px;padding:1px 6px;vertical-align:middle;font-weight:400">✕ No quote</span>`:''}</td>
         <td style="font-size:11px;color:var(--tx2)">${r.trade}</td>
         <td>${r.contact||'—'}</td>
-        <td style="white-space:nowrap;font-size:11px">${ph||'—'}</td>
+        <td style="font-size:11px">${ph||'—'}</td>
         <td class="wrap">${em||'—'}</td>
         <td style="font-size:10.5px;color:var(--tx3);font-style:italic;white-space:pre-wrap">${r.remark||''}</td>
         ${cbTd(inv,'invDate','#1a56a0',st.invDate||'')}
@@ -3025,24 +3025,30 @@ loadColVisibility();
 setTimeout(applyColVisibility,500);
 
 // ── Table column resize (Private-style: drag th edge, mouse-based) ──
+// Widths are saved by column NAME (hdb_colw2) and start from sensible defaults,
+// never from the auto-measured width (that made Tel/HP/Remark/BCA columns huge and pushed Email far right).
+const COLW_DEF={'company':230,'trade':170,'contact':150,'tel/hp':140,'email':240,'remark':200,'notes':170,'bca grade':150,'quotation rcvd':120};
+function colKey(th){return th.textContent.replace(/\s+/g,' ').trim().toLowerCase();}
+function fitColTable(table){ let s=0; table.querySelectorAll('thead th').forEach(th=>{s+=parseFloat(th.style.width)||th.offsetWidth;}); table.style.width=s+'px'; } // table = exactly the sum of its columns, so no column gets stretched
+function colDefW(k){return COLW_DEF[k]||(/^add\.\d+$/.test(k)?100:110);}
 function saveColW(table){
-  try{ localStorage.setItem('hdb_colw', JSON.stringify([...table.querySelectorAll('thead th')].map(th=>th.offsetWidth))); }catch(e){}
+  try{ const m={}; table.querySelectorAll('thead th').forEach(th=>{m[colKey(th)]=th.offsetWidth;}); localStorage.setItem('hdb_colw2', JSON.stringify(m)); }catch(e){}
 }
 function initColResize(){
   const tb=document.getElementById('tb');if(!tb)return;
   const table=tb.closest('table');if(!table)return;
   const ths=[...table.querySelectorAll('thead th')];
   if(!ths.length||ths[0].offsetWidth===0)return; // table not visible yet
-  let saved=null;try{saved=JSON.parse(localStorage.getItem('hdb_colw'));}catch(e){}
-  ths.forEach((th,i)=>{ const w=(saved&&saved[i])?saved[i]:th.offsetWidth; th.style.width=w+'px'; });
-  table.style.tableLayout='fixed';
+  let saved=null;try{saved=JSON.parse(localStorage.getItem('hdb_colw2'));}catch(e){}
+  ths.forEach(th=>{ const k=colKey(th); const w=(saved&&saved[k])?saved[k]:colDefW(k); th.style.width=w+'px'; });
+  table.style.tableLayout='fixed'; fitColTable(table);
   if(table._cr)return; table._cr=true; // wire handles only once
   ths.forEach(th=>{
     const h=document.createElement('div');h.className='cresize';th.appendChild(h);
     h.addEventListener('mousedown',e=>{
       e.preventDefault();e.stopPropagation();
       const startX=e.pageX,startW=th.offsetWidth;
-      function move(ev){th.style.width=Math.max(48,startW+ev.pageX-startX)+'px';}
+      function move(ev){th.style.width=Math.max(48,startW+ev.pageX-startX)+'px'; fitColTable(table);}
       function up(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);saveColW(table);}
       document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
     });
