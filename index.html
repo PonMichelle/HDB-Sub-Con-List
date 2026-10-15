@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Subcon Hub — Team</title>
+<title>SubconHub HDB · Quotes In, Chaos Out</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -603,18 +603,288 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
 .epicker-def{font-size:11px;color:var(--tx3);padding:6px 14px 8px;display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none}
 .epicker-def input{accent-color:var(--blue);cursor:pointer;margin:0}
 </style>
+<style id="brandTeam">
+.brand2{display:flex;align-items:center;gap:9px;margin-bottom:6px;position:relative;z-index:3}
+.b2-word{display:flex;align-items:center;gap:3px;line-height:1;font-weight:800;font-size:21px;letter-spacing:-.01em}
+.b2-hub{background:linear-gradient(120deg,#2563eb,#7c3aed);color:#fff;border-radius:8px;padding:2px 7px 3px;font-size:.86em;box-shadow:0 2px 0 #1a1916;transform:rotate(-4deg);display:inline-block}
+.b2-big{justify-content:center;font-size:30px;margin-top:2px}
+.b2-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);height:13px;overflow:hidden;margin-top:5px}
+.b2-rot{display:flex;flex-direction:column;animation:b2rot 9s steps(1) infinite}
+.b2-rot span{height:13px;line-height:13px;white-space:nowrap}
+.b2-rot span::before{content:"✦ ";color:#f5a300}
+@keyframes b2rot{0%{transform:translateY(0)}33.33%{transform:translateY(-13px)}66.66%{transform:translateY(-26px)}}
+.b2-word{font-family:'Luckiest Guy','Fredoka',cursive;font-weight:400;letter-spacing:1px}
+.b2-sub{background:linear-gradient(110deg,#d19a00 0%,#ffd76a 16%,#fff6c4 26%,#ffcc33 38%,#e0a800 52%,#ffe58a 66%,#fff6c4 76%,#ffc928 88%,#d19a00 100%);background-size:260% auto;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;-webkit-text-stroke:1.2px #7a4f00;filter:drop-shadow(1.5px 1.5px 0 #24203a);animation:goldShine 3.2s linear infinite;position:relative}
+@keyframes goldShine{from{background-position:120% center}to{background-position:-140% center}}
+.b2-word{position:relative}
+.b2-glint{position:absolute;pointer-events:none;color:#fff6c4;text-shadow:0 0 6px #ffd23f,0 0 10px #fff;font-family:sans-serif;line-height:1;animation:glint 2.4s ease-in-out infinite}
+.b2-glint.g1{left:-4px;top:-7px;font-size:11px}.b2-glint.g2{left:38%;top:-9px;font-size:8px;animation-delay:.8s}.b2-glint.g3{left:58%;bottom:-6px;font-size:10px;animation-delay:1.5s}
+@keyframes glint{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(90deg)}}
+.b2-hub{border:2.5px solid #24203a;box-shadow:0 3px 0 #24203a}
+.b2-tag{font-family:'Fredoka',sans-serif;letter-spacing:.06em;font-weight:600}
+@media (prefers-reduced-motion:reduce){.brand2 *,.b2-rot{animation:none!important}}
+
+.harry{flex:none;overflow:visible}
+.hh-bounce{transform-box:fill-box;transform-origin:50% 100%;animation:hhBounce 2.2s ease-in-out infinite}
+@keyframes hhBounce{0%,100%{transform:translateY(0) scaleY(1)}45%{transform:translateY(-3px) scaleY(1.02)}90%{transform:translateY(0) scaleY(.96)}}
+.hh-shadow{transform-box:fill-box;transform-origin:center;animation:hhShadow 2.2s ease-in-out infinite}
+@keyframes hhShadow{45%{transform:scaleX(.8);opacity:.1}}
+.hh-pupil{animation:hhLook 6s ease-in-out infinite}
+@keyframes hhLook{0%,18%,100%{transform:translate(0,0)}24%,40%{transform:translate(-2.4px,0)}48%,62%{transform:translate(1px,-1.6px)}70%,85%{transform:translate(-1px,1.4px)}}
+.hh-eyeR{transform-box:fill-box;transform-origin:center;animation:hhWink 6s ease-in-out infinite}
+@keyframes hhWink{0%,64%,72%,100%{transform:scaleY(1)}67%,69%{transform:scaleY(.08)}}
+.hh-eyeL{transform-box:fill-box;transform-origin:center;animation:hhBlink 4.3s ease-in-out infinite}
+@keyframes hhBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.hh-stache{transform-box:fill-box;transform-origin:50% 40%;animation:hhStache 3s ease-in-out infinite}
+@keyframes hhStache{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(-7deg)}82%{transform:rotate(7deg)}88%{transform:rotate(-4deg)}}
+.hh-wrench{transform-box:fill-box;transform-origin:0% 100%;animation:hhWave 1.6s ease-in-out infinite}
+@keyframes hhWave{0%,100%{transform:rotate(0)}50%{transform:rotate(-28deg)}}
+.hh-hat{transform-box:fill-box;transform-origin:50% 100%;animation:hhHat 6s ease-in-out infinite}
+@keyframes hhHat{0%,30%,40%,100%{transform:translateY(0) rotate(0)}33%{transform:translateY(-7px) rotate(-8deg)}36%{transform:translateY(-4px) rotate(5deg)}}
+.b2-team{font-family:'Fredoka',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;background:#ff5a4e;color:#fff;border:2px solid #24203a;border-radius:6px;padding:1px 5px;transform:rotate(8deg) translateY(-9px);margin-left:-4px;box-shadow:0 2px 0 #24203a}
+.b2-big .b2-team{font-size:11px}
+@media (prefers-reduced-motion:reduce){.harry *{animation:none!important}}
+
+.mich{flex:none;overflow:visible}
+.mi-bob{transform-box:fill-box;transform-origin:50% 100%;animation:miBob 1.8s ease-in-out infinite}
+@keyframes miBob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-2.5px) rotate(1.5deg)}}
+.mi-shadow{transform-box:fill-box;transform-origin:center;animation:miShadow 1.8s ease-in-out infinite}
+@keyframes miShadow{50%{transform:scaleX(.82);opacity:.1}}
+.mi-wave{transform-box:fill-box;transform-origin:0% 100%;animation:miWave .9s ease-in-out infinite}
+@keyframes miWave{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-22deg)}}
+.mi-hello{animation:miHello .9s ease-in-out infinite}
+@keyframes miHello{0%,100%{opacity:.2}50%{opacity:1}}
+.mi-eyes{transform-box:fill-box;transform-origin:center;animation:miBlink 3.8s infinite}
+@keyframes miBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.mi-hairfront,.mi-hairback{transform-box:fill-box;transform-origin:50% 0%;animation:miHair 1.8s ease-in-out infinite}
+@keyframes miHair{0%,100%{transform:rotate(1.2deg)}50%{transform:rotate(-1.2deg)}}
+.mi-hat{transform-box:fill-box;transform-origin:50% 100%;animation:miHat 5s ease-in-out infinite}
+@keyframes miHat{0%,74%,86%,100%{transform:translateY(0) rotate(0)}78%{transform:translateY(-5px) rotate(-7deg)}82%{transform:translateY(-3px) rotate(5deg)}}
+.mi-clip{transform-box:fill-box;transform-origin:50% 100%;animation:miClip 1.8s ease-in-out infinite}
+@keyframes miClip{50%{transform:rotate(-5deg)}}
+@media (prefers-reduced-motion:reduce){.mich *{animation:none!important}}
+</style>
+<!-- ===== Optional cartoon themes (picker at bottom-right; saved per device) ===== -->
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet"/>
+<script>
+(function(){try{
+  var s=localStorage.getItem('subconhub_skin'); if(s==='toon') s='sunny';
+  if(s && s!=='classic'){document.documentElement.classList.add('toon');document.documentElement.setAttribute('data-skin',s);}
+  if(localStorage.getItem('subconhub_anim')==='off') document.documentElement.classList.add('noanim');
+}catch(e){}})();
+</script>
+<style id="toonThemes">
+/* ---------- picker (always available) ---------- */
+.skin-wrap{position:fixed;bottom:24px;right:80px;z-index:100000;display:flex;gap:8px;align-items:flex-end;font-family:'Fredoka','IBM Plex Sans',sans-serif}
+.skin-btn,.anim-btn{font:600 12.5px/1 'Fredoka','IBM Plex Sans',sans-serif;padding:10px 14px;border-radius:999px;border:1.5px solid var(--bdr2);background:#fff;color:#1a1916;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.15);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.anim-btn{display:none}
+html.toon .anim-btn{display:inline-flex}
+html.toon .skin-btn,html.toon .anim-btn{border:3px solid #24203a;box-shadow:0 4px 0 #24203a}
+html.toon .skin-btn{background:var(--t-accent);color:#24203a}
+.skin-menu{position:absolute;bottom:52px;right:0;background:#fff;border:3px solid #24203a;border-radius:18px;box-shadow:0 6px 0 #24203a;padding:8px;display:none;min-width:230px}
+.skin-menu.open{display:block}
+.skin-menu .sm-title{font-size:11px;font-weight:700;color:#6b6585;text-transform:uppercase;letter-spacing:.06em;padding:4px 8px 6px}
+.skin-opt{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:2px solid transparent;border-radius:12px;background:none;cursor:pointer;font:600 13.5px 'Fredoka',sans-serif;color:#24203a;text-align:left}
+.skin-opt:hover{background:#fff4c2}
+.skin-opt.on{border-color:#24203a;background:#ffe98a}
+.skin-opt .skin-sw{width:34px;height:22px;border-radius:7px;border:2px solid #24203a;flex:none}
+.skin-opt small{display:block;font-weight:500;font-size:11px;color:#6b6585}
+
+/* ---------- theme palettes ---------- */
+html[data-skin=sunny]{--t-bg:linear-gradient(180deg,#4fc3ff 0%,#bfeeff 70%,#e9fbff 100%);--t-primary:#ff5a4e;--t-accent:#ffd23f;--t-hover:#fff4c2;--t-ground:#5bd16b;--t-ground2:#3aa64b;--t-sky2:#dff7ff}
+html[data-skin=snowy]{--t-bg:linear-gradient(180deg,#8ecdf0 0%,#d4eefb 65%,#f4fbff 100%);--t-primary:#2f8cff;--t-accent:#bfe9ff;--t-hover:#e6f6ff;--t-ground:#ffffff;--t-ground2:#cfe8f7;--t-sky2:#e8f6ff}
+html[data-skin=party]{--t-bg:linear-gradient(180deg,#ffb3d9 0%,#e6ccff 60%,#fff0fa 100%);--t-primary:#ff4fa3;--t-accent:#ffe066;--t-hover:#ffeaf5;--t-ground:#c084fc;--t-ground2:#a855f7;--t-sky2:#ffe3f3}
+html[data-skin=aurora]{--t-bg:linear-gradient(180deg,#06162a 0%,#0b2a40 55%,#16475a 100%);--t-primary:#14b8a6;--t-accent:#a7f3d0;--t-hover:#e0fbf1;--t-ground:#e8f4ff;--t-ground2:#b8d4ea;--t-sky2:#0b2a40}
+html[data-skin=animals]{--t-bg:linear-gradient(180deg,#ffe08a 0%,#fff3cf 55%,#e3f7cf 100%);--t-primary:#f97316;--t-accent:#fde047;--t-hover:#fff7d6;--t-ground:#86d36b;--t-ground2:#5fb34a;--t-sky2:#fff3cf}
+html[data-skin=twinkle]{--t-bg:linear-gradient(180deg,#1e0b45 0%,#4a1f7a 50%,#b85a9a 100%);--t-primary:#f59e0b;--t-accent:#fde68a;--t-hover:#fff7d6;--t-ground:#4c1d95;--t-ground2:#3b0f73;--t-sky2:#35135f}
+html[data-skin=night]{--t-bg:linear-gradient(180deg,#141a46 0%,#2e2a6e 60%,#4a3b8f 100%);--t-primary:#7c5cff;--t-accent:#ffd23f;--t-hover:#fff4c2;--t-ground:#3b2f78;--t-ground2:#2a2160;--t-sky2:#2e2a6e}
+
+/* ---------- shared cartoon styling (all cartoon themes) ---------- */
+html.toon{--ink:#24203a;--bg:transparent;--sur:#fffdf7;--sur2:#fff9ec;--bdr:#24203a;--bdr2:#24203a;--tx:#24203a;--tx2:#4a4466;--tx3:#6b6585;
+  --blue:#2f6fe4;--bblue:#dcebff;--lblue:#cfe4ff;--green:#1f9d55;--bgreen:#dbf7e6;--amber:#b77900;--bamber:#fff1c2;--red:#e5484d;--r:11px;--rl:18px}
+html.toon body{font-family:'Fredoka','IBM Plex Sans',sans-serif;font-size:13.5px;background:var(--t-bg) fixed}
+@keyframes toonPop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
+html.toon #loginGate{background:var(--t-bg)!important;font-family:'Fredoka',sans-serif!important}
+html.toon #loginGate>div{border:3px solid var(--ink)!important;border-radius:26px!important;box-shadow:0 8px 0 var(--ink)!important;background:#fffdf7!important}
+html.toon #loginGate input[type=password]{border:3px solid var(--ink)!important;border-radius:14px!important;text-align:center}
+html.toon #loginGate button{background:var(--t-primary)!important;border:3px solid var(--ink)!important;border-radius:14px!important;box-shadow:0 4px 0 var(--ink)!important;font-family:'Fredoka',sans-serif!important}
+html.toon .proj-screen{background:var(--t-bg)}
+html.toon .proj-box{border:3px solid var(--ink);border-radius:26px;box-shadow:0 8px 0 var(--ink);animation:toonPop .45s cubic-bezier(.2,1.6,.4,1)}
+html.toon .proj-box h1{font-family:'Luckiest Guy',cursive;font-weight:400;font-size:26px;letter-spacing:1px;color:var(--t-primary);text-shadow:2px 2px 0 var(--ink)}
+html.toon .proj-item{border:2.5px solid var(--ink);border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+html.toon .proj-item:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ink);background:var(--t-hover)}
+html.toon .proj-new input{border:2.5px solid var(--ink);border-radius:12px}
+html.toon .sidebar{background:rgba(255,253,247,.94);border-right:3px solid var(--ink)}
+html.toon .sh{border-bottom:3px solid var(--ink)}
+html.toon .tsw{border-bottom:2px dashed var(--ink)}
+html.toon .tsw input,html.toon .sw input,html.toon .upill,html.toon #sortSel{border:2.5px solid var(--ink)!important;border-radius:12px!important;background:#fff!important}
+html.toon .ti{border-radius:12px;margin:2px 8px;border:2px solid transparent;font-weight:500}
+html.toon .ti:hover{background:var(--t-hover)}
+html.toon .ti.act{background:var(--t-accent);color:var(--ink);border:2px solid var(--ink);box-shadow:0 3px 0 var(--ink);font-weight:700}
+html.toon .tc,html.toon .ti.act .tc{border:2px solid var(--ink);background:#fff;color:var(--ink);font-weight:600}
+html.toon .sidebar-toggle{border:3px solid var(--ink);border-left:none;background:var(--t-accent)}
+html.toon .cur-proj{border:2px solid var(--ink);border-radius:999px;background:#dcebff;color:var(--ink);font-weight:600}
+html.toon .toolbar{margin:10px 12px 0;border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);background:#fffdf7}
+html.toon .fbar{background:transparent;border-bottom:none;padding:12px 16px 6px}
+html.toon .btn,html.toon .vb{border:2.5px solid var(--ink);border-radius:12px;box-shadow:0 3px 0 var(--ink);color:var(--ink);font-weight:600;background:#fff;transition:transform .08s,box-shadow .08s}
+html.toon .btn:hover,html.toon .vb:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ink);background:var(--t-hover)}
+html.toon .btn:active,html.toon .vb:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+html.toon .btn-blue,html.toon .btn-open{background:var(--t-primary);color:#fff;border-color:var(--ink)}
+html.toon .btn-blue:hover,html.toon .btn-open:hover{background:var(--t-primary);filter:brightness(1.08)}
+html.toon .vb.act{background:var(--t-accent)}
+/* status chips keep their meaning colours in every theme */
+html.toon .fc{border:2.5px solid var(--ink);border-radius:999px;background:#fff;color:var(--ink);font-weight:600;box-shadow:0 3px 0 var(--ink);padding:4px 12px}
+html.toon .fc:hover{background:var(--t-hover)}
+html.toon .fc.act{background:var(--t-accent);color:var(--ink)}
+html.toon .fc.actb{background:#2f6fe4;color:#fff}
+html.toon .fc.actg{background:#1f9d55;color:#fff}
+html.toon .fc.acta{background:#ffb703;color:var(--ink)}
+html.toon .fc.actr{background:#e5484d;color:#fff}
+html.toon .pbb{height:12px;width:120px;border:2.5px solid var(--ink);border-radius:999px;background:#fff}
+html.toon .pbf{background:repeating-linear-gradient(45deg,#3dd6b5 0 8px,#26b896 8px 16px)}
+html.toon .pt{color:var(--ink);font-weight:600;background:rgba(255,255,255,.85);border:2px solid var(--ink);border-radius:999px;padding:2px 9px}
+html.toon .card{border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);background:#fffdf7;animation:toonPop .4s cubic-bezier(.2,1.6,.4,1) both;transition:transform .15s,box-shadow .15s}
+html.toon .card:hover{transform:translateY(-3px);box-shadow:0 8px 0 var(--ink)}
+html.toon .card.inv{background:#eaf4ff;border-color:var(--ink);box-shadow:inset 7px 0 0 #2f6fe4,0 5px 0 var(--ink)}
+html.toon .card.qrcv{background:#fff6d6;border-width:3px;border-color:var(--ink);box-shadow:inset 7px 0 0 #ffb703,0 5px 0 var(--ink)}
+html.toon .card.nq{background:#ffecec;border-width:3px;border-color:var(--ink);box-shadow:inset 7px 0 0 #e5484d,0 5px 0 var(--ink)}
+html.toon .card{position:relative}
+html.toon .card.selem,html.toon .card.selem.inv,html.toon .card.selem.qrcv,html.toon .card.selem.nq,html.toon .card.selem.nfa{background:#c9f7e4;outline:3px solid #14b8a6;outline-offset:2px}
+html.toon .card.selem::after{content:"✓ Selected";position:absolute;top:-13px;left:16px;background:#14b8a6;color:#fff;border:2.5px solid var(--ink);border-radius:999px;font:700 11px/1.5 'Fredoka',sans-serif;padding:0 9px;box-shadow:0 2px 0 var(--ink)}
+html.toon tr.selrow-em td{background:#c9f7e4!important}
+html.toon .cname{font-weight:700;font-size:14.5px}
+html.toon .qrbadge,html.toon .invbadge,html.toon .nqbadge,html.toon .nfabadge,html.toon .cbadge{border:2px solid var(--ink);border-radius:999px;font-weight:700}
+html.toon .gradechip{border:2px solid var(--ink);border-radius:999px;background:#ffd23f;color:var(--ink)}
+html.toon .dpill{border:2px solid var(--ink);border-radius:999px}
+html.toon .di,html.toon .ni,html.toon .dinput{border:2px solid var(--ink);border-radius:10px;background:#fff}
+html.toon .cdiv,html.toon .csec{border-top:2px dashed var(--ink)}
+html.toon .empty{color:var(--ink);background:rgba(255,255,255,.85);border:3px solid var(--ink);border-radius:18px}
+html.toon .tw{margin:6px 12px 12px;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);background:#fffdf7}
+html.toon th{background:var(--t-accent);color:var(--ink);border-bottom:3px solid var(--ink);font-weight:700}
+html.toon td{border-bottom:1.5px dashed #b9b3cf}
+html.toon tr:hover td{background:var(--t-hover)}
+html.toon .modal,html.toon .batchbox{border:3px solid var(--ink);border-radius:24px;box-shadow:0 8px 0 var(--ink);background:#fffdf7;animation:toonPop .35s cubic-bezier(.2,1.6,.4,1)}
+html.toon .modal h2,html.toon .batchhd{font-family:'Luckiest Guy',cursive;font-weight:400;font-size:22px;letter-spacing:1px;color:var(--t-primary);text-shadow:1.5px 1.5px 0 var(--ink)}
+html.toon .fg input,html.toon .fg select,html.toon .fg textarea{border:2.5px solid var(--ink);border-radius:12px;background:#fff}
+html.toon .epicker,html.toon .gradepop,html.toon .wp-panel{border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink)}
+html.toon .emailbar,html.toon .toast{border:3px solid var(--ink);box-shadow:0 5px 0 rgba(36,32,58,.5);background:#2f2a4a}
+html.toon .wp-btn{border:3px solid var(--ink);box-shadow:0 4px 0 var(--ink)}
+html.toon ::-webkit-scrollbar{width:9px;height:9px}
+html.toon ::-webkit-scrollbar-thumb{background:var(--t-accent);border:2px solid var(--ink);border-radius:6px}
+/* night theme: light text where it sits directly on the dark sky */
+html[data-skin=night] .rc,html[data-skin=aurora] .rc,html[data-skin=twinkle] .rc{color:var(--tx2)}
+html[data-skin=night] #wallpaperBg:not(.active) ~ .app .fbar .pt{background:#fff}
+
+/* ---------- background scenery (behind everything; only shows in gaps) ---------- */
+.toon-scene{display:none;position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
+html.toon .toon-scene{display:block}
+html.toon body:has(#wallpaperBg.active) .toon-scene{display:none}
+.sc{display:none}
+html[data-skin=sunny] .sc-sunny,html[data-skin=snowy] .sc-snowy,html[data-skin=party] .sc-party,html[data-skin=night] .sc-night,html[data-skin=aurora] .sc-aurora,html[data-skin=twinkle] .sc-twinkle,html[data-skin=animals] .sc-animals{display:block}
+.aurora{position:absolute;left:-20%;width:140%;height:34vh;filter:blur(24px);opacity:.95;mix-blend-mode:screen;border-radius:50%;animation:aurora 14s ease-in-out infinite alternate}
+.aurora.a1{top:2%;background:linear-gradient(90deg,transparent 5%,#34d399 25%,#22d3ee 45%,#34d399 65%,transparent 90%)}
+.aurora.a2{top:14%;background:linear-gradient(90deg,transparent 10%,#a78bfa 30%,#22d3ee 50%,#86efac 70%,transparent 95%);animation-duration:18s;animation-delay:-6s;opacity:.6}
+.aurora.a3{top:26%;height:22vh;background:linear-gradient(90deg,transparent 0%,#22c55e 35%,#f0abfc 55%,transparent 85%);animation-duration:22s;animation-delay:-11s;opacity:.45}
+@keyframes aurora{0%{transform:translateX(-6%) skewX(-12deg) scaleY(.8)}50%{transform:translateX(4%) skewX(10deg) scaleY(1.15)}100%{transform:translateX(8%) skewX(-6deg) scaleY(.9)}}
+.tw{position:absolute;line-height:1;animation:blink var(--d,2.2s) ease-in-out infinite;animation-delay:var(--dl,0s)}
+@keyframes blink{0%,100%{opacity:.15;transform:scale(.55) rotate(0)}45%{opacity:1;transform:scale(1.15) rotate(20deg)}55%{opacity:1;transform:scale(1) rotate(25deg)}}
+.shooting{position:absolute;width:110px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff7c2);transform:rotate(18deg);opacity:0;animation:shootSky 9s ease-out infinite}
+@keyframes shootSky{0%,82%{opacity:0;transform:translate(0,0) rotate(18deg)}85%{opacity:1}100%{opacity:0;transform:translate(60vw,22vh) rotate(18deg)}}
+.sun{position:absolute;top:7%;right:10%;width:80px;height:80px;border-radius:50%;background:#ffd23f;border:3px solid #24203a;box-shadow:0 0 0 14px rgba(255,210,63,.35);animation:sunPulse 4s ease-in-out infinite}
+@keyframes sunPulse{50%{box-shadow:0 0 0 24px rgba(255,210,63,.18)}}
+.bfly{position:absolute;font-size:22px;animation:flutter 9s ease-in-out infinite}
+@keyframes flutter{0%,100%{transform:translate(0,0) rotate(-8deg)}25%{transform:translate(60px,-30px) rotate(8deg)}50%{transform:translate(120px,10px) rotate(-6deg)}75%{transform:translate(50px,30px) rotate(10deg)}}
+.toon-cloud{position:absolute;background:#fff;border-radius:60px;left:-220px;animation:toonDrift linear infinite}
+.toon-cloud::before,.toon-cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.toon-cloud::before{width:55%;height:150%;left:12%;top:-60%}.toon-cloud::after{width:40%;height:120%;right:12%;top:-40%}
+.toon-cloud.k1{width:150px;height:44px;top:10%;animation-duration:75s}
+.toon-cloud.k2{width:110px;height:34px;top:28%;animation-duration:100s;animation-delay:-45s}
+.toon-cloud.k3{width:190px;height:54px;top:18%;animation-duration:125s;animation-delay:-85s}
+@keyframes toonDrift{to{transform:translateX(calc(100vw + 450px))}}
+.toon-hill{position:absolute;bottom:-40px;border-radius:50% 50% 0 0;border:3px solid #24203a;border-bottom:none;background:var(--t-ground)}
+.toon-hill.g1{width:55vw;height:150px;left:-8vw}.toon-hill.g2{width:45vw;height:110px;left:38vw;background:var(--t-ground2)}.toon-hill.g3{width:40vw;height:160px;right:-10vw}
+.toon-coin{position:absolute;width:24px;height:24px;border-radius:50%;border:3px solid #24203a;background:radial-gradient(circle at 35% 35%,#fff3b0,#ffb703 55%,#e08e00);animation:toonBob 2.4s ease-in-out infinite}
+@keyframes toonBob{0%,100%{transform:translateY(0) scaleX(1)}50%{transform:translateY(-14px) scaleX(.55)}}
+.flake{position:absolute;top:-20px;color:#fff;text-shadow:0 0 2px #7fb8d8;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+.balloon{position:absolute;bottom:-90px;width:34px;height:42px;border-radius:50% 50% 48% 48%;border:3px solid #24203a;animation:rise linear infinite}
+.balloon::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:34px;background:#24203a}
+@keyframes rise{to{transform:translateY(-120vh) rotate(8deg)}}
+.star{position:absolute;color:#fff6c4;text-shadow:0 0 6px #ffd23f;animation:twinkleS 3s ease-in-out infinite}
+@keyframes twinkleS{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+.moon{position:absolute;top:8%;right:12%;width:70px;height:70px;border-radius:50%;background:#fff3c4;border:3px solid #24203a;box-shadow:inset -14px -6px 0 #f2d98a}
+html.noanim .toon-scene *{animation:none!important}
+@media (prefers-reduced-motion:reduce){html.toon *{animation:none!important;transition:none!important}}
+</style>
+<style id="toonTeamFix">
+/* Team version uses !important glass backgrounds; cartoon themes need to win */
+html.toon .toolbar{background:#fffdf7!important;backdrop-filter:none!important}
+html.toon .fbar{background:transparent!important;backdrop-filter:none!important}
+html.toon .cards-area,html.toon .tw{background:transparent!important}
+html.toon .card{background:#fffdf7!important;backdrop-filter:none!important}
+html.toon .card.inv{background:#eaf4ff!important}
+html.toon .card.qrcv{background:#fff6d6!important}
+html.toon .card.nq{background:#ffecec!important}
+html.toon .card.selem,html.toon .card.selem.inv,html.toon .card.selem.qrcv,html.toon .card.selem.nq,html.toon .card.selem.nfa{background:#c9f7e4!important;outline:3px solid #14b8a6;outline-offset:2px}
+html.toon table{background:#fffdf7!important}
+html.toon th{background:var(--t-accent)!important;color:var(--ink)!important;backdrop-filter:none!important}
+html.toon .sh{background:transparent}
+html.toon .card.inv .cname{color:#0369a1}
+html.toon .fc.act,html.toon .fc.actg,html.toon .fc.acta,html.toon .fc.actr{box-shadow:0 3px 0 var(--ink)}
+html.toon .ti.act{border-left-color:var(--ink)}
+html.toon .proj-screen{backdrop-filter:none}
+</style>
 </head>
 
 <body>
 <div id="loginGate" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#1f2937,#0b1220);display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',system-ui,sans-serif">
   <div style="background:#fff;padding:36px 30px;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.45);width:300px;text-align:center">
-    <div style="font-size:34px;margin-bottom:4px">🔒</div>
-    <div style="font-size:19px;font-weight:800;color:#111;letter-spacing:.5px">SUBCON HUB</div>
-    <div style="font-size:12px;color:#888;margin:4px 0 20px">Enter passcode to continue</div>
+    <div style="display:flex;justify-content:center;margin-bottom:4px"><svg class="mich" viewBox="0 0 64 74" width="78" height="89" aria-hidden="true">
+  <ellipse class="mi-shadow" cx="32" cy="72" rx="20" ry="2.4" fill="#24203a" opacity=".16"/>
+  <g class="mi-bob">
+    <path class="mi-hairback" d="M15 31 Q11 50 17 61 L47 61 Q53 50 49 31 Z" fill="#7a3f22" stroke="#24203a" stroke-width="2"/>
+    <path d="M12 72 Q12 56 32 54 Q52 56 52 72 Z" fill="#2b2b38" stroke="#24203a" stroke-width="2"/>
+    <path d="M16.5 72 L20.5 57 L28.5 55.5 L28.5 72 Z M47.5 72 L43.5 57 L35.5 55.5 L35.5 72 Z" fill="#ff8a1a" stroke="#24203a" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M17.6 65 H28.5 M35.5 65 H46.4" stroke="#e8f1f7" stroke-width="2.6"/>
+    <rect x="28" y="47" width="8" height="8" rx="2" fill="#f2c6a4" stroke="#24203a" stroke-width="1.6"/>
+    <circle cx="32" cy="38" r="14.5" fill="#f7d4b6" stroke="#24203a" stroke-width="2"/>
+    <g class="mi-hairfront">
+      <path d="M18.5 35 Q19 22 32 21.5 Q44.5 22 45.5 33 Q41 26.5 33 28 Q26 29 20 37 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M18.4 34 Q14.6 46 17.6 59 Q20.8 49 20.6 38 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M45.8 33 Q49.6 46 46.6 59 Q43.4 49 43.6 38 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M25 26.5 Q31 24 38 25.5" fill="none" stroke="#c0703f" stroke-width="1.6" stroke-linecap="round"/>
+    </g>
+    <g class="mi-eyes">
+      <ellipse cx="26" cy="38.5" rx="4.4" ry="5" fill="#fff" stroke="#24203a" stroke-width="1.6"/><ellipse cx="38" cy="38.5" rx="4.4" ry="5" fill="#fff" stroke="#24203a" stroke-width="1.6"/>
+      <ellipse cx="26.4" cy="39.2" rx="3.1" ry="3.7" fill="#5a2e16"/><ellipse cx="38.4" cy="39.2" rx="3.1" ry="3.7" fill="#5a2e16"/>
+      <ellipse cx="26.4" cy="39.6" rx="1.7" ry="2.1" fill="#24203a"/><ellipse cx="38.4" cy="39.6" rx="1.7" ry="2.1" fill="#24203a"/>
+      <circle cx="27.6" cy="37.6" r="1.25" fill="#fff"/><circle cx="39.6" cy="37.6" r="1.25" fill="#fff"/>
+      <circle cx="25.4" cy="41" r=".6" fill="#fff"/><circle cx="37.4" cy="41" r=".6" fill="#fff"/>
+      <path d="M21.8 35.2 l-1.6 -1.2 M23 34 l-1 -1.6 M42.2 35.2 l1.6 -1.2 M41 34 l1 -1.6" stroke="#24203a" stroke-width="1.1" stroke-linecap="round"/></g>
+    <path d="M23.2 32 Q26 30.4 28.8 31.6 M35.2 31.6 Q38 30.4 40.8 32" fill="none" stroke="#5a2e16" stroke-width="1.3" stroke-linecap="round"/>
+    <circle cx="21.6" cy="44.6" r="2.4" fill="#ff9ec4" opacity=".75"/><circle cx="42.4" cy="44.6" r="2.4" fill="#ff9ec4" opacity=".75"/>
+    <path d="M28.2 45.4 Q32 50 35.8 45.4 Z" fill="#fff" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M29.4 47.3 Q32 49.2 34.6 47.3" fill="#ff7e8f" opacity=".8"/>
+    <g class="mi-hat"><path d="M17.5 27.5 Q17.5 11.5 32 11.5 Q46.5 11.5 46.5 27.5 Z" fill="#ffd23f" stroke="#24203a" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="29" y="8.5" width="6" height="8" rx="1.8" fill="#ffd23f" stroke="#24203a" stroke-width="1.7"/>
+      <rect x="14" y="25.5" width="36" height="4.6" rx="2.3" fill="#ffc21a" stroke="#24203a" stroke-width="2"/>
+      <path d="M22 20 Q23.5 15.5 27.5 14.5" fill="none" stroke="#fff6c4" stroke-width="2" stroke-linecap="round"/></g>
+    <g class="mi-clip"><rect x="5" y="56" width="13" height="16" rx="2" fill="#c08a4a" stroke="#24203a" stroke-width="1.8"/>
+      <rect x="7" y="59" width="9" height="11" fill="#fff"/><rect x="9" y="54.5" width="5" height="3" rx="1" fill="#6b6585" stroke="#24203a" stroke-width="1.2"/>
+      <text x="11.5" y="67" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="5.4" font-weight="700" fill="#e5484d">QS</text>
+      <circle cx="17" cy="62" r="2.8" fill="#f7d4b6" stroke="#24203a" stroke-width="1.4"/></g>
+    <g class="mi-wave"><path d="M48 59 Q55 52 56 43" fill="none" stroke="#24203a" stroke-width="7" stroke-linecap="round"/>
+      <path d="M48 59 Q55 52 56 43" fill="none" stroke="#2b2b38" stroke-width="4.4" stroke-linecap="round"/>
+      <circle cx="56.3" cy="40" r="3.6" fill="#f7d4b6" stroke="#24203a" stroke-width="1.6"/>
+      <path class="mi-hello" d="M60 33 q2 -2 4 0 M61 29 q2.5 -2.5 5 0" fill="none" stroke="#ffb703" stroke-width="1.6" stroke-linecap="round"/></g>
+  </g>
+</svg></div>
+    <div class="b2-word b2-big"><span class="b2-sub">Subcon</span><span class="b2-hub">Hub</span><span class="b2-team">HDB</span><span class="b2-glint g1">✦</span><span class="b2-glint g2">✧</span><span class="b2-glint g3">✦</span></div>
+    <div style="font-size:12.5px;color:#777;margin:8px 0 20px">Knock knock! 👷‍♀️ Michelle needs<br>the team passcode before you come in</div>
     <input id="gatePass" type="password" placeholder="Passcode" autofocus style="width:100%;box-sizing:border-box;padding:11px 12px;font-size:14px;border:1px solid #ccc;border-radius:9px;outline:none" onkeydown="if(event.key==='Enter')tryUnlock()"/>
     <div id="gateErr" style="color:#c0392b;font-size:11.5px;height:15px;margin:7px 0 4px"></div>
     <label style="display:flex;gap:6px;align-items:center;justify-content:center;font-size:11.5px;color:#666;margin-bottom:14px;cursor:pointer"><input type="checkbox" id="gateRemember" checked/> Remember on this device</label>
-    <button onclick="tryUnlock()" style="width:100%;padding:11px;font-size:14px;font-weight:700;color:#fff;background:#2563eb;border:none;border-radius:9px;cursor:pointer">Unlock</button>
+    <button onclick="tryUnlock()" style="width:100%;padding:11px;font-size:14px;font-weight:700;color:#fff;background:#2563eb;border:none;border-radius:9px;cursor:pointer">🔓 Let me in, Michelle!</button>
   </div>
 </div>
 <script>
@@ -651,8 +921,47 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
 <!-- Project selection screen -->
 <div class="proj-screen" id="projScreen">
   <div class="proj-box">
-    <h1>📋 SubconHub</h1>
-    <p>Select a project or create a new one. Each project tracks its own invitation, addendum and quotation status using the same subcontractor list.</p>
+    <h1><span style="display:inline-flex;vertical-align:middle;margin-right:8px"><svg class="mich" viewBox="0 0 64 74" width="42" height="48" aria-hidden="true">
+  <ellipse class="mi-shadow" cx="32" cy="72" rx="20" ry="2.4" fill="#24203a" opacity=".16"/>
+  <g class="mi-bob">
+    <path class="mi-hairback" d="M15 31 Q11 50 17 61 L47 61 Q53 50 49 31 Z" fill="#7a3f22" stroke="#24203a" stroke-width="2"/>
+    <path d="M12 72 Q12 56 32 54 Q52 56 52 72 Z" fill="#2b2b38" stroke="#24203a" stroke-width="2"/>
+    <path d="M16.5 72 L20.5 57 L28.5 55.5 L28.5 72 Z M47.5 72 L43.5 57 L35.5 55.5 L35.5 72 Z" fill="#ff8a1a" stroke="#24203a" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M17.6 65 H28.5 M35.5 65 H46.4" stroke="#e8f1f7" stroke-width="2.6"/>
+    <rect x="28" y="47" width="8" height="8" rx="2" fill="#f2c6a4" stroke="#24203a" stroke-width="1.6"/>
+    <circle cx="32" cy="38" r="14.5" fill="#f7d4b6" stroke="#24203a" stroke-width="2"/>
+    <g class="mi-hairfront">
+      <path d="M18.5 35 Q19 22 32 21.5 Q44.5 22 45.5 33 Q41 26.5 33 28 Q26 29 20 37 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M18.4 34 Q14.6 46 17.6 59 Q20.8 49 20.6 38 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M45.8 33 Q49.6 46 46.6 59 Q43.4 49 43.6 38 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M25 26.5 Q31 24 38 25.5" fill="none" stroke="#c0703f" stroke-width="1.6" stroke-linecap="round"/>
+    </g>
+    <g class="mi-eyes">
+      <ellipse cx="26" cy="38.5" rx="4.4" ry="5" fill="#fff" stroke="#24203a" stroke-width="1.6"/><ellipse cx="38" cy="38.5" rx="4.4" ry="5" fill="#fff" stroke="#24203a" stroke-width="1.6"/>
+      <ellipse cx="26.4" cy="39.2" rx="3.1" ry="3.7" fill="#5a2e16"/><ellipse cx="38.4" cy="39.2" rx="3.1" ry="3.7" fill="#5a2e16"/>
+      <ellipse cx="26.4" cy="39.6" rx="1.7" ry="2.1" fill="#24203a"/><ellipse cx="38.4" cy="39.6" rx="1.7" ry="2.1" fill="#24203a"/>
+      <circle cx="27.6" cy="37.6" r="1.25" fill="#fff"/><circle cx="39.6" cy="37.6" r="1.25" fill="#fff"/>
+      <circle cx="25.4" cy="41" r=".6" fill="#fff"/><circle cx="37.4" cy="41" r=".6" fill="#fff"/>
+      <path d="M21.8 35.2 l-1.6 -1.2 M23 34 l-1 -1.6 M42.2 35.2 l1.6 -1.2 M41 34 l1 -1.6" stroke="#24203a" stroke-width="1.1" stroke-linecap="round"/></g>
+    <path d="M23.2 32 Q26 30.4 28.8 31.6 M35.2 31.6 Q38 30.4 40.8 32" fill="none" stroke="#5a2e16" stroke-width="1.3" stroke-linecap="round"/>
+    <circle cx="21.6" cy="44.6" r="2.4" fill="#ff9ec4" opacity=".75"/><circle cx="42.4" cy="44.6" r="2.4" fill="#ff9ec4" opacity=".75"/>
+    <path d="M28.2 45.4 Q32 50 35.8 45.4 Z" fill="#fff" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M29.4 47.3 Q32 49.2 34.6 47.3" fill="#ff7e8f" opacity=".8"/>
+    <g class="mi-hat"><path d="M17.5 27.5 Q17.5 11.5 32 11.5 Q46.5 11.5 46.5 27.5 Z" fill="#ffd23f" stroke="#24203a" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="29" y="8.5" width="6" height="8" rx="1.8" fill="#ffd23f" stroke="#24203a" stroke-width="1.7"/>
+      <rect x="14" y="25.5" width="36" height="4.6" rx="2.3" fill="#ffc21a" stroke="#24203a" stroke-width="2"/>
+      <path d="M22 20 Q23.5 15.5 27.5 14.5" fill="none" stroke="#fff6c4" stroke-width="2" stroke-linecap="round"/></g>
+    <g class="mi-clip"><rect x="5" y="56" width="13" height="16" rx="2" fill="#c08a4a" stroke="#24203a" stroke-width="1.8"/>
+      <rect x="7" y="59" width="9" height="11" fill="#fff"/><rect x="9" y="54.5" width="5" height="3" rx="1" fill="#6b6585" stroke="#24203a" stroke-width="1.2"/>
+      <text x="11.5" y="67" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="5.4" font-weight="700" fill="#e5484d">QS</text>
+      <circle cx="17" cy="62" r="2.8" fill="#f7d4b6" stroke="#24203a" stroke-width="1.4"/></g>
+    <g class="mi-wave"><path d="M48 59 Q55 52 56 43" fill="none" stroke="#24203a" stroke-width="7" stroke-linecap="round"/>
+      <path d="M48 59 Q55 52 56 43" fill="none" stroke="#2b2b38" stroke-width="4.4" stroke-linecap="round"/>
+      <circle cx="56.3" cy="40" r="3.6" fill="#f7d4b6" stroke="#24203a" stroke-width="1.6"/>
+      <path class="mi-hello" d="M60 33 q2 -2 4 0 M61 29 q2.5 -2.5 5 0" fill="none" stroke="#ffb703" stroke-width="1.6" stroke-linecap="round"/></g>
+  </g>
+</svg></span>Right, team — which job are we chasing quotes for?</h1>
+    <p>Pick a project or start a new one. Every project keeps its own invites, addenda and quotes — all from one shared crew of trusted trades.</p>
     <div class="proj-list" id="projList"></div>
     <div class="proj-empty" id="projEmpty" style="display:none">No projects yet — create one below</div>
     <div class="proj-new">
@@ -673,22 +982,52 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <div class="resize-handle" id="resizeHandle"></div>
     <div class="sh">
       <span class="spark s1">✦</span><span class="spark s2">✧</span><span class="spark s3">⋆</span><span class="spark s4">✦</span><span class="spark s5">✧</span><span class="spark s6">⋆</span>
-      <div class="brand">
-        <svg class="brand-icon" viewBox="0 0 32 32" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
-          <defs><radialGradient id="hubg"><stop offset="0" stop-color="#fff3b0"/><stop offset="1" stop-color="#f5a300"/></radialGradient></defs>
-          <circle cx="16" cy="16" r="12" class="orbit-ring"/>
-          <g class="rays">
-            <line x1="16" y1="9" x2="16" y2="6"/><line x1="16" y1="23" x2="16" y2="26"/>
-            <line x1="9" y1="16" x2="6" y2="16"/><line x1="23" y1="16" x2="26" y2="16"/>
-            <line x1="10.8" y1="10.8" x2="8.6" y2="8.6"/><line x1="21.2" y1="10.8" x2="23.4" y2="8.6"/>
-            <line x1="10.8" y1="21.2" x2="8.6" y2="23.4"/><line x1="21.2" y1="21.2" x2="23.4" y2="23.4"/>
-          </g>
-          <circle cx="16" cy="16" r="5" class="sun-core"/>
-          <g class="orbit"><circle cx="16" cy="4" r="2.6" class="earth"/><circle cx="15" cy="3.3" r=".9" fill="#aee0ff"/></g>
-        </svg>
-        <span class="brand-word"><span class="bk-sub">SUBCON</span><span class="bk-hub">HUB</span></span>
+      <div class="brand2">
+        <svg class="mich" viewBox="0 0 64 74" width="50" height="57" aria-hidden="true">
+  <ellipse class="mi-shadow" cx="32" cy="72" rx="20" ry="2.4" fill="#24203a" opacity=".16"/>
+  <g class="mi-bob">
+    <path class="mi-hairback" d="M15 31 Q11 50 17 61 L47 61 Q53 50 49 31 Z" fill="#7a3f22" stroke="#24203a" stroke-width="2"/>
+    <path d="M12 72 Q12 56 32 54 Q52 56 52 72 Z" fill="#2b2b38" stroke="#24203a" stroke-width="2"/>
+    <path d="M16.5 72 L20.5 57 L28.5 55.5 L28.5 72 Z M47.5 72 L43.5 57 L35.5 55.5 L35.5 72 Z" fill="#ff8a1a" stroke="#24203a" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M17.6 65 H28.5 M35.5 65 H46.4" stroke="#e8f1f7" stroke-width="2.6"/>
+    <rect x="28" y="47" width="8" height="8" rx="2" fill="#f2c6a4" stroke="#24203a" stroke-width="1.6"/>
+    <circle cx="32" cy="38" r="14.5" fill="#f7d4b6" stroke="#24203a" stroke-width="2"/>
+    <g class="mi-hairfront">
+      <path d="M18.5 35 Q19 22 32 21.5 Q44.5 22 45.5 33 Q41 26.5 33 28 Q26 29 20 37 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M18.4 34 Q14.6 46 17.6 59 Q20.8 49 20.6 38 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M45.8 33 Q49.6 46 46.6 59 Q43.4 49 43.6 38 Z" fill="#8a4b2a" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M25 26.5 Q31 24 38 25.5" fill="none" stroke="#c0703f" stroke-width="1.6" stroke-linecap="round"/>
+    </g>
+    <g class="mi-eyes">
+      <ellipse cx="26" cy="38.5" rx="4.4" ry="5" fill="#fff" stroke="#24203a" stroke-width="1.6"/><ellipse cx="38" cy="38.5" rx="4.4" ry="5" fill="#fff" stroke="#24203a" stroke-width="1.6"/>
+      <ellipse cx="26.4" cy="39.2" rx="3.1" ry="3.7" fill="#5a2e16"/><ellipse cx="38.4" cy="39.2" rx="3.1" ry="3.7" fill="#5a2e16"/>
+      <ellipse cx="26.4" cy="39.6" rx="1.7" ry="2.1" fill="#24203a"/><ellipse cx="38.4" cy="39.6" rx="1.7" ry="2.1" fill="#24203a"/>
+      <circle cx="27.6" cy="37.6" r="1.25" fill="#fff"/><circle cx="39.6" cy="37.6" r="1.25" fill="#fff"/>
+      <circle cx="25.4" cy="41" r=".6" fill="#fff"/><circle cx="37.4" cy="41" r=".6" fill="#fff"/>
+      <path d="M21.8 35.2 l-1.6 -1.2 M23 34 l-1 -1.6 M42.2 35.2 l1.6 -1.2 M41 34 l1 -1.6" stroke="#24203a" stroke-width="1.1" stroke-linecap="round"/></g>
+    <path d="M23.2 32 Q26 30.4 28.8 31.6 M35.2 31.6 Q38 30.4 40.8 32" fill="none" stroke="#5a2e16" stroke-width="1.3" stroke-linecap="round"/>
+    <circle cx="21.6" cy="44.6" r="2.4" fill="#ff9ec4" opacity=".75"/><circle cx="42.4" cy="44.6" r="2.4" fill="#ff9ec4" opacity=".75"/>
+    <path d="M28.2 45.4 Q32 50 35.8 45.4 Z" fill="#fff" stroke="#24203a" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M29.4 47.3 Q32 49.2 34.6 47.3" fill="#ff7e8f" opacity=".8"/>
+    <g class="mi-hat"><path d="M17.5 27.5 Q17.5 11.5 32 11.5 Q46.5 11.5 46.5 27.5 Z" fill="#ffd23f" stroke="#24203a" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="29" y="8.5" width="6" height="8" rx="1.8" fill="#ffd23f" stroke="#24203a" stroke-width="1.7"/>
+      <rect x="14" y="25.5" width="36" height="4.6" rx="2.3" fill="#ffc21a" stroke="#24203a" stroke-width="2"/>
+      <path d="M22 20 Q23.5 15.5 27.5 14.5" fill="none" stroke="#fff6c4" stroke-width="2" stroke-linecap="round"/></g>
+    <g class="mi-clip"><rect x="5" y="56" width="13" height="16" rx="2" fill="#c08a4a" stroke="#24203a" stroke-width="1.8"/>
+      <rect x="7" y="59" width="9" height="11" fill="#fff"/><rect x="9" y="54.5" width="5" height="3" rx="1" fill="#6b6585" stroke="#24203a" stroke-width="1.2"/>
+      <text x="11.5" y="67" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="5.4" font-weight="700" fill="#e5484d">QS</text>
+      <circle cx="17" cy="62" r="2.8" fill="#f7d4b6" stroke="#24203a" stroke-width="1.4"/></g>
+    <g class="mi-wave"><path d="M48 59 Q55 52 56 43" fill="none" stroke="#24203a" stroke-width="7" stroke-linecap="round"/>
+      <path d="M48 59 Q55 52 56 43" fill="none" stroke="#2b2b38" stroke-width="4.4" stroke-linecap="round"/>
+      <circle cx="56.3" cy="40" r="3.6" fill="#f7d4b6" stroke="#24203a" stroke-width="1.6"/>
+      <path class="mi-hello" d="M60 33 q2 -2 4 0 M61 29 q2.5 -2.5 5 0" fill="none" stroke="#ffb703" stroke-width="1.6" stroke-linecap="round"/></g>
+  </g>
+</svg>
+        <div class="b2-text">
+          <div class="b2-word"><span class="b2-sub">Subcon</span><span class="b2-hub">Hub</span><span class="b2-team">HDB</span><span class="b2-glint g1">✦</span><span class="b2-glint g2">✧</span><span class="b2-glint g3">✦</span></div>
+          <div class="b2-tag"><span class="b2-rot"><span>Quotes in, chaos out</span><span>Calls made, quotes chased</span><span>Team crew, assemble!</span></span></div>
+        </div>
       </div>
-      <div class="brand-tag">Subcontractor Directory</div>
       <div class="proj" id="projTitle" style="font-size:12px;font-weight:600;color:var(--tx);line-height:1.3;margin-bottom:4px">—</div>
       <button class="cur-proj" onclick="showProjScreen()" title="Switch project">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
@@ -705,7 +1044,7 @@ input[type=checkbox]:checked{animation:checkBounce .25s cubic-bezier(.34,1.56,.6
     <div class="toolbar">
       <div class="sw">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" id="mq" placeholder="Search company, contact, phone, email, track record..." oninput="render()" />
+        <input type="text" id="mq" placeholder="Find a trade partner… company, contact, phone, email or track record" oninput="render()" />
       </div>
       <div class="tr">
         <span class="rc" id="rc"></span>
@@ -3018,6 +3357,383 @@ document.addEventListener('mouseup',()=>{
   window.render=function(){const ret=_r.apply(this,arguments);applyColOrder();applyColVisibility();initColDrag();return ret;};
 })();
 setTimeout(()=>{initColDrag();applyColOrder();applyColVisibility();},200);
+</script>
+<!-- ===== Cartoon themes: scenery, character stage, picker ===== -->
+<div class="toon-scene" aria-hidden="true">
+  <div class="sc sc-sunny">
+    <div class="toon-cloud k1"></div><div class="toon-cloud k2"></div><div class="toon-cloud k3"></div>
+    <div class="toon-coin" style="left:6%;top:42%"></div><div class="toon-coin" style="right:5%;top:55%;animation-delay:.8s"></div>
+  </div>
+  <div class="sc sc-snowy">
+    <span class="flake" style="left:5%;font-size:16px;animation-duration:11s">❄</span><span class="flake" style="left:18%;font-size:11px;animation-duration:14s;animation-delay:-5s">❄</span>
+    <span class="flake" style="left:33%;font-size:20px;animation-duration:17s;animation-delay:-9s">❄</span><span class="flake" style="left:49%;font-size:12px;animation-duration:12s;animation-delay:-2s">❄</span>
+    <span class="flake" style="left:63%;font-size:17px;animation-duration:15s;animation-delay:-7s">❄</span><span class="flake" style="left:77%;font-size:10px;animation-duration:10s;animation-delay:-4s">❄</span>
+    <span class="flake" style="left:90%;font-size:15px;animation-duration:16s;animation-delay:-11s">❄</span>
+  </div>
+  <div class="sc sc-party">
+    <span class="balloon" style="left:6%;background:#ff4fa3;animation-duration:19s"></span><span class="balloon" style="left:24%;background:#ffe066;animation-duration:23s;animation-delay:-8s"></span>
+    <span class="balloon" style="left:47%;background:#3dd6b5;animation-duration:21s;animation-delay:-14s"></span><span class="balloon" style="left:71%;background:#8b5cf6;animation-duration:25s;animation-delay:-4s"></span>
+    <span class="balloon" style="left:89%;background:#ff7a45;animation-duration:20s;animation-delay:-11s"></span>
+  </div>
+  <div class="sc sc-night">
+    <div class="moon"></div>
+    <span class="star" style="left:8%;top:12%;font-size:14px">✦</span><span class="star" style="left:22%;top:30%;font-size:9px;animation-delay:.7s">✦</span>
+    <span class="star" style="left:41%;top:9%;font-size:12px;animation-delay:1.4s">✧</span><span class="star" style="left:57%;top:26%;font-size:10px;animation-delay:.3s">✦</span>
+    <span class="star" style="left:69%;top:44%;font-size:13px;animation-delay:2s">✧</span><span class="star" style="left:33%;top:52%;font-size:8px;animation-delay:1.1s">✦</span>
+    <span class="star" style="left:92%;top:38%;font-size:11px;animation-delay:.5s">✦</span>
+  </div>
+  <div class="sc sc-aurora">
+    <div class="aurora a1"></div><div class="aurora a2"></div><div class="aurora a3"></div>
+    <span class="star" style="left:10%;top:48%;font-size:10px">✦</span><span class="star" style="left:28%;top:62%;font-size:8px;animation-delay:.9s">✦</span>
+    <span class="star" style="left:52%;top:55%;font-size:11px;animation-delay:1.6s">✧</span><span class="star" style="left:74%;top:60%;font-size:9px;animation-delay:.4s">✦</span>
+    <span class="star" style="left:90%;top:50%;font-size:12px;animation-delay:2.2s">✧</span>
+  </div>
+  <div class="sc sc-animals">
+    <div class="sun"></div>
+    <span class="bfly" style="left:8%;top:30%">🦋</span><span class="bfly" style="left:40%;top:18%;animation-delay:-3s;animation-duration:11s">🦋</span>
+    <span class="bfly" style="left:70%;top:40%;animation-delay:-6s;animation-duration:8s">🦋</span>
+    <div class="toon-cloud k1" style="opacity:.8"></div><div class="toon-cloud k3" style="opacity:.8"></div>
+  </div>
+  <div class="sc sc-twinkle"><span class="tw" style="left:32.4%;top:12.3%;font-size:20px;color:#fff7c2;--d:1.6s;--dl:-1.9s;text-shadow:0 0 8px currentColor">★</span><span class="tw" style="left:57.5%;top:63.9%;font-size:10px;color:#fff7c2;--d:1.6s;--dl:-1.5s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:9.8%;top:30.9%;font-size:24px;color:#c4b5fd;--d:1.7s;--dl:-0.8s;text-shadow:0 0 8px currentColor">⋆</span><span class="tw" style="left:92.9%;top:41.2%;font-size:14px;color:#fff7c2;--d:3.5s;--dl:-0.2s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:29.1%;top:11.8%;font-size:8px;color:#c4b5fd;--d:2.1s;--dl:-2.9s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:11.0%;top:40.8%;font-size:10px;color:#ffffff;--d:1.6s;--dl:-2.5s;text-shadow:0 0 8px currentColor">⋆</span><span class="tw" style="left:6.8%;top:16.0%;font-size:20px;color:#c4b5fd;--d:2.3s;--dl:-1.1s;text-shadow:0 0 8px currentColor">⋆</span><span class="tw" style="left:90.6%;top:26.6%;font-size:10px;color:#ffd23f;--d:2.9s;--dl:-0.9s;text-shadow:0 0 8px currentColor">⋆</span><span class="tw" style="left:30.1%;top:35.7%;font-size:12px;color:#fde68a;--d:2.4s;--dl:-2.1s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:12.5%;top:30.4%;font-size:24px;color:#ffffff;--d:1.7s;--dl:-1.7s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:94.3%;top:7.3%;font-size:16px;color:#c4b5fd;--d:3.1s;--dl:-2.9s;text-shadow:0 0 8px currentColor">★</span><span class="tw" style="left:68.4%;top:42.4%;font-size:16px;color:#ffb3d9;--d:1.6s;--dl:-0.3s;text-shadow:0 0 8px currentColor">★</span><span class="tw" style="left:47.0%;top:47.2%;font-size:8px;color:#fde68a;--d:2.9s;--dl:-2.3s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:28.6%;top:28.2%;font-size:20px;color:#ffffff;--d:1.4s;--dl:-1.6s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:60.3%;top:35.6%;font-size:10px;color:#ffffff;--d:1.7s;--dl:-0.9s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:89.9%;top:35.8%;font-size:10px;color:#ffb3d9;--d:2.3s;--dl:-1.0s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:80.5%;top:60.8%;font-size:12px;color:#fde68a;--d:2.3s;--dl:-1.3s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:93.9%;top:12.3%;font-size:10px;color:#ffd23f;--d:1.9s;--dl:-0.8s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:81.6%;top:14.4%;font-size:12px;color:#fff7c2;--d:1.7s;--dl:-1.9s;text-shadow:0 0 8px currentColor">⋆</span><span class="tw" style="left:55.9%;top:66.8%;font-size:20px;color:#c4b5fd;--d:3.5s;--dl:-2.3s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:45.3%;top:61.2%;font-size:24px;color:#fde68a;--d:3.2s;--dl:-1.4s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:39.2%;top:34.7%;font-size:14px;color:#fff7c2;--d:1.8s;--dl:-3.4s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:16.7%;top:25.1%;font-size:8px;color:#fff7c2;--d:1.4s;--dl:-0.5s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:93.0%;top:43.7%;font-size:8px;color:#ffd23f;--d:2.8s;--dl:-0.5s;text-shadow:0 0 8px currentColor">★</span><span class="tw" style="left:93.7%;top:43.0%;font-size:14px;color:#fff7c2;--d:1.7s;--dl:-1.7s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:47.6%;top:23.2%;font-size:10px;color:#fff7c2;--d:3.0s;--dl:-2.6s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:81.4%;top:13.0%;font-size:8px;color:#ffd23f;--d:3.5s;--dl:-1.8s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:67.9%;top:64.2%;font-size:24px;color:#c4b5fd;--d:2.1s;--dl:-2.3s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:68.5%;top:19.8%;font-size:12px;color:#ffd23f;--d:2.2s;--dl:-0.8s;text-shadow:0 0 8px currentColor">⋆</span><span class="tw" style="left:76.6%;top:24.4%;font-size:10px;color:#c4b5fd;--d:3.2s;--dl:-3.4s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:79.2%;top:57.6%;font-size:20px;color:#ffd23f;--d:1.8s;--dl:-1.7s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:97.0%;top:55.7%;font-size:14px;color:#ffffff;--d:1.8s;--dl:-2.1s;text-shadow:0 0 8px currentColor">★</span><span class="tw" style="left:44.4%;top:65.7%;font-size:12px;color:#ffffff;--d:1.6s;--dl:-0.4s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:20.1%;top:15.9%;font-size:16px;color:#c4b5fd;--d:3.2s;--dl:-1.7s;text-shadow:0 0 8px currentColor">★</span><span class="tw" style="left:78.6%;top:7.8%;font-size:20px;color:#fff7c2;--d:3.4s;--dl:-2.7s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:47.4%;top:14.1%;font-size:24px;color:#fde68a;--d:2.1s;--dl:-2.8s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:45.9%;top:52.5%;font-size:8px;color:#fde68a;--d:1.7s;--dl:-3.5s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:15.7%;top:63.5%;font-size:24px;color:#fde68a;--d:1.7s;--dl:-2.9s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:64.8%;top:25.8%;font-size:16px;color:#c4b5fd;--d:1.7s;--dl:-0.0s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:52.1%;top:65.5%;font-size:14px;color:#ffd23f;--d:3.2s;--dl:-0.7s;text-shadow:0 0 8px currentColor">★</span><span class="tw" style="left:21.6%;top:36.1%;font-size:24px;color:#c4b5fd;--d:2.1s;--dl:-1.9s;text-shadow:0 0 8px currentColor">✧</span><span class="tw" style="left:6.9%;top:52.3%;font-size:14px;color:#fde68a;--d:2.7s;--dl:-3.2s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:81.2%;top:61.7%;font-size:10px;color:#c4b5fd;--d:1.7s;--dl:-1.8s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:76.3%;top:43.4%;font-size:24px;color:#ffd23f;--d:1.8s;--dl:-1.7s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:55.0%;top:24.2%;font-size:16px;color:#c4b5fd;--d:2.6s;--dl:-2.7s;text-shadow:0 0 8px currentColor">✦</span><span class="tw" style="left:86.7%;top:5.9%;font-size:10px;color:#ffffff;--d:1.5s;--dl:-0.3s;text-shadow:0 0 8px currentColor">✦</span>
+    <span class="shooting" style="left:5%;top:8%"></span><span class="shooting" style="left:30%;top:20%;animation-delay:-4.5s;animation-duration:11s"></span>
+  </div>
+  <div class="toon-hill g1"></div><div class="toon-hill g2"></div><div class="toon-hill g3"></div>
+</div>
+
+<style id="toonStageCss">
+.toon-stage{display:none}
+html.toon:not(.noanim) .toon-stage{display:block;position:relative;flex:0 0 78px;height:78px;overflow:hidden;border-top:3px solid #24203a;
+  background:linear-gradient(180deg,var(--t-sky2) 0%,var(--t-sky2) 58%,var(--t-ground) 58%,var(--t-ground) 100%)}
+.toon-stage::after{content:"";position:absolute;left:0;right:0;top:58%;height:3px;background:var(--t-ground2)}
+.st{display:none}
+html[data-skin=sunny] .st-sunny,html[data-skin=snowy] .st-snowy,html[data-skin=party] .st-party,html[data-skin=night] .st-night{display:block}
+.actor{position:absolute;bottom:12px;pointer-events:none;z-index:1}
+.actor svg{display:block;overflow:visible}
+@keyframes flipDir{0%{transform:scaleX(1)}50%{transform:scaleX(-1)}}
+/* SUNNY: crane + brick buddies */
+.buddy-walk{animation:walkX var(--dur,22s) linear infinite;animation-delay:var(--delay,0s)}
+.buddy-walk .flip{animation:flipDir var(--dur,22s) steps(1) infinite;animation-delay:var(--delay,0s);transform-box:fill-box;transform-origin:50% 50%}
+.buddy-walk .bob{animation:bobY .5s ease-in-out infinite}
+.buddy-walk .legA{animation:legA .5s ease-in-out infinite;transform-box:fill-box;transform-origin:top center}
+.buddy-walk .legB{animation:legB .5s ease-in-out infinite;transform-box:fill-box;transform-origin:top center}
+@keyframes walkX{0%{left:150px}50%{left:calc(100% - 500px)}100%{left:150px}}
+@keyframes bobY{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes legA{0%,100%{transform:rotate(22deg)}50%{transform:rotate(-22deg)}}
+@keyframes legB{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(22deg)}}
+.crane{left:12px;bottom:6px}
+.crane .jib{transform-box:view-box;transform-origin:30px 14px;animation:jib 6s ease-in-out infinite}
+.crane .sign{transform-box:fill-box;transform-origin:50% 0;animation:signSw 2.4s ease-in-out infinite}
+@keyframes jib{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes signSw{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.cheer .buddy-walk svg{animation:hopUp .45s ease-in-out 6}
+.cheer .crane .sign rect{fill:#dbf7e6}
+@keyframes hopUp{50%{transform:translateY(-14px)}}
+/* SNOWY: penguin family */
+.peng{animation:pengX 30s linear infinite;animation-delay:var(--delay,0s)}
+.peng .waddle{animation:waddle .6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.peng .flip{animation:flipDir 30s steps(1) infinite;animation-delay:var(--delay,0s);transform-box:fill-box;transform-origin:50% 50%}
+.peng .wave{transform-box:fill-box;transform-origin:10% 90%;animation:wave 30s ease-in-out infinite;animation-delay:var(--delay,0s)}
+@keyframes pengX{0%{left:calc(100% - 490px)}45%{left:40px}50%{left:40px}95%{left:calc(100% - 490px)}100%{left:calc(100% - 490px)}}
+@keyframes waddle{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes wave{0%,44%{transform:rotate(0)}46%{transform:rotate(-55deg)}47.5%{transform:rotate(-20deg)}49%{transform:rotate(-55deg)}51%,100%{transform:rotate(0)}}
+.snowman{left:calc(100% - 470px)}
+.cheer .peng svg{animation:hopUp .45s ease-in-out 6}
+/* PARTY: dancing traffic cones */
+.cone .sway{transform-box:fill-box;transform-origin:50% 100%;animation:bop .9s ease-in-out infinite;animation-delay:var(--delay,0s)}
+.cone .note{opacity:0;animation:note 1.8s ease-out infinite;animation-delay:var(--delay,0s)}
+.cheer .cone .sway{animation:dance .45s ease-in-out 7}
+@keyframes bop{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-5px)}}
+@keyframes dance{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-14px) rotate(-16deg)}50%{transform:translateY(0) rotate(0) scaleY(.9)}75%{transform:translateY(-14px) rotate(16deg)}100%{transform:translateY(0) rotate(0)}}
+@keyframes note{0%{opacity:0;transform:translate(0,4px)}30%{opacity:1}100%{opacity:0;transform:translate(8px,-22px)}}
+.bunting{position:absolute;left:0;right:0;top:0;height:16px;background:repeating-linear-gradient(90deg,transparent 0 4px,#ff4fa3 4px 22px,transparent 22px 30px,#ffe066 30px 48px,transparent 48px 56px,#3dd6b5 56px 74px,transparent 74px 78px);clip-path:polygon(0 0,100% 0,100% 30%,0 30%);opacity:.9}
+.bunting2{position:absolute;left:0;right:0;top:3px;height:12px;background:repeating-conic-gradient(from 135deg at 50% 0,#ff4fa3 0 90deg,transparent 0 360deg) 0 0/26px 12px}
+/* NIGHT: coin sprites */
+.coinbot{animation:coinRoll var(--dur,18s) linear infinite;animation-delay:var(--delay,0s)}
+.coinbot svg{animation:coinHop .8s ease-in-out infinite}
+@keyframes coinRoll{0%{left:40px}50%{left:calc(100% - 490px)}100%{left:40px}}
+@keyframes coinHop{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.shoot{position:absolute;top:6px;left:-60px;width:60px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff6c4);opacity:0}
+.cheer .shoot{animation:shoot 1.2s ease-out 2}
+@keyframes shoot{0%{opacity:0;transform:translate(0,0)}20%{opacity:1}100%{opacity:0;transform:translate(70vw,30px)}}
+.cheer .coinbot svg{animation:coinSpin .6s ease-in-out 5}
+@keyframes coinSpin{50%{transform:translateY(-16px) scaleX(.2)}}
+/* show-rules for new stages */
+html[data-skin=twinkle] .st-twinkle{display:block}
+.sbuddy .sb-hop{transform-box:fill-box;transform-origin:50% 100%;animation:sbHop var(--d,1.4s) ease-in-out infinite;animation-delay:var(--dl,0s)}
+@keyframes sbHop{0%,100%{transform:translateY(0) rotate(-6deg) scaleY(1)}40%{transform:translateY(-12px) rotate(6deg)}60%{transform:translateY(-12px) rotate(6deg)}85%{transform:translateY(0) scaleY(.88)}}
+.sbuddy .sb-eyes{transform-box:fill-box;transform-origin:center;animation:eyeBlink 3.6s infinite;animation-delay:var(--dl,0s)}
+@keyframes eyeBlink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+.st-twinkle .tw{position:absolute}
+.cheer .sbuddy .sb-hop{animation:dance .45s ease-in-out 7}
+html[data-skin=aurora] .st-aurora,html[data-skin=animals] .st-animals{display:block}
+/* AURORA: shimmering sky band, pine forest, cabin */
+.st-aurora .sky{position:absolute;left:-10%;right:-10%;top:0;height:58%;background:linear-gradient(90deg,transparent,#34d39988,#22d3ee88,#a78bfa77,#34d39988,transparent);filter:blur(10px);animation:aurora 9s ease-in-out infinite alternate}
+.cheer .st-aurora .sky{animation:auroraFlash .6s ease-in-out 5}
+@keyframes auroraFlash{50%{opacity:.3;filter:blur(4px) brightness(1.6)}}
+.pine{bottom:10px}
+.cabin .win{animation:glow 3s ease-in-out infinite}
+@keyframes glow{50%{fill:#ffe9a8}}
+.fox{animation:walkX 26s linear infinite}
+.fox .flipper{animation:flipDir 26s steps(1) infinite;transform-box:fill-box;transform-origin:50% 50%}
+.fox .tail{transform-box:fill-box;transform-origin:100% 50%;animation:swish 1.2s ease-in-out infinite}
+.cheer .fox svg{animation:hopUp .45s ease-in-out 6}
+/* ANIMALS: duck, bunny, cat walking + dog wagging */
+.walker{animation:walkX var(--dur,24s) linear infinite;animation-delay:var(--delay,0s)}
+.walker .flipper{animation:flipDir var(--dur,24s) steps(1) infinite;animation-delay:var(--delay,0s);transform-box:fill-box;transform-origin:50% 50%}
+.duck .waddle2{transform-box:fill-box;transform-origin:50% 100%;animation:waddle .5s ease-in-out infinite}
+.bunny .hop{animation:hopArc .7s ease-in-out infinite}
+@keyframes hopArc{0%,100%{transform:translateY(0)}45%{transform:translateY(-14px)}}
+.cat .tail,.dog .tail{transform-box:fill-box;transform-origin:0% 100%;animation:swish 1s ease-in-out infinite}
+.dog .tail{animation-duration:.28s}
+@keyframes swish{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(16deg)}}
+.cat .legs,.dog .legs{animation:bobY .4s ease-in-out infinite}
+.dog{left:40px}
+.cheer .st-animals .actor svg{animation:hopUp .45s ease-in-out 6}
+/* NIGHT: coin beside progress bar */
+.coin-sprite{display:none}
+html[data-skin=night]:not(.noanim) .coin-sprite{display:inline-block;width:22px;height:22px;flex:none;animation:coinHop 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.toon-stage *,.coin-sprite{animation:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="tBuddy" viewBox="0 0 64 70">
+    <g class="flip"><g class="bob">
+      <rect class="legA" x="20" y="54" width="8" height="12" rx="3" fill="#24203a"/>
+      <rect class="legB" x="36" y="54" width="8" height="12" rx="3" fill="#24203a"/>
+      <path d="M14 22 Q32 4 50 22 L52 26 H12 Z" fill="#ffd23f" stroke="#24203a" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="29" y="9" width="6" height="8" rx="2" fill="#ffd23f" stroke="#24203a" stroke-width="2.5"/>
+      <rect x="12" y="26" width="40" height="30" rx="7" fill="currentColor" stroke="#24203a" stroke-width="3"/>
+      <path d="M12 41 H52 M32 26 V41 M22 41 V56 M42 41 V56" stroke="#24203a" stroke-width="1.8" opacity=".3"/>
+      <ellipse cx="25" cy="35" rx="3.2" ry="4.2" fill="#24203a"/><ellipse cx="39" cy="35" rx="3.2" ry="4.2" fill="#24203a"/>
+      <circle cx="26" cy="33.5" r="1.1" fill="#fff"/><circle cx="40" cy="33.5" r="1.1" fill="#fff"/>
+      <path d="M26 44 Q32 49 38 44" fill="none" stroke="#24203a" stroke-width="2.6" stroke-linecap="round"/>
+      <circle cx="19" cy="42" r="2.6" fill="#ff7eb6" opacity=".8"/><circle cx="45" cy="42" r="2.6" fill="#ff7eb6" opacity=".8"/>
+    </g></g>
+  </symbol>
+  <symbol id="tPeng" viewBox="0 0 46 58">
+    <g class="flip"><g class="waddle">
+      <ellipse cx="17" cy="55" rx="6" ry="2.6" fill="#ff9f1c" stroke="#24203a" stroke-width="1.8"/>
+      <ellipse cx="29" cy="55" rx="6" ry="2.6" fill="#ff9f1c" stroke="#24203a" stroke-width="1.8"/>
+      <ellipse cx="23" cy="34" rx="15" ry="19" fill="#2b3a55" stroke="#24203a" stroke-width="3"/>
+      <ellipse cx="23" cy="38" rx="9.5" ry="13" fill="#fff"/>
+      <path d="M9 14 Q23 0 37 14 L38 17 H8 Z" fill="#ffd23f" stroke="#24203a" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="18.5" cy="24" r="2.2" fill="#fff"/><circle cx="27.5" cy="24" r="2.2" fill="#fff"/>
+      <circle cx="18.8" cy="24.3" r="1.2" fill="#24203a"/><circle cx="27.8" cy="24.3" r="1.2" fill="#24203a"/>
+      <path d="M20.5 28 L25.5 28 L23 31.5 Z" fill="#ff9f1c" stroke="#24203a" stroke-width="1.2"/>
+      <rect x="27" y="36" width="12" height="15" rx="2" fill="#c08a4a" stroke="#24203a" stroke-width="2"/>
+      <rect x="29" y="39" width="8" height="10" fill="#fff"/><path d="M30 42h6M30 45h6" stroke="#6b6585" stroke-width="1"/>
+      <path class="wave" d="M9 32 Q2 38 5 46" fill="none" stroke="#2b3a55" stroke-width="5" stroke-linecap="round"/>
+    </g></g>
+  </symbol>
+  <symbol id="tCone" viewBox="0 0 48 62">
+    <g class="sway">
+      <path d="M24 4 L38 52 H10 Z" fill="#ff7a1a" stroke="#24203a" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M19.5 20 H28.5 L30.5 28 H17.5 Z M15.5 36 H32.5 L34 42 H14 Z" fill="#fff"/>
+      <rect x="4" y="50" width="40" height="8" rx="3" fill="#ff7a1a" stroke="#24203a" stroke-width="3"/>
+      <circle cx="21" cy="31" r="2" fill="#24203a"/><circle cx="27" cy="31" r="2" fill="#24203a"/>
+      <path d="M21 35.5 Q24 38 27 35.5" fill="none" stroke="#24203a" stroke-width="2" stroke-linecap="round"/>
+      <path d="M13 34 L4 26 M35 34 L44 26" stroke="#24203a" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <text class="note" x="38" y="14" font-size="13">♪</text>
+  </symbol>
+  <symbol id="tCoin" viewBox="0 0 22 22">
+    <circle cx="11" cy="11" r="9" fill="#ffb703" stroke="#24203a" stroke-width="2.5"/><circle cx="8" cy="10" r="1.3" fill="#24203a"/><circle cx="14" cy="10" r="1.3" fill="#24203a"/>
+    <path d="M8 14 Q11 16.5 14 14" fill="none" stroke="#24203a" stroke-width="1.5" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<div class="toon-stage" id="toonStage" aria-hidden="true">
+  <!-- Sunny Site -->
+  <div class="st st-sunny">
+    <div class="actor crane"><svg width="100" height="70" viewBox="0 0 100 70">
+      <rect x="24" y="12" width="10" height="56" fill="#ffd23f" stroke="#24203a" stroke-width="2.5"/>
+      <path d="M24 20 L34 30 M34 20 L24 30 M24 34 L34 44 M34 34 L24 44 M24 48 L34 58 M34 48 L24 58" stroke="#24203a" stroke-width="1.5"/>
+      <rect x="16" y="62" width="26" height="7" rx="2" fill="#6b6585" stroke="#24203a" stroke-width="2.5"/>
+      <g class="jib">
+        <rect x="6" y="9" width="86" height="7" fill="#ffd23f" stroke="#24203a" stroke-width="2.5"/>
+        <rect x="6" y="16" width="14" height="9" fill="#6b6585" stroke="#24203a" stroke-width="2"/>
+        <line x1="78" y1="16" x2="78" y2="30" stroke="#24203a" stroke-width="2"/>
+        <g class="sign"><rect x="56" y="30" width="44" height="18" rx="4" fill="#fff" stroke="#24203a" stroke-width="2.5"/>
+          <text x="78" y="43" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="9.5" font-weight="700" fill="#1f9d55">Quote ✓</text></g>
+      </g>
+    </svg></div>
+    <div class="actor buddy-walk" style="--dur:24s;color:#ff7a45"><svg width="44" height="48"><use href="#tBuddy"/></svg></div>
+    <div class="actor buddy-walk" style="--dur:24s;--delay:-1.2s;color:#3dd6b5"><svg width="36" height="40" style="margin-top:8px"><use href="#tBuddy"/></svg></div>
+    <div class="actor buddy-walk" style="--dur:31s;--delay:-14s;color:#8b5cf6"><svg width="40" height="44"><use href="#tBuddy"/></svg></div>
+  </div>
+  <!-- Snowy -->
+  <div class="st st-snowy">
+    <div class="actor snowman"><svg width="44" height="62" viewBox="0 0 44 62">
+      <circle cx="22" cy="44" r="15" fill="#fff" stroke="#24203a" stroke-width="3"/><circle cx="22" cy="20" r="11" fill="#fff" stroke="#24203a" stroke-width="3"/>
+      <rect x="13" y="4" width="18" height="6" rx="2" fill="#2f8cff" stroke="#24203a" stroke-width="2.5"/>
+      <circle cx="18" cy="18" r="1.6" fill="#24203a"/><circle cx="26" cy="18" r="1.6" fill="#24203a"/><path d="M22 21 L30 23 L22 24 Z" fill="#ff7a1a"/>
+      <path d="M12 30 Q22 34 32 30" fill="none" stroke="#e5484d" stroke-width="4" stroke-linecap="round"/>
+    </svg></div>
+    <div class="actor peng"><svg width="46" height="58"><use href="#tPeng"/></svg></div>
+    <div class="actor peng" style="--delay:-3s"><svg width="34" height="43" style="margin-top:15px"><use href="#tPeng"/></svg></div>
+  </div>
+  <!-- Party -->
+  <div class="st st-party">
+    <div class="bunting2"></div>
+    <div class="actor cone" style="left:60px"><svg width="48" height="62"><use href="#tCone"/></svg></div>
+    <div class="actor cone" style="left:150px;--delay:-.3s"><svg width="40" height="52" style="margin-top:10px"><use href="#tCone"/></svg></div>
+    <div class="actor cone" style="left:230px;--delay:-.6s"><svg width="48" height="62"><use href="#tCone"/></svg></div>
+    <div class="actor cone" style="left:320px;--delay:-.15s"><svg width="40" height="52" style="margin-top:10px"><use href="#tCone"/></svg></div>
+  </div>
+  <!-- Northern lights -->
+  <div class="st st-aurora">
+    <div class="sky"></div>
+    <div class="actor pine" style="left:20px"><svg width="40" height="62" viewBox="0 0 40 62"><path d="M20 2 L36 30 H27 L38 50 H2 L13 30 H4 Z" fill="#14532d" stroke="#24203a" stroke-width="2.5" stroke-linejoin="round"/><path d="M20 2 L27 14 H13 Z M13 30 L20 24 L27 30 Z" fill="#fff"/><rect x="16" y="50" width="8" height="10" fill="#7c4a20" stroke="#24203a" stroke-width="2"/></svg></div>
+    <div class="actor pine" style="left:66px"><svg width="30" height="46" viewBox="0 0 40 62"><path d="M20 2 L36 30 H27 L38 50 H2 L13 30 H4 Z" fill="#166534" stroke="#24203a" stroke-width="2.5" stroke-linejoin="round"/><path d="M20 2 L27 14 H13 Z" fill="#fff"/><rect x="16" y="50" width="8" height="10" fill="#7c4a20" stroke="#24203a" stroke-width="2"/></svg></div>
+    <div class="actor cabin" style="left:110px"><svg width="60" height="50" viewBox="0 0 60 50"><path d="M4 22 L30 4 L56 22 Z" fill="#fff" stroke="#24203a" stroke-width="2.5" stroke-linejoin="round"/><rect x="9" y="22" width="42" height="26" fill="#b45309" stroke="#24203a" stroke-width="2.5"/><rect class="win" x="15" y="28" width="11" height="10" fill="#fcd34d" stroke="#24203a" stroke-width="2"/><rect x="33" y="30" width="11" height="18" fill="#78350f" stroke="#24203a" stroke-width="2"/><rect x="40" y="6" width="7" height="12" fill="#6b6585" stroke="#24203a" stroke-width="2"/></svg></div>
+    <div class="actor pine" style="right:430px"><svg width="34" height="54" viewBox="0 0 40 62"><path d="M20 2 L36 30 H27 L38 50 H2 L13 30 H4 Z" fill="#14532d" stroke="#24203a" stroke-width="2.5" stroke-linejoin="round"/><path d="M20 2 L27 14 H13 Z M13 30 L20 24 L27 30 Z" fill="#fff"/><rect x="16" y="50" width="8" height="10" fill="#7c4a20" stroke="#24203a" stroke-width="2"/></svg></div>
+    <div class="actor fox"><svg width="54" height="38" viewBox="0 0 54 38"><g class="flipper">
+      <path class="tail" d="M10 22 Q-2 14 2 6 Q8 14 16 18 Z" fill="#fff" stroke="#24203a" stroke-width="2.2" stroke-linejoin="round"/>
+      <ellipse cx="24" cy="24" rx="13" ry="8" fill="#f8fafc" stroke="#24203a" stroke-width="2.5"/>
+      <path d="M17 30 v6 M23 31 v6 M29 31 v6 M34 30 v6" stroke="#24203a" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="40" cy="16" r="8" fill="#f8fafc" stroke="#24203a" stroke-width="2.5"/>
+      <path d="M34 11 L35 2 L40 8 Z M42 8 L47 3 L47 12 Z" fill="#f8fafc" stroke="#24203a" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="43" cy="15" r="1.4" fill="#24203a"/><circle cx="48" cy="18" r="1.6" fill="#24203a"/>
+    </g></svg></div>
+  </div>
+  <!-- Animal friends -->
+  <div class="st st-animals">
+    <div class="actor dog"><svg width="54" height="44" viewBox="0 0 54 44">
+      <path class="tail" d="M10 18 Q2 10 6 4" fill="none" stroke="#24203a" stroke-width="4" stroke-linecap="round"/>
+      <g class="legs"><path d="M16 32 v9 M24 33 v9 M32 33 v9 M38 32 v9" stroke="#24203a" stroke-width="3.2" stroke-linecap="round"/></g>
+      <ellipse cx="27" cy="26" rx="17" ry="10" fill="#c08a4a" stroke="#24203a" stroke-width="2.5"/>
+      <circle cx="43" cy="16" r="9" fill="#c08a4a" stroke="#24203a" stroke-width="2.5"/>
+      <path d="M37 10 Q33 18 37 24 Q40 18 40 11 Z" fill="#7c4a20" stroke="#24203a" stroke-width="2"/>
+      <circle cx="45" cy="14" r="1.6" fill="#24203a"/><ellipse cx="51" cy="18" rx="2.2" ry="1.8" fill="#24203a"/>
+      <path d="M45 21 Q48 24 51 21" fill="none" stroke="#24203a" stroke-width="1.6" stroke-linecap="round"/>
+    </svg></div>
+    <div class="actor walker duck" style="--dur:27s"><svg width="42" height="42" viewBox="0 0 44 44"><g class="flipper"><g class="waddle2">
+      <path d="M14 40 h7 M24 40 h7" stroke="#f97316" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="20" cy="28" rx="14" ry="10" fill="#ffd23f" stroke="#24203a" stroke-width="2.5"/>
+      <path d="M12 26 Q18 22 22 28 Q16 31 12 26 Z" fill="#fbbf24" stroke="#24203a" stroke-width="1.8"/>
+      <circle cx="31" cy="14" r="8" fill="#ffd23f" stroke="#24203a" stroke-width="2.5"/>
+      <path d="M38 13 L44 15 L38 18 Z" fill="#f97316" stroke="#24203a" stroke-width="1.8" stroke-linejoin="round"/>
+      <circle cx="33" cy="12" r="1.6" fill="#24203a"/>
+    </g></g></svg></div>
+    <div class="actor walker bunny" style="--dur:21s;--delay:-7s"><svg width="38" height="50" viewBox="0 0 40 52"><g class="flipper"><g class="hop">
+      <path d="M17 18 Q12 2 16 1 Q21 2 21 17 Z M24 17 Q25 2 30 2 Q33 5 27 19 Z" fill="#fff" stroke="#24203a" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M17 15 Q15 6 17 4 M26 15 Q28 7 29 5" stroke="#ffb3d1" stroke-width="2" fill="none"/>
+      <ellipse cx="18" cy="38" rx="13" ry="11" fill="#fff" stroke="#24203a" stroke-width="2.5"/>
+      <circle cx="25" cy="24" r="9" fill="#fff" stroke="#24203a" stroke-width="2.5"/>
+      <circle cx="28" cy="22" r="1.6" fill="#24203a"/><circle cx="33" cy="26" r="1.5" fill="#ff7eb6"/>
+      <circle cx="6" cy="38" r="3.5" fill="#fff" stroke="#24203a" stroke-width="2"/>
+      <path d="M12 48 h8" stroke="#24203a" stroke-width="3" stroke-linecap="round"/>
+    </g></g></svg></div>
+    <div class="actor walker cat" style="--dur:33s;--delay:-15s"><svg width="56" height="40" viewBox="0 0 56 40"><g class="flipper">
+      <path class="tail" d="M10 20 Q0 14 4 2" fill="none" stroke="#24203a" stroke-width="5" stroke-linecap="round"/>
+      <path class="tail" d="M10 20 Q0 14 4 2" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+      <g class="legs"><path d="M16 30 v8 M23 31 v8 M31 31 v8 M37 30 v8" stroke="#24203a" stroke-width="3.2" stroke-linecap="round"/></g>
+      <ellipse cx="26" cy="24" rx="16" ry="9" fill="#94a3b8" stroke="#24203a" stroke-width="2.5"/>
+      <circle cx="43" cy="15" r="9" fill="#94a3b8" stroke="#24203a" stroke-width="2.5"/>
+      <path d="M36 9 L37 1 L42 7 Z M45 7 L50 1 L51 10 Z" fill="#94a3b8" stroke="#24203a" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="41" cy="14" r="1.5" fill="#24203a"/><circle cx="47" cy="14" r="1.5" fill="#24203a"/>
+      <path d="M42 18 Q44 20 46 18" fill="none" stroke="#24203a" stroke-width="1.5" stroke-linecap="round"/>
+    </g></svg></div>
+  </div>
+  <!-- Twinkle stars -->
+  <div class="st st-twinkle"><span class="tw" style="left:42%;top:8px;font-size:12px;color:#fff7c2;--d:1.8s;--dl:-0.4s">✦</span><span class="tw" style="left:55%;top:22px;font-size:9px;color:#fff7c2;--d:2.4s;--dl:-1.2s">✦</span><span class="tw" style="left:63%;top:6px;font-size:14px;color:#fff7c2;--d:1.5s;--dl:-0.8s">✦</span><span class="tw" style="left:71%;top:26px;font-size:8px;color:#fff7c2;--d:2.1s;--dl:-0.1s">✦</span><span class="tw" style="left:80%;top:12px;font-size:11px;color:#fff7c2;--d:1.9s;--dl:-1.6s">✦</span><span class="tw" style="left:35%;top:30px;font-size:8px;color:#fff7c2;--d:2.6s;--dl:-0.9s">✦</span><span class="tw" style="left:12%;top:6px;font-size:10px;color:#fff7c2;--d:2.2s;--dl:-0.2s">✦</span><div class="actor sbuddy" style="left:60px;--d:1.4s"><svg width="44" height="48" viewBox="0 0 48 52"><g class="sb-hop"><path d="M24.0,6.0 L29.3,18.7 L43.0,19.8 L32.6,28.8 L35.8,42.2 L24.0,35.0 L12.2,42.2 L15.4,28.8 L5.0,19.8 L18.7,18.7 Z" fill="#ffd23f" stroke="#24203a" stroke-width="2.6" stroke-linejoin="round"/>
+<g class="sb-eyes"><ellipse cx="19.5" cy="26" rx="2" ry="2.6" fill="#24203a"/><ellipse cx="28.5" cy="26" rx="2" ry="2.6" fill="#24203a"/></g>
+<path d="M20.5 31 Q24 34 27.5 31" fill="none" stroke="#24203a" stroke-width="2" stroke-linecap="round"/>
+<circle cx="16" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/><circle cx="32" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/></g></svg></div><div class="actor sbuddy" style="left:150px;bottom:14px;--d:1.7s;--dl:-.5s"><svg width="34" height="37" viewBox="0 0 48 52"><g class="sb-hop"><path d="M24.0,6.0 L29.3,18.7 L43.0,19.8 L32.6,28.8 L35.8,42.2 L24.0,35.0 L12.2,42.2 L15.4,28.8 L5.0,19.8 L18.7,18.7 Z" fill="#ffb3d9" stroke="#24203a" stroke-width="2.6" stroke-linejoin="round"/>
+<g class="sb-eyes"><ellipse cx="19.5" cy="26" rx="2" ry="2.6" fill="#24203a"/><ellipse cx="28.5" cy="26" rx="2" ry="2.6" fill="#24203a"/></g>
+<path d="M20.5 31 Q24 34 27.5 31" fill="none" stroke="#24203a" stroke-width="2" stroke-linecap="round"/>
+<circle cx="16" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/><circle cx="32" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/></g></svg></div><div class="actor sbuddy" style="left:240px;--d:1.2s;--dl:-.9s"><svg width="40" height="44" viewBox="0 0 48 52"><g class="sb-hop"><path d="M24.0,6.0 L29.3,18.7 L43.0,19.8 L32.6,28.8 L35.8,42.2 L24.0,35.0 L12.2,42.2 L15.4,28.8 L5.0,19.8 L18.7,18.7 Z" fill="#fde68a" stroke="#24203a" stroke-width="2.6" stroke-linejoin="round"/>
+<g class="sb-eyes"><ellipse cx="19.5" cy="26" rx="2" ry="2.6" fill="#24203a"/><ellipse cx="28.5" cy="26" rx="2" ry="2.6" fill="#24203a"/></g>
+<path d="M20.5 31 Q24 34 27.5 31" fill="none" stroke="#24203a" stroke-width="2" stroke-linecap="round"/>
+<circle cx="16" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/><circle cx="32" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/></g></svg></div><div class="actor sbuddy" style="left:330px;bottom:14px;--d:1.6s;--dl:-.3s"><svg width="34" height="37" viewBox="0 0 48 52"><g class="sb-hop"><path d="M24.0,6.0 L29.3,18.7 L43.0,19.8 L32.6,28.8 L35.8,42.2 L24.0,35.0 L12.2,42.2 L15.4,28.8 L5.0,19.8 L18.7,18.7 Z" fill="#c4b5fd" stroke="#24203a" stroke-width="2.6" stroke-linejoin="round"/>
+<g class="sb-eyes"><ellipse cx="19.5" cy="26" rx="2" ry="2.6" fill="#24203a"/><ellipse cx="28.5" cy="26" rx="2" ry="2.6" fill="#24203a"/></g>
+<path d="M20.5 31 Q24 34 27.5 31" fill="none" stroke="#24203a" stroke-width="2" stroke-linecap="round"/>
+<circle cx="16" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/><circle cx="32" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/></g></svg></div><div class="actor sbuddy" style="right:450px;--d:1.5s;--dl:-1.1s"><svg width="42" height="46" viewBox="0 0 48 52"><g class="sb-hop"><path d="M24.0,6.0 L29.3,18.7 L43.0,19.8 L32.6,28.8 L35.8,42.2 L24.0,35.0 L12.2,42.2 L15.4,28.8 L5.0,19.8 L18.7,18.7 Z" fill="#ffd23f" stroke="#24203a" stroke-width="2.6" stroke-linejoin="round"/>
+<g class="sb-eyes"><ellipse cx="19.5" cy="26" rx="2" ry="2.6" fill="#24203a"/><ellipse cx="28.5" cy="26" rx="2" ry="2.6" fill="#24203a"/></g>
+<path d="M20.5 31 Q24 34 27.5 31" fill="none" stroke="#24203a" stroke-width="2" stroke-linecap="round"/>
+<circle cx="16" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/><circle cx="32" cy="30.5" r="2" fill="#ff7eb6" opacity=".85"/></g></svg></div></div>
+  <!-- Starry night -->
+  <div class="st st-night">
+    <div class="shoot"></div>
+    <div class="actor coinbot" style="--dur:16s"><svg width="30" height="30"><use href="#tCoin"/></svg></div>
+    <div class="actor coinbot" style="--dur:16s;--delay:-.6s"><svg width="24" height="24" style="margin-top:6px"><use href="#tCoin"/></svg></div>
+    <div class="actor coinbot" style="--dur:21s;--delay:-9s"><svg width="30" height="30"><use href="#tCoin"/></svg></div>
+  </div>
+</div>
+
+<div class="skin-wrap" id="skinWrap">
+  <button class="anim-btn" id="animBtn" onclick="toggleAnim()" title="Turn the cartoon characters on or off"></button>
+  <div style="position:relative">
+    <button class="skin-btn" id="skinBtn" onclick="toggleSkinMenu(event)" title="Choose a look"></button>
+    <div class="skin-menu" id="skinMenu">
+      <div class="sm-title">Choose a theme</div>
+      <button class="skin-opt" data-s="classic"><span class="skin-sw" style="background:#f4f2ee"></span><span>Classic<small>Original look</small></span></button>
+      <button class="skin-opt" data-s="sunny"><span class="skin-sw" style="background:linear-gradient(180deg,#4fc3ff 60%,#5bd16b 60%)"></span><span>☀️ Sunny Site<small>Crane + brick buddies</small></span></button>
+      <button class="skin-opt" data-s="snowy"><span class="skin-sw" style="background:linear-gradient(180deg,#8ecdf0 60%,#fff 60%)"></span><span>❄️ Snowy<small>Penguins + snowman</small></span></button>
+      <button class="skin-opt" data-s="party"><span class="skin-sw" style="background:linear-gradient(180deg,#ffb3d9 60%,#c084fc 60%)"></span><span>🎉 Party<small>Dancing traffic cones</small></span></button>
+      <button class="skin-opt" data-s="aurora"><span class="skin-sw" style="background:linear-gradient(180deg,#06162a 20%,#34d399 40%,#a78bfa 55%,#e8f4ff 60%)"></span><span>🌌 Northern Lights<small>Glowing aurora + snowy forest</small></span></button>
+      <button class="skin-opt" data-s="animals"><span class="skin-sw" style="background:linear-gradient(180deg,#ffe08a 60%,#86d36b 60%)"></span><span>🐾 Animal Friends<small>Duck, bunny, cat + puppy</small></span></button>
+      <button class="skin-opt" data-s="twinkle"><span class="skin-sw" style="background:radial-gradient(circle at 30% 30%,#fff7c2 0 2px,transparent 3px),radial-gradient(circle at 70% 45%,#ffd23f 0 2px,transparent 3px),linear-gradient(180deg,#1e0b45,#b85a9a)"></span><span>✨ Twinkle Stars<small>Blinking stars + star buddies</small></span></button>
+      <button class="skin-opt" data-s="night"><span class="skin-sw" style="background:linear-gradient(180deg,#141a46 60%,#3b2f78 60%)"></span><span>🌙 Starry Night<small>Bouncing coins + stars</small></span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  var NAMES={classic:'Classic',sunny:'☀️ Sunny Site',snowy:'❄️ Snowy',party:'🎉 Party',night:'🌙 Starry Night',aurora:'🌌 Northern Lights',animals:'🐾 Animal Friends',twinkle:'✨ Twinkle Stars'};
+  function cur(){ return root.classList.contains('toon') ? (root.getAttribute('data-skin')||'sunny') : 'classic'; }
+  function labels(){
+    document.getElementById('skinBtn').textContent='🎨 Theme: '+NAMES[cur()];
+    document.getElementById('animBtn').textContent=root.classList.contains('noanim')?'✨ Animations: OFF':'✨ Animations: ON';
+    document.querySelectorAll('.skin-opt').forEach(function(b){b.classList.toggle('on',b.dataset.s===cur());});
+  }
+  function setSkin(s){
+    if(s==='classic'){root.classList.remove('toon');root.removeAttribute('data-skin');}
+    else{root.classList.add('toon');root.setAttribute('data-skin',s);}
+    try{localStorage.setItem('subconhub_skin',s)}catch(e){}
+    labels();
+  }
+  window.toggleSkinMenu=function(e){e.stopPropagation();document.getElementById('skinMenu').classList.toggle('open');};
+  document.querySelectorAll('.skin-opt').forEach(function(b){b.onclick=function(e){e.stopPropagation();setSkin(b.dataset.s);document.getElementById('skinMenu').classList.remove('open');};});
+  document.addEventListener('click',function(e){ if(!e.target.closest('#skinWrap')) document.getElementById('skinMenu').classList.remove('open'); });
+  window.toggleAnim=function(){var off=root.classList.toggle('noanim');try{localStorage.setItem('subconhub_anim',off?'off':'on')}catch(e){}labels();};
+  labels();
+
+  // inline the character drawings (so their walk/waddle/dance animations apply)
+  function inlineUses(scope){
+    scope.querySelectorAll('svg > use').forEach(function(u){
+      var id=(u.getAttribute('href')||'').slice(1), sym=document.getElementById(id), svg=u.parentNode;
+      if(!sym) return; svg.setAttribute('viewBox',sym.getAttribute('viewBox')); svg.innerHTML=sym.innerHTML;
+    });
+  }
+  // the stage is its own strip below the cards/table, so characters never cover any info
+  var main=document.querySelector('.app .main'), stage=document.getElementById('toonStage');
+  if(main && stage) main.appendChild(stage);
+  if(stage) inlineUses(stage);
+
+  // night theme: coin beside the progress bar
+  var pw=document.querySelector('.pw'), coin=null;
+  if(pw){
+    coin=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    coin.setAttribute('viewBox','0 0 22 22'); coin.setAttribute('class','coin-sprite'); coin.setAttribute('aria-hidden','true');
+    coin.innerHTML=document.getElementById('tCoin').innerHTML;
+    pw.insertBefore(coin, pw.firstChild);
+  }
+
+  // celebrate when the "quoted" count goes up (each theme has its own cheer)
+  var pbt=document.getElementById('pbt'), last=null;
+  function quoted(t){ var m=/(\d+)\s*quoted/i.exec(t||''); return m?+m[1]:null; }
+  if(pbt && stage){
+    last=quoted(pbt.textContent);
+    new MutationObserver(function(){
+      var q=quoted(pbt.textContent);
+      if(q!==null && last!==null && q>last){ stage.classList.remove('cheer'); void stage.offsetWidth; stage.classList.add('cheer'); setTimeout(function(){stage.classList.remove('cheer')},3400); }
+      last=q;
+    }).observe(pbt,{childList:true,characterData:true,subtree:true});
+  }
+})();
 </script>
 </body>
 </html>
