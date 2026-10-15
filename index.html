@@ -283,7 +283,7 @@ tr.selrow-em td{background:var(--bblue)!important}
 .empty h3{color:var(--tx2);font-size:15px;margin-bottom:6px}
 
 /* Table */
-.tw{flex:1;overflow:auto;background:var(--bg)}
+.tw#ta{flex:1;overflow:auto;background:var(--bg)}
 .tw::-webkit-scrollbar{width:5px;height:5px}
 .tw::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
 table{width:max-content;min-width:100%;border-collapse:collapse;font-size:12px;background:var(--sur)}
@@ -759,7 +759,7 @@ html.toon .dpill{border:2px solid var(--ink);border-radius:999px}
 html.toon .di,html.toon .ni,html.toon .dinput{border:2px solid var(--ink);border-radius:10px;background:#fff}
 html.toon .cdiv,html.toon .csec{border-top:2px dashed var(--ink)}
 html.toon .empty{color:var(--ink);background:rgba(255,255,255,.85);border:3px solid var(--ink);border-radius:18px}
-html.toon .tw{margin:6px 12px 12px;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);background:#fffdf7}
+html.toon .tw#ta{margin:6px 12px 12px;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);background:#fffdf7}
 html.toon th{background:var(--t-accent);color:var(--ink);border-bottom:3px solid var(--ink);font-weight:700}
 html.toon td{border-bottom:1.5px dashed #b9b3cf}
 html.toon tr:hover td{background:var(--t-hover)}
@@ -786,7 +786,7 @@ html[data-skin=sunny] .sc-sunny,html[data-skin=snowy] .sc-snowy,html[data-skin=p
 .aurora.a2{top:14%;background:linear-gradient(90deg,transparent 10%,#a78bfa 30%,#22d3ee 50%,#86efac 70%,transparent 95%);animation-duration:18s;animation-delay:-6s;opacity:.6}
 .aurora.a3{top:26%;height:22vh;background:linear-gradient(90deg,transparent 0%,#22c55e 35%,#f0abfc 55%,transparent 85%);animation-duration:22s;animation-delay:-11s;opacity:.45}
 @keyframes aurora{0%{transform:translateX(-6%) skewX(-12deg) scaleY(.8)}50%{transform:translateX(4%) skewX(10deg) scaleY(1.15)}100%{transform:translateX(8%) skewX(-6deg) scaleY(.9)}}
-.tw{position:absolute;line-height:1;animation:blink var(--d,2.2s) ease-in-out infinite;animation-delay:var(--dl,0s)}
+.tw:not(#ta){position:absolute;line-height:1;animation:blink var(--d,2.2s) ease-in-out infinite;animation-delay:var(--dl,0s)}
 @keyframes blink{0%,100%{opacity:.15;transform:scale(.55) rotate(0)}45%{opacity:1;transform:scale(1.15) rotate(20deg)}55%{opacity:1;transform:scale(1) rotate(25deg)}}
 .shooting{position:absolute;width:110px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff7c2);transform:rotate(18deg);opacity:0;animation:shootSky 9s ease-out infinite}
 @keyframes shootSky{0%,82%{opacity:0;transform:translate(0,0) rotate(18deg)}85%{opacity:1}100%{opacity:0;transform:translate(60vw,22vh) rotate(18deg)}}
@@ -1035,7 +1035,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-13</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-15</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
