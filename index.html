@@ -895,7 +895,10 @@ html.toon .proj-screen{backdrop-filter:none}
   // already been let in on this device is only asked for the name.
   var NAMEKEY='hdb_uname';
   var saved=''; try{ saved=(localStorage.getItem(NAMEKEY)||'').trim(); }catch(e){}
-  var authed=false; try{ authed=localStorage.getItem('subconhub_auth')==='1'; }catch(e){}
+  // Bumped when the passcode changes, so every device that ticked "remember"
+  // is asked for the new one instead of sailing in on the old.
+  var AUTHKEY='subconhub_auth2';
+  var authed=false; try{ authed=localStorage.getItem(AUTHKEY)==='1'; }catch(e){}
 
   function el(id){ return document.getElementById(id); }
   function nameOnly(){                       // passcode already accepted here before
@@ -912,11 +915,11 @@ html.toon .proj-screen{backdrop-filter:none}
     }
     if(!authed){
       var v=el('gatePass').value;
-      if(v!==atob('d2VlaHVyODg=')){
+      if(v!==atob('d2VlaHVyODg4')){
         el('gateErr').textContent='Wrong passcode — try again';
         var p=el('gatePass'); p.value=''; p.focus(); return;
       }
-      try{ if(el('gateRemember').checked) localStorage.setItem('subconhub_auth','1'); }catch(e){}
+      try{ if(el('gateRemember').checked) localStorage.setItem(AUTHKEY,'1'); }catch(e){}
     }
     try{ localStorage.setItem(NAMEKEY,n); }catch(e){}
     // hand the name to the toolbar field the rest of the page reads
