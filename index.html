@@ -743,7 +743,8 @@ html.toon .fc.actr{background:#e5484d;color:#fff}
 html.toon .pbb{height:12px;width:120px;border:2.5px solid var(--ink);border-radius:999px;background:#fff}
 html.toon .pbf{background:repeating-linear-gradient(45deg,#3dd6b5 0 8px,#26b896 8px 16px)}
 html.toon .pt{color:var(--ink);font-weight:600;background:rgba(255,255,255,.85);border:2px solid var(--ink);border-radius:999px;padding:2px 9px}
-html.toon .card{border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);background:#fffdf7;animation:toonPop .4s cubic-bezier(.2,1.6,.4,1) both;transition:transform .15s,box-shadow .15s}
+html.toon .card{border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);background:#fffdf7;transition:transform .15s,box-shadow .15s}
+html.toon .card:nth-child(-n+24){animation:toonPop .4s cubic-bezier(.2,1.6,.4,1) both} /* only the first screenful pops in: animating ~2,000 cards at once froze the page */
 html.toon .card:hover{transform:translateY(-3px);box-shadow:0 8px 0 var(--ink)}
 html.toon .card.inv{background:#eaf4ff;border-color:var(--ink);box-shadow:inset 7px 0 0 #2f6fe4,0 5px 0 var(--ink)}
 html.toon .card.qrcv{background:#fff6d6;border-width:3px;border-color:var(--ink);box-shadow:inset 7px 0 0 #ffb703,0 5px 0 var(--ink)}
@@ -1080,7 +1081,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-22c</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-22f</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -2722,7 +2723,7 @@ document.getElementById('uname').addEventListener('input',function(){try{localSt
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function list(){
     const now=Date.now()+offset,byDev={};
-    Object.keys(online).forEach(function(k){const v=online[k];if(!v||!v.seen)return;if(now-v.seen>10*60*1000){if(now-v.seen>3600*1000&&typeof firebaseDB!=='undefined'&&firebaseDB)firebaseDB.ref(PFX+'/presence/'+k).remove().catch(function(){});return;}
+    Object.keys(online).forEach(function(k){const v=online[k];if(!v||!v.seen||(v.dev&&blocked[v.dev]))return;if(now-v.seen>10*60*1000){if(now-v.seen>3600*1000&&typeof firebaseDB!=='undefined'&&firebaseDB)firebaseDB.ref(PFX+'/presence/'+k).remove().catch(function(){});return;}
       const d=v.dev||k;if(!byDev[d]||byDev[d].seen<v.seen)byDev[d]=v;});
     return Object.keys(byDev).map(function(d){return byDev[d];}).sort(function(a,b){return (a.since||0)-(b.since||0);});
   }
@@ -2735,7 +2736,7 @@ document.getElementById('uname').addEventListener('input',function(){try{localSt
     d.innerHTML='<div>Access removed.<br><span style="font-weight:400;font-size:14px;opacity:.8">This device has been blocked by the site owner.</span></div>';
     document.body.appendChild(d);
   }
-  function ownerOk(){return (typeof askDeletePasscode==='function')?askDeletePasscode():false;}
+  function ownerOk(){const p=prompt('Owner sign-in\n\nEnter the owner passcode to block or unblock devices.\n(This does not delete anything.)');if(p===null)return false;let ok=false;try{ok=(btoa(p)===DEL_PW_B64);}catch(e){}if(!ok){alert('Wrong passcode.');return false;}return true;}
   function paint(){
     const l=list(),n=document.getElementById('onlineN');if(n)n.textContent=l.length;
     const pop=document.getElementById('onlinePop');if(!pop||pop.style.display==='none')return;
