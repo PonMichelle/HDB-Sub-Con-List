@@ -880,8 +880,9 @@ html.toon .proj-screen{backdrop-filter:none}
   </g>
 </svg></div>
     <div class="b2-word b2-big"><span class="b2-sub">Subcon</span><span class="b2-hub">Hub</span><span class="b2-team">HDB</span><span class="b2-glint g1">✦</span><span class="b2-glint g2">✧</span><span class="b2-glint g3">✦</span></div>
-    <div style="font-size:12.5px;color:#777;margin:8px 0 20px">Knock knock! 👷‍♀️ Michelle needs<br>the team passcode before you come in</div>
-    <input id="gatePass" type="password" placeholder="Passcode" autofocus style="width:100%;box-sizing:border-box;padding:11px 12px;font-size:14px;border:1px solid #ccc;border-radius:9px;outline:none" onkeydown="if(event.key==='Enter')tryUnlock()"/>
+    <div id="gateMsg" style="font-size:12.5px;color:#777;margin:8px 0 20px">Knock knock! 👷‍♀️ Michelle needs<br>your name and the team passcode before you come in</div>
+    <input id="gateName" type="text" placeholder="Your name" autofocus autocomplete="name" style="width:100%;box-sizing:border-box;padding:11px 12px;font-size:14px;border:1px solid #ccc;border-radius:9px;outline:none;margin-bottom:9px" onkeydown="if(event.key==='Enter')tryUnlock()"/>
+    <input id="gatePass" type="password" placeholder="Passcode" style="width:100%;box-sizing:border-box;padding:11px 12px;font-size:14px;border:1px solid #ccc;border-radius:9px;outline:none" onkeydown="if(event.key==='Enter')tryUnlock()"/>
     <div id="gateErr" style="color:#c0392b;font-size:11.5px;height:15px;margin:7px 0 4px"></div>
     <label style="display:flex;gap:6px;align-items:center;justify-content:center;font-size:11.5px;color:#666;margin-bottom:14px;cursor:pointer"><input type="checkbox" id="gateRemember" checked/> Remember on this device</label>
     <button onclick="tryUnlock()" style="width:100%;padding:11px;font-size:14px;font-weight:700;color:#fff;background:#2563eb;border:none;border-radius:9px;cursor:pointer">🔓 Let me in, Michelle!</button>
@@ -889,17 +890,58 @@ html.toon .proj-screen{backdrop-filter:none}
 </div>
 <script>
 (function(){
+  // Nobody gets in without saying who they are, so the "who is on the site
+  // right now" list can never show "No name entered" again. Someone who has
+  // already been let in on this device is only asked for the name.
+  var NAMEKEY='hdb_uname';
+  var saved=''; try{ saved=(localStorage.getItem(NAMEKEY)||'').trim(); }catch(e){}
+  var authed=false; try{ authed=localStorage.getItem('subconhub_auth')==='1'; }catch(e){}
+
+  function el(id){ return document.getElementById(id); }
+  function nameOnly(){                       // passcode already accepted here before
+    var p=el('gatePass'); if(p) p.style.display='none';
+    var rem=el('gateRemember'); if(rem&&rem.parentNode) rem.parentNode.style.display='none';
+    var msg=el('gateMsg'); if(msg) msg.innerHTML='Welcome back! 👷‍♀️ Just your name<br>so the team can see who is in';
+  }
+
   window.tryUnlock=function(){
-    var v=document.getElementById('gatePass').value;
-    if(v===atob('d2VlaHVyODg=')){
-      try{if(document.getElementById('gateRemember').checked)localStorage.setItem('subconhub_auth','1');}catch(e){}
-      var g=document.getElementById('loginGate');if(g)g.parentNode.removeChild(g);
-    }else{
-      document.getElementById('gateErr').textContent='Wrong passcode — try again';
-      var p=document.getElementById('gatePass');p.value='';p.focus();
+    var n=(el('gateName').value||'').trim().replace(/\s+/g,' ');
+    if(n.length<2){
+      el('gateErr').textContent='Please enter your name first';
+      el('gateName').focus(); return;
     }
+    if(!authed){
+      var v=el('gatePass').value;
+      if(v!==atob('d2VlaHVyODg=')){
+        el('gateErr').textContent='Wrong passcode — try again';
+        var p=el('gatePass'); p.value=''; p.focus(); return;
+      }
+      try{ if(el('gateRemember').checked) localStorage.setItem('subconhub_auth','1'); }catch(e){}
+    }
+    try{ localStorage.setItem(NAMEKEY,n); }catch(e){}
+    // hand the name to the toolbar field the rest of the page reads
+    var apply=function(){ var u=el('uname'); if(u&&u.value.trim()!==n){ u.value=n;
+      try{ u.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} } };
+    apply(); setTimeout(apply,300); setTimeout(apply,1500);
+    var g=el('loginGate'); if(g) g.parentNode.removeChild(g);
   };
-  try{if(localStorage.getItem('subconhub_auth')==='1'){var g=document.getElementById('loginGate');if(g)g.parentNode.removeChild(g);}}catch(e){}
+
+  if(saved) el('gateName').value=saved;
+  if(authed && saved){                        // known device, known person
+    var g=el('loginGate'); if(g) g.parentNode.removeChild(g);
+  } else if(authed){
+    nameOnly(); el('gateName').focus();
+  }
+
+  // The name must not be rubbed out afterwards - put it back if it is.
+  document.addEventListener('DOMContentLoaded',function(){
+    var u=el('uname'); if(!u) return;
+    u.addEventListener('blur',function(){
+      if(this.value.trim()) return;
+      var n=''; try{ n=(localStorage.getItem(NAMEKEY)||'').trim(); }catch(e){}
+      if(n){ this.value=n; try{ this.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){} }
+    });
+  });
 })();
 </script>
 <div id="wallpaperBg"></div>
