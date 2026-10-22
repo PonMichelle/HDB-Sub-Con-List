@@ -1080,7 +1080,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-22</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-10-22c</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -2715,10 +2715,10 @@ document.getElementById('uname').addEventListener('input',function(){try{localSt
   const tabId=Math.random().toString(36).slice(2,8);
   let dev;try{dev=localStorage.getItem('subconhub_dev');if(!dev){dev=Math.random().toString(36).slice(2,10);localStorage.setItem('subconhub_dev',dev);}}catch(e){dev=tabId;}
   const since=Date.now();
-  let me=null,online={},offset=0,lastSig='',tick=0;
+  let me=null,online={},blocked={},owner=(function(){try{return sessionStorage.getItem('subconhub_owner')==='1';}catch(e){return false;}})(),offset=0,lastSig='',tick=0;
   function deviceName(){const u=navigator.userAgent;const os=/Windows/.test(u)?'Windows':/Android/.test(u)?'Android':/iPhone|iPad/.test(u)?'iPhone/iPad':/Mac/.test(u)?'Mac':/Linux/.test(u)?'Linux':'Unknown';const br=/Edg\//.test(u)?'Edge':/Chrome\//.test(u)?'Chrome':/Firefox\//.test(u)?'Firefox':/Safari\//.test(u)?'Safari':'Browser';return br+' on '+os;}
   function info(){const n=document.getElementById('uname');return{name:((n&&n.value)||'').trim(),project:(typeof currentProject!=='undefined'&&currentProject)?currentProject.name:'',dev:dev,device:deviceName(),since:since};}
-  function push(){if(!me)return;const i=info();lastSig=i.name+'|'+i.project;i.seen=firebase.database.ServerValue.TIMESTAMP;me.update(i).catch(function(){});}
+  function push(){if(!me||blocked[dev])return;const i=info();lastSig=i.name+'|'+i.project;i.seen=firebase.database.ServerValue.TIMESTAMP;me.update(i).catch(function(){});}
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function list(){
     const now=Date.now()+offset,byDev={};
@@ -2726,13 +2726,23 @@ document.getElementById('uname').addEventListener('input',function(){try{localSt
       const d=v.dev||k;if(!byDev[d]||byDev[d].seen<v.seen)byDev[d]=v;});
     return Object.keys(byDev).map(function(d){return byDev[d];}).sort(function(a,b){return (a.since||0)-(b.since||0);});
   }
+  function blockedHtml(){return Object.keys(blocked).map(function(k){return '<div class="op-u">Blocked: '+esc((blocked[k]&&blocked[k].name)||k)+(owner?' <button class="op-ub" data-u="'+esc(k)+'">Unblock</button>':'')+'</div>';}).join('');}
+  function lockOut(){
+    me=null;try{localStorage.removeItem('subconhub_auth2');localStorage.removeItem('subconhub_auth');}catch(e){}
+    if(document.getElementById('blockedScreen'))return;
+    const d=document.createElement('div');d.id='blockedScreen';
+    d.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#1a1f3c;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font:600 18px/1.5 system-ui,sans-serif';
+    d.innerHTML='<div>Access removed.<br><span style="font-weight:400;font-size:14px;opacity:.8">This device has been blocked by the site owner.</span></div>';
+    document.body.appendChild(d);
+  }
+  function ownerOk(){return (typeof askDeletePasscode==='function')?askDeletePasscode():false;}
   function paint(){
     const l=list(),n=document.getElementById('onlineN');if(n)n.textContent=l.length;
     const pop=document.getElementById('onlinePop');if(!pop||pop.style.display==='none')return;
     pop.innerHTML='<div class="op-h">Using the site right now ('+l.length+')</div>'+l.map(function(v){
       const t=v.since?new Date(v.since).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'';
-      return '<div class="op-r"><div class="op-n">'+(v.name?esc(v.name):'<span class="op-w">⚠ No name entered</span>')+(v.dev===dev?' <span class="op-me">you</span>':'')+'</div><div class="op-s">'+esc(v.project||'No project open')+' · '+esc(v.device||'')+' · since '+esc(t)+'</div></div>';}).join('')
-      +'<div class="op-f">Shows people who have the latest version of the page open. Not recognised? Change the login passcode.</div>';
+      return '<div class="op-r"><div class="op-n">'+(v.name?esc(v.name):'<span class="op-w">⚠ No name entered</span>')+(v.dev===dev?' <span class="op-me">you</span>':(owner?' <button class="op-b" data-d="'+esc(v.dev||'')+'" data-n="'+esc(v.name||'')+'">Block</button>':''))+'</div><div class="op-s">'+esc(v.project||'No project open')+' · '+esc(v.device||'')+' · since '+esc(t)+'</div></div>';}).join('')
+      +blockedHtml()+'<div class="op-f">Shows people who have the latest version of the page open. Not recognised? Only the owner can block a device.'+(owner?' <a href="#" class="op-own">Lock</a>':' <a href="#" class="op-own">Owner sign-in</a>')+'</div>';
   }
   window.toggleOnline=function(ev){
     if(ev)ev.stopPropagation();
@@ -2740,19 +2750,29 @@ document.getElementById('uname').addEventListener('input',function(){try{localSt
     if(pop.style.display==='block'){pop.style.display='none';return;}
     const r=b.getBoundingClientRect();pop.style.top=(r.bottom+6)+'px';pop.style.right=Math.max(8,window.innerWidth-r.right)+'px';pop.style.display='block';paint();
   };
-  document.addEventListener('click',function(e){const pop=document.getElementById('onlinePop');if(pop&&pop.style.display==='block'&&!e.target.closest('#onlinePop'))pop.style.display='none';});
+  document.addEventListener('click',function(e){const pop=document.getElementById('onlinePop');if(pop&&pop.style.display==='block'&&(e.composedPath?e.composedPath().indexOf(pop)<0:!e.target.closest('#onlinePop')))pop.style.display='none';});
   const css=document.createElement('style');
-  css.textContent='#onlinePop{position:fixed;display:none;z-index:900;width:320px;max-width:calc(100vw - 16px);max-height:70vh;overflow:auto;background:var(--sur,#fff);color:var(--tx,#222);border:1.5px solid var(--bdr2,#ccc);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:10px 12px;font-size:12px}'
+  css.textContent='#onlinePop .op-b,#onlinePop .op-ub{margin-left:8px;padding:1px 8px;font-size:10.5px;font-weight:700;border-radius:8px;border:1px solid #dc2626;background:#fff;color:#dc2626;cursor:pointer;float:right}#onlinePop .op-ub{border-color:var(--bdr2,#ccc);color:var(--tx2,#555)}#onlinePop .op-u{padding:6px 0;border-top:1px solid var(--bdr,#eee);color:#dc2626;font-weight:600}#onlinePop{position:fixed;display:none;z-index:900;width:320px;max-width:calc(100vw - 16px);max-height:70vh;overflow:auto;background:var(--sur,#fff);color:var(--tx,#222);border:1.5px solid var(--bdr2,#ccc);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.2);padding:10px 12px;font-size:12px}'
    +'#onlinePop .op-h{font-weight:800;margin-bottom:6px}#onlinePop .op-r{padding:6px 0;border-top:1px solid var(--bdr,#eee)}#onlinePop .op-n{font-weight:700}#onlinePop .op-s{color:var(--tx3,#888);font-size:11px;margin-top:1px}'
    +'#onlinePop .op-w{color:#b45309}#onlinePop .op-me{background:var(--bblue,#e8eeff);color:var(--blue,#3b5bdb);border-radius:8px;padding:0 6px;font-size:10px;font-weight:700}#onlinePop .op-f{margin-top:8px;padding-top:6px;border-top:1px solid var(--bdr,#eee);color:var(--tx3,#888);font-size:10.5px}';
   document.head.appendChild(css);
   const pop=document.createElement('div');pop.id='onlinePop';document.body.appendChild(pop);
+  pop.addEventListener('click',function(e){
+    if(e.target.closest('.op-own')){e.preventDefault();if(owner){owner=false;try{sessionStorage.removeItem('subconhub_owner');}catch(x){}}else if(ownerOk()){owner=true;try{sessionStorage.setItem('subconhub_owner','1');}catch(x){}}paint();return;}
+    const b=e.target.closest('.op-b'),u=e.target.closest('.op-ub');if(!b&&!u)return;
+    if(!owner)return;
+    const db=(typeof firebaseDB!=='undefined')?firebaseDB:null;if(!db)return;
+    if(b){const d=b.getAttribute('data-d');if(!d)return;db.ref(PFX+'/blocked/'+d).set({name:b.getAttribute('data-n')||'',at:Date.now()});
+      Object.keys(online).forEach(function(k){if(online[k]&&online[k].dev===d)db.ref(PFX+'/presence/'+k).remove().catch(function(){});});}
+    else{db.ref(PFX+'/blocked/'+u.getAttribute('data-u')).remove();}
+  });
   function startPresence(n){ if(!(window.firebase&&firebase.database)){ if(n<80)setTimeout(function(){startPresence(n+1);},500); return; } // wait for the app's own Firebase load (avoids a load race)
   initFirebase().then(function(db){
     me=db.ref(PFX+'/presence/'+dev+'_'+tabId);
     db.ref('.info/serverTimeOffset').on('value',function(s){offset=s.val()||0;});
     db.ref('.info/connected').on('value',function(s){if(s.val()===true){me.onDisconnect().remove();push();}});
     db.ref(PFX+'/presence').on('value',function(s){online=s.val()||{};paint();},function(){});
+    db.ref(PFX+'/blocked').on('value',function(s){blocked=s.val()||{};if(blocked[dev]){lockOut();}paint();},function(){});
     setInterval(function(){tick++;const i=info();if(i.name+'|'+i.project!==lastSig||tick%6===0)push();},10000);
     const u=document.getElementById('uname');if(u)u.addEventListener('input',function(){clearTimeout(window._presT);window._presT=setTimeout(push,800);});
   }).catch(function(){});}
