@@ -1087,7 +1087,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-04b</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-04c</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -2183,7 +2183,7 @@ function popTr(){
   const c=document.createElement('option');c.value='__custom__';c.textContent='+ Add new trade...';sel.appendChild(c);
 }
 let _editSiblingIds=[];
-function hideSibRow(){document.getElementById('fsibRow').style.display='none';document.getElementById('fsibSync').checked=false;_editSiblingIds=[];const x=document.getElementById('fxRow');if(x){x.style.display='none';document.getElementById('fxSync').checked=false;}}
+function hideSibRow(){document.getElementById('fsibRow').style.display='none';document.getElementById('fsibSync').checked=false;_editSiblingIds=[];const x=document.getElementById('fxRow');if(x){x.style.display='none';x.style.opacity='1';const c=document.getElementById('fxSync');c.checked=false;c.disabled=false;}}
 // Indexed once per render (see render()) instead of re-scanning all records per card — O(n) instead of O(n^2), matters a lot at 900+ records.
 let _companyIndex=null;
 function buildCompanyIndex(){
@@ -2236,10 +2236,38 @@ function openEdit(id){
     sibRow.style.display='block';
   } else hideSibRow();
   // tick to copy these contact details to the same company in the other app
-  document.getElementById('fxLabel').textContent=`Also update this company's contact/phone/email/website/track record in the ${OTHER_NAME}?`;
-  document.getElementById('fxSync').checked=false;
-  document.getElementById('fxRow').style.display='block';
+  const _fxLab=document.getElementById('fxLabel'),_fxCb=document.getElementById('fxSync'),_fxRow=document.getElementById('fxRow');
+  _fxLab.textContent=`Also update this company's contact/phone/email/website/track record in the ${OTHER_NAME}? (checking…)`;
+  _fxCb.checked=false;_fxCb.disabled=true;_fxRow.style.opacity='.7';_fxRow.style.display='block';
+  const _fxCo=r.company,_fxId=id;
+  loadOtherIndex().then(idx=>{
+    if(eid!==_fxId)return; // the box was closed / another record opened meanwhile
+    const n=idx.get(bcaNorm(_fxCo))||0;
+    if(n){_fxLab.textContent=`Also update this company's contact/phone/email/website/track record in the ${OTHER_NAME}? (${n} ${n===1?'entry':'entries'} found there)`;_fxCb.disabled=false;_fxRow.style.opacity='1';}
+    else{_fxLab.textContent=`This company isn't in the ${OTHER_NAME}, so there is nothing to update there.`;}
+  }).catch(()=>{if(eid!==_fxId)return;_fxLab.textContent=`Also update this company's contact/phone/email/website/track record in the ${OTHER_NAME}?`;_fxCb.disabled=false;_fxRow.style.opacity='1';});
   document.getElementById('mo').classList.add('open');
+}
+// Which company names exist in the OTHER app (read once per visit, ~one database read), so the tick is only offered when there is something to update.
+let _otherIdx=null,_otherIdxP=null;
+function loadOtherIndex(){
+  if(_otherIdx)return Promise.resolve(_otherIdx);
+  if(_otherIdxP)return _otherIdxP;
+  _otherIdxP=(async()=>{
+    const db=await initFirebase(),P=OTHER_PFX;
+    const [bSnap,oSnap,rSnap]=await Promise.all([db.ref(P+'/base_dir').get(),db.ref(P+'/'+fbKey(P+'_subcon_overrides')).get(),db.ref(P+'/'+fbKey(P+'_subcon_records')).get()]);
+    let base=bSnap.val()||[];if(!Array.isArray(base))base=Object.keys(base).sort((a,b)=>a-b).map(k=>base[k]);
+    base=base.filter(Boolean);
+    const ovv=oSnap.val()||{},ov=ovv.ov||{};
+    let dl=ovv.del||[];if(!Array.isArray(dl))dl=Object.values(dl);const deleted=new Set(dl);
+    let adds=rSnap.val()||[];if(!Array.isArray(adds))adds=Object.values(adds);
+    const m=new Map();const add=n=>{const k=bcaNorm(n);if(k)m.set(k,(m.get(k)||0)+1);};
+    base.forEach(r=>{if(deleted.has(r.id))return;const o=ov[r.id];const a=bcaNorm(r.company),b=o&&o.company?bcaNorm(o.company):a;add(r.company);if(b&&b!==a)add(o.company);});
+    adds.forEach(r=>{if(r&&r.id>base.length)add(r.company);});
+    _otherIdx=m;return m;
+  })();
+  _otherIdxP.catch(()=>{_otherIdxP=null;});
+  return _otherIdxP;
 }
 function openDuplicate(id){
   const r=records.find(x=>x.id===id);if(!r)return;
@@ -2297,7 +2325,8 @@ async function syncToOtherApp(names,shared){
     const ovv=oSnap.val()||{};
     let delList=ovv.del||[];if(!Array.isArray(delList))delList=Object.values(delList);
     const deleted=new Set(delList);
-    const baseIds=base.filter(r=>keys.has(bcaNorm(r.company))&&!deleted.has(r.id)).map(r=>r.id);
+    const _ov0=ovv.ov||{};
+    const baseIds=base.filter(r=>!deleted.has(r.id)&&(keys.has(bcaNorm(r.company))||(_ov0[r.id]&&_ov0[r.id].company&&keys.has(bcaNorm(_ov0[r.id].company))))).map(r=>r.id);
     let adds=rSnap.val()||[];if(!Array.isArray(adds))adds=Object.values(adds);
     const addIds=adds.filter(r=>r&&r.id>base.length&&keys.has(bcaNorm(r.company))).map(r=>r.id);
     const n=baseIds.length+addIds.length;
