@@ -1087,7 +1087,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-04c</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-04e</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -1117,6 +1117,7 @@ html.toon .proj-screen{backdrop-filter:none}
         <button class="btn" id="undoBtn" onclick="doUndo()" title="Undo the last status change (single or bulk)" style="opacity:.45" disabled>↶ Undo</button>
         <button class="btn" onclick="syncNow()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,4 1,10 7,10"/><polyline points="23,20 23,14 17,14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Sync</button>
         <button class="btn" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+        <button class="btn" id="bkBtn" onclick="downloadBackup()" title="Download a backup file of everything in this app (projects, status, contacts you added or edited). Keep it somewhere safe."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Backup</button>
         <button class="btn" id="emailDefBtn" onclick="resetEmailDefault()" title="Change default email app">📧 <span id="emailDefLabel">Email</span></button>
         <button class="btn" id="bcaBtn" onclick="refreshBcaGrades(true)" title="Refresh BCA registration grades from data.gov.sg">BCA grades</button>
         <span class="rc" id="bcaStat" style="font-size:10.5px;color:var(--tx3)"></span>
@@ -1214,6 +1215,7 @@ const SK_R='hdb_subcon_records';
 const SK_OV='hdb_subcon_overrides'; // edits & deletions of baked (built-in) subcontractors — SHARED
 const SK_S='hdb_subcon_status';
 const SK_PROJECTS='hdb_projects';
+const MY_PFX='hdb', MY_NAME='Team';
 const OTHER_PFX='prv', OTHER_NAME='Private app'; // the sister app that "also update" can copy contact details into
 let records=[],statusMap={},nextId=1,activeTrade='ALL',view='grid',cf={yes:0,no:0,qr:0,nq:0,nfa:0},tq='',eid=null;
 let recOverrides={ov:{},del:[]}; // ov={id:editedRecord}, del=[deletedBakedIds]
@@ -1450,27 +1452,67 @@ async function syncNow(){
   await loadAll();toast('Refreshed ✓');
 }
 
-// Real-time sync via Firebase listeners
-function startRealtimeSync(){
-  if(!currentProject) return;
-  // Listen for status changes
-  listenKey(statusKey(), val=>{
-    if(JSON.stringify(val)!==JSON.stringify(statusMap)){
-      statusMap=val||{};
-      render();
-    }
+// ── Live sync: what a teammate changes appears here within a second or two ──
+// Status ticks/dates/notes are saved FIELD BY FIELD (see saveStatus), so two people working on different
+// companies never overwrite each other. statusBase = the last status we know the database holds.
+let statusBase={},_remR=null,_remOV=null,_live=[],_liveGen=0,_rrTimer=null,_rrTries=0;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function _stable(o){return JSON.stringify(o,(k,v)=>(v&&typeof v==='object'&&!Array.isArray(v))?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);}
+function _arr(v){return !v?[]:(Array.isArray(v)?v:Object.values(v)).filter(Boolean);}
+// Firebase hands back a list instead of an object when the ids happen to be 0,1,2…; always work with an object.
+function normStatus(v){if(!v||typeof v!=='object')return {};if(Array.isArray(v)){const o={};v.forEach((x,i)=>{if(x)o[i]=x;});return o;}return v;}
+// The changes made on this screen that the database does not have yet: {'<id>/<field>': value|null}
+function statusDiff(){
+  const upd={};
+  new Set([...Object.keys(statusMap),...Object.keys(statusBase)]).forEach(id=>{
+    const a=statusMap[id]||{},b=statusBase[id]||{};
+    new Set([...Object.keys(a),...Object.keys(b)]).forEach(f=>{
+      if(JSON.stringify(a[f])!==JSON.stringify(b[f]))upd[id+'/'+f]=(a[f]===undefined?null:a[f]);
+    });
   });
-  // Listen for record additions
-  listenKey(SK_R, val=>{
-    if(val){
-      const additions=(val||[]).filter(r=>r.id>BD.length);
-      const fresh=[...JSON.parse(JSON.stringify(BD)),...additions];
-      if(JSON.stringify(fresh)!==JSON.stringify(records)){
-        records=fresh;
-        renderSB();render();
-      }
-    }
+  return upd;
+}
+function stopRealtimeSync(){_liveGen++;_live.forEach(x=>{try{x[0].off('value',x[1]);}catch(e){}});_live=[];}
+// Redraw after a teammate's change — but not while this person is typing inside a card/row (that would drop their cursor).
+function remoteRender(sb){
+  clearTimeout(_rrTimer);
+  const a=document.activeElement;
+  if(_rrTries<4&&a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#cg,#ta')){_rrTries++;_rrTimer=setTimeout(()=>remoteRender(sb),1500);return;}
+  _rrTries=0;
+  if(sb){try{renderSB();}catch(e){}}
+  render();
+}
+function rebuildFromRemote(){
+  recOverrides=normOv(_remOV);
+  const fresh=buildRecords(_arr(_remR).filter(r=>r.id>BD.length));
+  const keep=records;records=fresh;applyTradeRenames();
+  if(_stable(fresh)===_stable(keep)){return;}
+  nextId=records.length?Math.max(...records.map(r=>r.id))+1:1;
+  try{buildBakedIndex();}catch(e){}
+  remoteRender(true);
+}
+async function startRealtimeSync(){
+  stopRealtimeSync();
+  if(!currentProject)return;
+  const gen=_liveGen;
+  let db;try{db=await initFirebase();}catch(e){return;}
+  if(gen!==_liveGen)return;
+  const watch=(key,fn)=>{
+    const ref=db.ref(MY_PFX+'/'+fbKey(key));
+    const h=snap=>{if(gen!==_liveGen)return;try{fn(snap.val());}catch(e){console.warn('live sync:',e);}};
+    ref.on('value',h,()=>{});
+    _live.push([ref,h]);
+  };
+  // 1) status (ticks, dates, notes): take the database's version, but keep anything typed here that is not saved yet
+  watch(statusKey(),v=>{
+    const remote=normStatus(v),pending=statusDiff(),next=_clone(remote);
+    statusBase=_clone(remote);
+    Object.keys(pending).forEach(p=>{const i=p.indexOf('/'),id=p.slice(0,i),f=p.slice(i+1);if(pending[p]===null){if(next[id])delete next[id][f];}else{(next[id]=next[id]||{})[f]=pending[p];}});
+    if(_stable(next)!==_stable(statusMap)){statusMap=next;remoteRender(false);}
   });
+  // 2) contacts added by someone, and contact edits/deletions
+  watch(SK_R,v=>{if(_stable(v)===_stable(_remR))return;_remR=v;rebuildFromRemote();});
+  watch(SK_OV,v=>{if(_stable(v)===_stable(_remOV))return;_remOV=v;rebuildFromRemote();});
   setSS('ok');
 }
 
@@ -1566,7 +1608,8 @@ async function deleteProject(id){
   await saveProjects();
   if(currentProject&&currentProject.id===id){
     currentProject=null;
-    statusMap={};
+    stopRealtimeSync();
+    statusMap={};statusBase={};
     updateProjUI();
     showProjScreen();
   } else {
@@ -1585,10 +1628,11 @@ async function loadStatusForProject(){
   setSS('syn');
   try{
     const r=await sget(statusKey());
-    statusMap=r?r:{};
+    statusMap=normStatus(r);statusBase=_clone(statusMap);
     // Always start from BD (embedded data) to ensure latest subcon list
     // Cloud only stores user-added contacts (SK_R) + edits/deletions of baked rows (SK_OV)
     const[rr,ovv]=await Promise.all([sget(SK_R),sget(SK_OV)]);
+    _remR=rr;_remOV=ovv;
     recOverrides=normOv(ovv);
     const additions=rr?rr.filter(r=>r.id>BD.length):[];
     records=buildRecords(additions);
@@ -1596,7 +1640,7 @@ async function loadStatusForProject(){
     setSS('ok');
   }catch(e){
     records=JSON.parse(JSON.stringify(BD));
-    statusMap={};
+    statusMap={};statusBase={};
     setSS('err');
   }
 }
@@ -1620,6 +1664,7 @@ async function loadAll(){
   refreshBcaGrades(); // auto-update grades from BCA in background (7-day cache)
   loadTplsFromCloud(); // shared email templates (Firebase)
   loadMascot(); // shared mascot image (Firebase)
+  startRealtimeSync(); // live updates from teammates
 }
 
 async function saveRecords(){
@@ -1629,15 +1674,33 @@ async function saveRecords(){
     const ov={},del=[],present=new Map(records.map(r=>[r.id,r]));
     BD.forEach(orig=>{const cur=present.get(orig.id);if(!cur){del.push(orig.id);return;}if(JSON.stringify(cur)!==JSON.stringify(orig))ov[orig.id]=cur;});
     recOverrides={ov,del};
+    _remR=additions;_remOV=recOverrides; // so the live listener doesn't treat our own save as someone else's change
     await sset(SK_R,additions);
     await sset(SK_OV,recOverrides);
     setSS('ok');toast('Saved ✓');
   }catch(e){setSS('err');toast('Save failed');}
 }
 
+// Saves only the fields that changed on this screen (not the whole project), so a teammate's changes to other
+// companies — or other fields — are never overwritten by a stale copy.
 async function saveStatus(){
   if(!currentProject)return;
-  try{await sset(statusKey(),statusMap);}catch(e){setSS('err');}
+  const upd=statusDiff(),paths=Object.keys(upd);
+  if(!paths.length)return;
+  if(!Object.keys(statusMap).length&&paths.length>50){console.warn('saveStatus: refused to wipe',paths.length,'fields');return;}
+  const key=statusKey();
+  lsPut('fb_'+key,statusMap);
+  try{
+    const db=await initFirebase();
+    await db.ref(MY_PFX+'/'+fbKey(key)).update(upd);
+    if(key===statusKey()){
+      paths.forEach(p=>{const i=p.indexOf('/'),id=p.slice(0,i),f=p.slice(i+1);if(upd[p]===null){if(statusBase[id])delete statusBase[id][f];}else{(statusBase[id]=statusBase[id]||{})[f]=upd[p];}});
+    }
+    setSS('ok');toast('Saved ✓');
+  }catch(e){
+    setSS('err');toast('Save failed — check your connection');
+    console.error('Firebase write error:',e.message);
+  }
 }
 
 async function syncNow(){
@@ -3057,6 +3120,36 @@ async function exportCSV(){
     console.error(err);
     toast('Export failed: '+err.message);
   }
+}
+// One-click backup: everything this app keeps in the database (projects and their status, added/edited contacts,
+// trade renames, templates, the directory itself) in a single file. Who-is-online data is left out.
+async function downloadBackup(){
+  const btn=document.getElementById('bkBtn');
+  if(btn&&btn.disabled)return;
+  if(btn)btn.disabled=true;
+  toast('Preparing backup…');
+  try{
+    const db=await initFirebase();
+    const snap=await db.ref(MY_PFX).get();
+    const data=snap.val()||{};
+    delete data.presence;
+    let who='';try{who=firebase.auth().currentUser.email||'';}catch(e){}
+    const now=new Date(),pad=n=>String(n).padStart(2,'0');
+    const stamp=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'_'+pad(now.getHours())+pad(now.getMinutes());
+    const out={backupOf:'SubconHub '+MY_NAME,database:MY_PFX,takenAt:now.toISOString(),takenBy:who,build:(document.getElementById('sbver')||{}).textContent||'',data};
+    const blob=new Blob([JSON.stringify(out)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='SubconHub_'+MY_NAME+'_backup_'+stamp+'.json';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    const np=Array.isArray(data[MY_PFX+'_projects'])?data[MY_PFX+'_projects'].filter(Boolean).length:Object.keys(data[MY_PFX+'_projects']||{}).length;
+    toast('Backup saved ✓ ('+np+' projects, '+Math.round(blob.size/1024)+' KB)');
+  }catch(err){
+    console.error('backup failed:',err);
+    toast('Backup failed: '+(err&&err.message||err));
+  }
+  if(btn)btn.disabled=false;
 }
 // ── Sidebar resize & collapse ─────────────────────────────────────
 function toggleSidebar(){
