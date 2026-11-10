@@ -1087,7 +1087,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-04f</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-10a</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -2300,15 +2300,15 @@ function openEdit(id){
   } else hideSibRow();
   // tick to copy these contact details to the same company in the other app
   const _fxLab=document.getElementById('fxLabel'),_fxCb=document.getElementById('fxSync'),_fxRow=document.getElementById('fxRow');
-  _fxLab.textContent=`Also update this company's contact/phone/email/website/track record in the ${OTHER_NAME}? (checking…)`;
+  _fxLab.textContent=`Also update this company's contact/phone/email/website/track record, remark and "Not for ask quote" in the ${OTHER_NAME}? (checking…)`;
   _fxCb.checked=false;_fxCb.disabled=true;_fxRow.style.opacity='.7';_fxRow.style.display='block';
   const _fxCo=r.company,_fxId=id;
   loadOtherIndex().then(idx=>{
     if(eid!==_fxId)return; // the box was closed / another record opened meanwhile
     const n=idx.get(bcaNorm(_fxCo))||0;
-    if(n){_fxLab.textContent=`Also update this company's contact/phone/email/website/track record in the ${OTHER_NAME}? (${n} ${n===1?'entry':'entries'} found there)`;_fxCb.disabled=false;_fxRow.style.opacity='1';}
+    if(n){_fxLab.textContent=`Also update this company's contact/phone/email/website/track record, remark and \"Not for ask quote\" in the ${OTHER_NAME}? (${n} ${n===1?'entry':'entries'} found there)`;_fxCb.disabled=false;_fxRow.style.opacity='1';}
     else{_fxLab.textContent=`This company isn't in the ${OTHER_NAME}, so there is nothing to update there.`;}
-  }).catch(()=>{if(eid!==_fxId)return;_fxLab.textContent=`Also update this company's contact/phone/email/website/track record in the ${OTHER_NAME}?`;_fxCb.disabled=false;_fxRow.style.opacity='1';});
+  }).catch(()=>{if(eid!==_fxId)return;_fxLab.textContent=`Also update this company's contact/phone/email/website/track record, remark and \"Not for ask quote\" in the ${OTHER_NAME}?`;_fxCb.disabled=false;_fxRow.style.opacity='1';});
   document.getElementById('mo').classList.add('open');
 }
 // Which company names exist in the OTHER app (read once per visit, ~one database read), so the tick is only offered when there is something to update.
@@ -2369,7 +2369,14 @@ function saveRec(){
   if(eid){const i=records.findIndex(x=>x.id===eid);records[i]={...records[i],...d};delete records[i].vfy;/* editing = you've reviewed it, clear the verify highlight */}
   else{records.push({id:nextId++,...d,addedBy:getUser(),addedAt:new Date().toISOString()});}
   closeMo();renderSB();render();saveRecords();
-  if(_alsoOther)syncToOtherApp([_origCo,co],{contact:d.contact,tel:d.tel,hp:d.hp,phone:d.phone,email:d.email,site:d.site,track:d.track});
+  if(_alsoOther){
+    // The remark and "Not for ask quote" belong to the COMPANY, not to one
+    // app, so they travel with the contact details. nfa is a card tick, not a
+    // dialog field, so it is read off the record rather than the form.
+    const _rec=eid?records.find(x=>x.id===eid):null;
+    syncToOtherApp([_origCo,co],{contact:d.contact,tel:d.tel,hp:d.hp,phone:d.phone,
+      email:d.email,site:d.site,track:d.track,remark:d.remark,nfa:!!(_rec&&_rec.nfa)});
+  }
 }
 // Copy the edited contact details to the SAME company (matched by company name) in the OTHER app.
 // Both apps share one Firebase database, so this edits the other app's saved data directly.
