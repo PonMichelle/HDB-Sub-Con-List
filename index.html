@@ -190,6 +190,7 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .ctag{font-size:9.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .cbadge,.qrbadge,.invbadge,.nqbadge,.nfabadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0}
 .nfabadge{background:#ffe3ef;color:#c2185b;border:1px solid #f8b5d0}
+.mfbadge.mfok{background:#e3f6e6;color:#17622b;border-color:#8fd19e}
 .mfbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;background:#fff0d0;color:#9a4b00;border:1px solid #f0a040;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .card.nfa{opacity:.92;background:linear-gradient(0deg,#fff,#fff)}
 .card.nfa .cname{color:#e91e8c!important;font-weight:800!important}
@@ -1088,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-11b</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-11c</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -3185,7 +3186,7 @@ function mailEmails(s){return (String(s||'').match(/[A-Za-z0-9._%+'-]+@[A-Za-z0-
 // msgs: [{id,subject,from,to,cc,date:'yyyy-mm-dd',snippet}]   mode: 'in' (received) | 'out' (sent)
 // returns {ticks:[{id,field,date,msgId,subject}], flags:[{id,why,msgId,subject,from,date}]}
 function mailMatch(msgs,ctx,mode){
-  const proj=mailNorm(ctx.projectName),ticks=[],flags=[];
+  const proj=mailNorm(ctx.projectName),ticks=[],flags=[],threads=[],learn=[],tm=ctx.threadMap||{};
   const byEmail=new Map(),byDom=new Map();
   ctx.records.forEach(r=>{
     mailEmails(r.email).forEach(e=>{
@@ -3204,23 +3205,30 @@ function mailMatch(msgs,ctx,mode){
     let exact=[];others.forEach(e=>{exact=exact.concat(byEmail.get(e)||[]);});exact=uniq(exact);
     let dom=[];others.forEach(e=>{const d=e.split('@')[1];dom=dom.concat(byDom.get(d)||[]);});dom=uniq(dom).filter(r=>exact.indexOf(r)<0);
     const st=id=>ctx.statusMap[id]||{};
-    const flag=(r,why)=>flags.push({id:r.id,why,msgId:m.id,subject:m.subject,from:m.from,date:m.date});
+    const flag=(r,why,x)=>flags.push(Object.assign({id:r.id,why,msgId:m.id,subject:m.subject,from:m.from,date:m.date},x||{}));
     if(mode==='out'){
       if(!titleOk||!exact.length)return;
       let c=exact;const t=c.filter(r=>mailNorm(r.trade)&&subj.indexOf(mailNorm(r.trade))>=0);if(t.length)c=t;
       if(c.length>1)return; // company has several trades and the subject doesn't say which — don't guess
+      if(m.threadId&&c.length===1)threads.push({threadId:m.threadId,id:c[0].id,date:m.date}); // remember: this thread = this company+trade
       c.forEach(r=>{if(r.nfa||st(r.id).invDate)return;ticks.push({id:r.id,field:'invDate',date:m.date,msgId:m.id,subject:m.subject});});
       return;
     }
     // received mail
     const invited=r=>!!st(r.id).invDate&&!st(r.id).noqDate&&!st(r.id).qrcDate;
+    // a reply inside a thread that started with OUR email to a known company belongs to that company, whoever answers
+    let threadHit=null;
+    if(m.threadId&&tm[m.threadId]){threadHit=ctx.records.find(r=>r.id===tm[m.threadId].id)||null;if(threadHit)exact=uniq(exact.concat([threadHit]));}
     if(exact.length){
       let c=exact;const t=c.filter(r=>mailNorm(r.trade)&&subj.indexOf(mailNorm(r.trade))>=0);if(t.length)c=t;
+      if(threadHit)c=[threadHit];
+      const tgt=threadHit||(c.length===1?c[0]:null); // the one company we are sure this reply is from → may learn contact details
+      if(tgt&&(titleOk||threadHit)&&!tgt.nfa)learn.push({id:tgt.id,msg:m});
       const open=c.filter(invited);
       if(!titleOk){open.forEach(r=>flag(r,'Reply from this company, but the subject doesn’t contain the project title'));return;}
       if(!open.length){
         const un=c.filter(r=>!st(r.id).invDate&&!st(r.id).noqDate&&!st(r.id).qrcDate&&!r.nfa);
-        if(un.length&&c.every(r=>!st(r.id).qrcDate&&!st(r.id).noqDate))un.slice(0,1).forEach(r=>flag(r,'Replied with the project title, but this company is not marked Invited'));
+        if(un.length&&c.every(r=>!st(r.id).qrcDate&&!st(r.id).noqDate))un.slice(0,1).forEach(r=>flag(r,'Replied with the project title, but this company is not marked Invited',{kind:'uninvited',decline:MAIL_DECLINE.test((m.subject||'')+' '+(m.snippet||'')),sentDate:(m.threadId&&tm[m.threadId]&&tm[m.threadId].date)||''}));
         return;
       }
       if(open.length>1&&!t.length){open.forEach(r=>flag(r,'Reply matches several trades of this company — which one?'));return;}
@@ -3230,15 +3238,104 @@ function mailMatch(msgs,ctx,mode){
     }
     if(dom.length&&titleOk){dom.filter(invited).forEach(r=>flag(r,'Reply with the project title from a different address at this company'));}
   });
-  return {ticks,flags};
+  return {ticks,flags,threads,learn};
 }
+
+// ── Learn contact details from a subcontractor's reply ───────────────
+// Adds a new sender address, appends a new person's name, and adds new phone numbers found in the signature.
+// Never removes anything; every change is returned as {field,old,new} so it can be shown and undone.
+const MAIL_NONAME=/^(admin|administrator|sales|info|tender|tenders|enquiry|enquiries|office|account|accounts|contract|contracts|marketing|estimating|estimation|procurement|purchasing|qs|noreply|no reply|support|service|services)$/i;
+function mailParseFrom(s){
+  s=String(s||'');const m=s.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>/);
+  let name=m?m[1].trim():'';const email=(m?m[2]:(mailEmails(s)[0]||'')).trim().toLowerCase();
+  if(name.indexOf(',')>0&&!/\b(pte|ltd|llp|co|inc)\b/i.test(name)){const p=name.split(',');if(p.length===2)name=p[1].trim()+' '+p[0].trim();}
+  return {name:name.replace(/\s+/g,' '),email};
+}
+function mailGoodName(n,company){
+  n=String(n||'').trim();
+  if(n.length<3||n.length>40||/[@\d]/.test(n)||MAIL_NONAME.test(n))return '';
+  const a=mailNorm(n),c=mailNorm(company||'');
+  if(c&&a&&(c.indexOf(a)>=0||a.indexOf(c)>=0))return ''; // that's the company name, not a person
+  return n;
+}
+function mailNameKnown(contact,name){
+  const have=mailNorm(contact).split(' '),toks=mailNorm(name).split(' ').filter(t=>t.length>=2);
+  return !toks.length||toks.every(t=>have.indexOf(t)>=0);
+}
+// Singapore numbers (8 digits starting 3/6/8/9) from the signature area of the reply (never from the quoted older mail, never fax lines)
+function mailSigPhones(body){
+  const own=[];
+  for(const l of String(body||'').replace(/\r/g,'').split('\n')){
+    if(/^\s*>/.test(l)||/^\s*(On .{5,160}wrote:?|-{2,}\s*Original Message|From:\s)/i.test(l))break;
+    own.push(l);
+  }
+  const nums=[];
+  own.filter(l=>l.trim()).slice(-18).forEach(l=>{
+    if(/\bfax\b|\bf\s*[:.]/i.test(l))return;
+    const re=/(?<!\d)(?:\+?65[\s-]?)?([3689]\d{3})[\s-]?(\d{4})(?!\d)/g;let m;
+    while((m=re.exec(l))){const n=m[1]+' '+m[2];if(nums.indexOf(n)<0)nums.push(n);}
+  });
+  return nums;
+}
+function mailLearn(m,r,body,mine){
+  const ch=[],from=mailParseFrom(m.from);
+  const mineDom=String(mine||'').split('@')[1]||'weehur.com.sg';
+  let newEmail=false;
+  if(from.email&&from.email.split('@')[1]!==mineDom&&!/(no-?reply|do-?not-?reply|mailer-daemon|postmaster)/i.test(from.email)){
+    if(mailEmails(r.email).indexOf(from.email)<0){
+      newEmail=true;
+      const sep=/;/.test(r.email||'')?'; ':', ';
+      ch.push({field:'email',old:r.email||'',new:(r.email?String(r.email).replace(/[;,\s]+$/,'')+sep:'')+from.email});
+    }
+    const nm=mailGoodName(from.name,r.company);
+    if(nm&&(newEmail||!String(r.contact||'').trim())&&!mailNameKnown(r.contact,nm))
+      ch.push({field:'contact',old:r.contact||'',new:r.contact?String(r.contact).replace(/[\/;,\s]+$/,'')+' / '+nm:nm});
+  }
+  let have=(String(r.tel||'')+' '+String(r.hp||'')).replace(/\D/g,'');
+  const val={tel:r.tel||'',hp:r.hp||''};
+  mailSigPhones(body).slice(0,2).forEach(n=>{
+    const d=n.replace(/\D/g,'');if(have.indexOf(d)>=0)return;
+    have+=d;
+    const f=/^[89]/.test(d)?'hp':'tel',old=val[f];
+    val[f]=old?old+' / '+n:n;
+    const ex=ch.find(c=>c.field===f);
+    if(ex)ex.new=val[f];else ch.push({field:f,old:old,new:val[f]});
+  });
+  return ch;
+}
+function mailBodyText(p){
+  if(!p)return '';
+  const dec=d=>{try{const s=atob(String(d).replace(/-/g,'+').replace(/_/g,'/'));const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder('utf-8').decode(b);}catch(e){return '';}};
+  let plain='',html='';
+  (function walk(x){
+    if(!x)return;
+    if(x.mimeType==='text/plain'&&x.body&&x.body.data&&!plain)plain=dec(x.body.data);
+    else if(x.mimeType==='text/html'&&x.body&&x.body.data&&!html)html=dec(x.body.data);
+    (x.parts||[]).forEach(walk);
+  })(p);
+  if(plain)return plain;
+  return html.replace(/<(br|\/p|\/div|\/tr|\/li)[^>]*>/gi,'\n').replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/[ \t]+/g,' ');
+}
+const MAIL_FLD={email:'Email',contact:'Contact',tel:'Tel',hp:'HP'};
+let mailChanges=[];
+function mcKey(){return 'mc_'+MY_PFX;}
+function loadMailChanges(){try{mailChanges=JSON.parse(localStorage.getItem(mcKey())||'[]')||[];}catch(e){mailChanges=[];}}
+function saveMailChanges(){try{localStorage.setItem(mcKey(),JSON.stringify(mailChanges.slice(-300)));}catch(e){}}
+function mtKey(){return 'mt_'+MY_PFX+'_'+(currentProject?currentProject.id:'');}
+function loadThreadMap(){try{return JSON.parse(localStorage.getItem(mtKey())||'{}')||{};}catch(e){return {};}}
+function saveThreadMap(t){try{const k=Object.keys(t);if(k.length>1500)k.slice(0,k.length-1500).forEach(x=>delete t[x]);localStorage.setItem(mtKey(),JSON.stringify(t));}catch(e){}}
 
 let mailFlags={},_mailBusy=false;
 function mfKey(){return 'mf_'+MY_PFX+'_'+(currentProject?currentProject.id:'');}
-function mpKey(){return 'mp_'+MY_PFX+'_'+(currentProject?currentProject.id:'');}
-function loadMailFlags(){try{mailFlags=JSON.parse(localStorage.getItem(mfKey())||'{}')||{};}catch(e){mailFlags={};}}
+function mpKey(){return 'mp2_'+MY_PFX+'_'+(currentProject?currentProject.id:'');}
+function loadMailFlags(){try{mailFlags=JSON.parse(localStorage.getItem(mfKey())||'{}')||{};}catch(e){mailFlags={};}loadMailChanges();}
 function saveMailFlags(){try{localStorage.setItem(mfKey(),JSON.stringify(mailFlags));}catch(e){}}
-function mailFlagHtml(id){return mailFlags[id]?'<span class="mfbadge" title="'+mEsc(mailFlags[id].why)+' — click to see" onclick="event.stopPropagation();showMailPanel()">✉ Reply — check</span>':'';}
+function mailFlagHtml(id){
+  let h='';
+  if(mailFlags[id])h+='<span class="mfbadge" title="'+mEsc(mailFlags[id].why)+' — click to see" onclick="event.stopPropagation();showMailPanel()">✉ Reply — check</span>';
+  if(mailChanges.some(c=>c.id===id))h+=(h?' ':'')+'<span class="mfbadge mfok" title="Contact details were updated from an email — click to confirm or undo" onclick="event.stopPropagation();showMailPanel()">✎ Updated — confirm</span>';
+  return h;
+}
 function mEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function isMailOwner(){try{return String(firebase.auth().currentUser.email||'').toLowerCase()==='michellepon@weehur.com.sg';}catch(e){return false;}}
 function mailClientId(ask){
@@ -3289,7 +3386,7 @@ async function gmailFetch(q,tok,cap){
     part.forEach(m=>{
       if(!m)return;const h={};(m.payload&&m.payload.headers||[]).forEach(x=>{h[x.name.toLowerCase()]=x.value;});
       const d=new Date(+m.internalDate),p=n=>String(n).padStart(2,'0');
-      out.push({id:m.id,subject:h.subject||'',from:h.from||'',to:h.to||'',cc:h.cc||'',snippet:m.snippet||'',date:d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())});
+      out.push({id:m.id,threadId:m.threadId||'',subject:h.subject||'',from:h.from||'',to:h.to||'',cc:h.cc||'',snippet:m.snippet||'',date:d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())});
     });
   }
   return out;
@@ -3301,7 +3398,7 @@ async function checkMail(interactive){
   try{
     if(interactive)toast('Checking your Gmail…');
     const tok=await gmailToken(interactive);
-    let days=21;try{const last=+localStorage.getItem('mlast_'+MY_PFX+'_'+currentProject.id);if(last)days=Math.min(60,Math.max(3,Math.ceil((Date.now()-last)/864e5)+2));}catch(e){}
+    let days=21;try{const last=+localStorage.getItem('mlast2_'+MY_PFX+'_'+currentProject.id);if(last)days=Math.min(60,Math.max(3,Math.ceil((Date.now()-last)/864e5)+2));}catch(e){}
     const after=Math.floor((Date.now()-days*864e5)/1000);
     const [inbox,sent]=await Promise.all([
       gmailFetch('after:'+after+' -from:me -in:sent -in:drafts -in:trash -in:spam',tok,300),
@@ -3309,24 +3406,41 @@ async function checkMail(interactive){
     ]);
     let done={};try{done=JSON.parse(localStorage.getItem(mpKey())||'{}')||{};}catch(e){}
     const fresh=a=>a.filter(m=>!done[m.id]);
-    const ctx={records,statusMap,projectName:currentProject.name,me:(firebase.auth().currentUser||{}).email||''};
+    const tmap=loadThreadMap();
+    const ctx={records,statusMap,projectName:currentProject.name,me:(firebase.auth().currentUser||{}).email||'',threadMap:tmap};
+    // every sent mail (even ones already processed) tells us which thread belongs to which company
+    mailMatch(sent.slice().sort((a,b)=>a.date<b.date?-1:1),ctx,'out').threads.forEach(t=>{tmap[t.threadId]={id:t.id,date:t.date};});
+    saveThreadMap(tmap);
     const rOut=mailMatch(fresh(sent).sort((a,b)=>a.date<b.date?-1:1),ctx,'out');
     // apply "sent" ticks first so a quick reply the same day can be matched to an invited row
     const ticks=rOut.ticks.slice();
     if(ticks.length){pushUndo();ticks.forEach(t=>{const s=statusMap[t.id]||{};if(!s[t.field])statusMap[t.id]={...s,[t.field]:t.date};});}
     const rIn=mailMatch(fresh(inbox).sort((a,b)=>a.date<b.date?-1:1),ctx,'in');
+    // learn contact details (new email, new name, new phone) from replies we are sure about; changes are logged for confirmation
+    let nChanged=0;
+    for(const L of rIn.learn.slice(0,15)){
+      const rec=records.find(x=>x.id===L.id);if(!rec)continue;
+      let body='';try{const full=await gmailApi('messages/'+L.msg.id+'?format=full',tok);body=mailBodyText(full.payload);}catch(e){}
+      const ch=mailLearn(L.msg,rec,body,ctx.me);
+      ch.forEach(c=>{
+        rec[c.field]=c.new;nChanged++;
+        mailChanges.push({key:L.msg.id+'|'+L.id+'|'+c.field,id:L.id,field:c.field,old:c.old,new:c.new,from:L.msg.from,subject:L.msg.subject,date:L.msg.date,msgId:L.msg.id});
+      });
+      done[L.msg.id]=1;
+    }
+    if(nChanged){saveMailChanges();saveRecords();}
     if(rIn.ticks.length){if(!ticks.length)pushUndo();rIn.ticks.forEach(t=>{const s=statusMap[t.id]||{};if(!s[t.field]){statusMap[t.id]={...s,[t.field]:t.date};ticks.push(t);}});}
     // flags (kept until the row gets its quotation ticked or the owner dismisses it)
     rIn.flags.forEach(f=>{const s=statusMap[f.id]||{};if(s.qrcDate||s.noqDate)return;mailFlags[f.id]=f;});
     Object.keys(mailFlags).forEach(id=>{const s=statusMap[id]||{};if(s.qrcDate||s.noqDate)delete mailFlags[id];});
     saveMailFlags();
     [].concat(ticks,rIn.flags).forEach(x=>{done[x.msgId]=1;});
-    try{localStorage.setItem(mpKey(),JSON.stringify(done));localStorage.setItem('mlast_'+MY_PFX+'_'+currentProject.id,String(Date.now()));}catch(e){}
+    try{localStorage.setItem(mpKey(),JSON.stringify(done));localStorage.setItem('mlast2_'+MY_PFX+'_'+currentProject.id,String(Date.now()));}catch(e){}
     if(ticks.length){saveStatus();}
     render();
     const nFlag=Object.keys(mailFlags).length;
     if(interactive)showMailPanel(ticks,{scanned:inbox.length+sent.length,days});
-    if(!interactive&&(ticks.length||nFlag))toast('Mail check: ticked '+ticks.length+(nFlag?', '+nFlag+' to check ✉':''));
+    if(!interactive&&(ticks.length||nFlag||nChanged))toast('Mail check: ticked '+ticks.length+(nChanged?', updated '+nChanged+' contact detail'+(nChanged>1?'s':'')+' ✎':'')+(nFlag?', '+nFlag+' to check ✉':''));
   }catch(e){
     console.warn('mail check:',e&&e.message||e);
     if(interactive)toast('Mail check failed: '+((e&&e.message)||e));
@@ -3343,19 +3457,41 @@ function showMailPanel(ticks,info){
   let h='<div style="background:var(--sur,#fff);color:var(--tx,#222);border-radius:12px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:18px 20px;font-size:13px;box-shadow:0 10px 40px rgba(0,0,0,.3)">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:15px">✉ Mail check — '+mEsc(currentProject?currentProject.name:'')+'</b><button class="btn" onclick="document.getElementById(\'mailPanel\').remove()">Close</button></div>';
   if(info)h+='<div style="color:var(--tx2,#666);margin-bottom:10px">Looked at '+info.scanned+' emails from the last '+info.days+' days.</div>';
+  h+='<div style="font-weight:600;margin:8px 0 4px;color:#17622b;display:flex;justify-content:space-between;align-items:center"><span>✎ Contact details updated from emails — please confirm ('+mailChanges.length+')</span>'+(mailChanges.length>1?'<button class="btn" onclick="mailConfirmAll()">✔ Confirm all</button>':'')+'</div>';
+  h+=mailChanges.length?mailChanges.map(c=>'<div style="padding:6px 0;border-top:1px solid var(--bdr,#eee)"><b>'+mEsc(recLabel(c.id))+'</b> — '+MAIL_FLD[c.field]+'<div style="font-size:12.5px;margin-top:2px"><span style="color:#a02020;text-decoration:line-through">'+mEsc(c.old||'(empty)')+'</span> → <b style="color:#17622b">'+mEsc(c.new)+'</b></div><div style="color:var(--tx3,#888);font-size:11.5px">from '+mEsc(c.date)+' · '+mEsc(c.from)+' · “'+mEsc(c.subject)+'”</div><div style="margin-top:4px"><button class="btn" onclick="mailChangeConfirm(\''+mEsc(c.key)+'\')">✔ Confirm</button> <button class="btn" onclick="mailChangeUndo(\''+mEsc(c.key)+'\')">↶ Undo</button> <button class="btn" onclick="mailShow('+c.id+')">Show this company</button></div></div>').join(''):'<div style="color:var(--tx3,#888)">Nothing waiting.</div>';
   if(ticks){
     h+='<div style="font-weight:600;margin:8px 0 4px">Ticked automatically ('+ticks.length+')</div>';
     h+=ticks.length?ticks.map(t=>'<div style="padding:5px 0;border-top:1px solid var(--bdr,#eee)">✔ <b>'+mEsc(recLabel(t.id))+'</b> — '+fld[t.field]+' '+mEsc(t.date)+'<div style="color:var(--tx3,#888);font-size:11.5px">'+mEsc(t.subject)+'</div></div>').join(''):'<div style="color:var(--tx3,#888)">Nothing new to tick.</div>';
     if(ticks.length)h+='<div style="font-size:11.5px;color:var(--tx3,#888);margin-top:6px">Wrong? Press ↶ Undo at the top to take the ticks back.</div>';
   }
   h+='<div style="font-weight:600;margin:14px 0 4px;color:#9a4b00">Needs your check ('+fl.length+')</div>';
-  h+=fl.length?fl.map(f=>'<div style="padding:6px 0;border-top:1px solid var(--bdr,#eee)"><b>'+mEsc(recLabel(f.id))+'</b><div style="color:#9a4b00;font-size:12px">'+mEsc(f.why)+'</div><div style="color:var(--tx3,#888);font-size:11.5px">'+mEsc(f.date)+' · '+mEsc(f.from)+' · “'+mEsc(f.subject)+'”</div><div style="margin-top:4px"><button class="btn" onclick="mailShow('+f.id+')">Show this company</button> <button class="btn" onclick="mailDismiss('+f.id+')">Dismiss</button></div></div>').join(''):'<div style="color:var(--tx3,#888)">Nothing to check.</div>';
+  h+=fl.length?fl.map(f=>'<div style="padding:6px 0;border-top:1px solid var(--bdr,#eee)"><b>'+mEsc(recLabel(f.id))+'</b><div style="color:#9a4b00;font-size:12px">'+mEsc(f.why)+'</div><div style="color:var(--tx3,#888);font-size:11.5px">'+mEsc(f.date)+' · '+mEsc(f.from)+' · “'+mEsc(f.subject)+'”</div><div style="margin-top:4px">'+(f.kind==='uninvited'?'<button class="btn btn-blue" onclick="mailFixInvited('+f.id+')">'+(f.decline?'Tick Invitation only':'Tick Invitation + Quotation received')+'</button> ':'')+'<button class="btn" onclick="mailShow('+f.id+')">Show this company</button> <button class="btn" onclick="mailDismiss('+f.id+')">Dismiss</button></div></div>').join(''):'<div style="color:var(--tx3,#888)">Nothing to check.</div>';
   h+='</div>';
   o.innerHTML=h;o.onclick=e=>{if(e.target===o)o.remove();};
   document.body.appendChild(o);
 }
 function mailShow(id){const r=records.find(x=>x.id===+id);const q=document.getElementById('mq');if(r&&q){q.value=r.company;}const p=document.getElementById('mailPanel');if(p)p.remove();render();}
 function mailDismiss(id){delete mailFlags[id];saveMailFlags();render();showMailPanel();}
+function mailChangeConfirm(k){mailChanges=mailChanges.filter(c=>c.key!==k);saveMailChanges();render();showMailPanel();}
+function mailConfirmAll(){mailChanges=[];saveMailChanges();render();showMailPanel();toast('All confirmed ✓');}
+// Undo puts the old value back — only if nobody has edited that field since; otherwise ask for a manual fix.
+function mailChangeUndo(k){
+  const c=mailChanges.find(x=>x.key===k);if(!c)return;
+  const r=records.find(x=>x.id===c.id);
+  if(r&&String(r[c.field]||'')===String(c.new)){r[c.field]=c.old;saveRecords();toast('Undone ✓');}
+  else if(r){toast('That field was edited since — please change it with Edit');return;}
+  mailChanges=mailChanges.filter(x=>x.key!==k);saveMailChanges();render();showMailPanel();
+}
+// "Replied, but never marked Invited" → tick Invitation (date of our sent mail if known) and Quotation received (date of the reply)
+function mailFixInvited(id){
+  const f=mailFlags[id];if(!f)return;
+  pushUndo();
+  const s=statusMap[id]||{},n={...s};
+  if(!n.invDate)n.invDate=f.sentDate||f.date;
+  if(!f.decline&&!n.qrcDate)n.qrcDate=f.date;
+  statusMap[id]=n;saveStatus();
+  delete mailFlags[id];saveMailFlags();render();showMailPanel();toast('Ticked ✓');
+}
 // ── Reply in the same Gmail thread (owner only) ──────────────────────
 // For the "Gmail — reply in same thread" choice: finds the earlier email YOU sent to this subcontractor for this
 // project (subject has the project title; trade used to tell trades apart) and creates a DRAFT that is a reply in
