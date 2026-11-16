@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-11c</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-16b</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -3281,6 +3281,7 @@ function mailLearn(m,r,body,mine){
   const ch=[],from=mailParseFrom(m.from);
   const mineDom=String(mine||'').split('@')[1]||'weehur.com.sg';
   let newEmail=false;
+  if(from.email&&from.email.split('@')[1]===mineDom)return ch; // a colleague's mail: never learn their name/phone as the subcon's
   if(from.email&&from.email.split('@')[1]!==mineDom&&!/(no-?reply|do-?not-?reply|mailer-daemon|postmaster)/i.test(from.email)){
     if(mailEmails(r.email).indexOf(from.email)<0){
       newEmail=true;
@@ -3291,13 +3292,15 @@ function mailLearn(m,r,body,mine){
     if(nm&&(newEmail||!String(r.contact||'').trim())&&!mailNameKnown(r.contact,nm))
       ch.push({field:'contact',old:r.contact||'',new:r.contact?String(r.contact).replace(/[\/;,\s]+$/,'')+' / '+nm:nm});
   }
+  const phoneName=mailGoodName(from.name,r.company)||'';
   let have=(String(r.tel||'')+' '+String(r.hp||'')).replace(/\D/g,'');
   const val={tel:r.tel||'',hp:r.hp||''};
   mailSigPhones(body).slice(0,2).forEach(n=>{
     const d=n.replace(/\D/g,'');if(have.indexOf(d)>=0)return;
     have+=d;
     const f=/^[89]/.test(d)?'hp':'tel',old=val[f];
-    val[f]=old?old+' / '+n:n;
+    const lab=(f==='hp'&&phoneName)?n+' ('+phoneName+')':n; // mobile numbers carry the sender's name beside them
+    val[f]=old?old+' / '+lab:lab;
     const ex=ch.find(c=>c.field===f);
     if(ex)ex.new=val[f];else ch.push({field:f,old:old,new:val[f]});
   });
@@ -3369,7 +3372,11 @@ async function gmailApi(path,tok,body){
   if(body){opt.method='POST';opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(body);}
   const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/'+path,opt);
   if(r.status===401){_gToks={};throw new Error('Gmail sign-in expired');}
-  if(r.status===403)throw new Error('Gmail refused (403) — is "gmail.compose" added under Data Access, and the Gmail API enabled?');
+  if(r.status===403){
+    let why='';try{const j=await r.json();const e=j&&j.error||{};why=(e.message||'')+((e.errors&&e.errors[0]&&e.errors[0].reason)?' ['+e.errors[0].reason+']':'')+((e.details&&e.details[0]&&e.details[0].reason)?' ['+e.details[0].reason+']':'');}catch(x){}
+    _gToks={};
+    throw new Error('Gmail refused (403): '+(why||'no reason given')+' — if it says insufficient/scope, click Check mail again and TICK every permission box in the Google window');
+  }
   if(!r.ok)throw new Error('Gmail said '+r.status);
   return r.json();
 }
