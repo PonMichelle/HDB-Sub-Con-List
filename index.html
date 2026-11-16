@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-16b</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-16c</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -3416,7 +3416,7 @@ async function checkMail(interactive){
     const tmap=loadThreadMap();
     const ctx={records,statusMap,projectName:currentProject.name,me:(firebase.auth().currentUser||{}).email||'',threadMap:tmap};
     // every sent mail (even ones already processed) tells us which thread belongs to which company
-    mailMatch(sent.slice().sort((a,b)=>a.date<b.date?-1:1),ctx,'out').threads.forEach(t=>{tmap[t.threadId]={id:t.id,date:t.date};});
+    mailMatch(sent.slice().sort((a,b)=>a.date<b.date?-1:1),ctx,'out').threads.forEach(t=>{const o=tmap[t.threadId];if(!o||o.id!==t.id||!o.date||t.date<o.date)tmap[t.threadId]={id:t.id,date:t.date};}); // keep the EARLIEST sent date of the thread
     saveThreadMap(tmap);
     const rOut=mailMatch(fresh(sent).sort((a,b)=>a.date<b.date?-1:1),ctx,'out');
     // apply "sent" ticks first so a quick reply the same day can be matched to an invited row
@@ -3490,11 +3490,27 @@ function mailChangeUndo(k){
   mailChanges=mailChanges.filter(x=>x.key!==k);saveMailChanges();render();showMailPanel();
 }
 // "Replied, but never marked Invited" → tick Invitation (date of our sent mail if known) and Quotation received (date of the reply)
-function mailFixInvited(id){
+async function mailFixInvited(id){
   const f=mailFlags[id];if(!f)return;
+  // the Invitation date must be the date YOU sent the invitation, never the date of the reply
+  let inv=f.sentDate||'';
+  if(!inv){
+    try{
+      const rec=records.find(x=>x.id===+id),ems=mailEmails(rec&&rec.email);
+      if(ems.length&&currentProject){
+        const tok=await gmailToken(true);
+        const q='in:sent to:('+ems.join(' OR ')+') subject:("'+String(currentProject.name).replace(/["\\]/g,' ')+'")';
+        const got=(await gmailFetch(q,tok,30)).filter(m=>mailNorm(m.subject).indexOf(mailNorm(currentProject.name))>=0);
+        const tr=got.filter(m=>rec.trade&&mailNorm(m.subject).indexOf(mailNorm(rec.trade))>=0);
+        const pool=(tr.length?tr:got).map(m=>m.date).filter(d=>d<=f.date).sort();
+        if(pool.length)inv=pool[0];
+      }
+    }catch(e){console.warn('find invitation date:',e&&e.message||e);}
+  }
+  if(!inv){toast('Could not find the email you sent — set the Invitation date yourself (Edit the date on the card)');}
   pushUndo();
   const s=statusMap[id]||{},n={...s};
-  if(!n.invDate)n.invDate=f.sentDate||f.date;
+  if(!n.invDate)n.invDate=inv||f.date;
   if(!f.decline&&!n.qrcDate)n.qrcDate=f.date;
   statusMap[id]=n;saveStatus();
   delete mailFlags[id];saveMailFlags();render();showMailPanel();toast('Ticked ✓');
