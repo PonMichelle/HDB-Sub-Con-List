@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-16c</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-17a</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -3557,7 +3557,17 @@ async function gmailFindThread(it,tok){
   const msgs=t.messages||[];if(!msgs.length)return null;
   const hv=(m,n)=>{const h=((m.payload&&m.payload.headers)||[]).find(x=>x.name.toLowerCase()===n);return h?h.value:'';};
   const last=msgs[msgs.length-1];
-  return {threadId:pick.threadId,subject:hv(msgs[0],'subject')||pick.subject,lastId:hv(last,'message-id'),refs:hv(last,'references')};
+  // the earlier email, so it can be quoted under the new text (Gmail's API does not add the quote by itself)
+  let quote='';
+  try{
+    const full=await gmailApi('messages/'+last.id+'?format=full',tok);
+    let txt=mailBodyText(full.payload).replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim();
+    if(txt.length>8000)txt=txt.slice(0,8000)+'\n[…]';
+    const d=new Date(+full.internalDate);
+    const when=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+' at '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    if(txt)quote='On '+when+', '+hv(full,'from')+' wrote:\n'+txt.split('\n').map(l=>'> '+l).join('\n');
+  }catch(e){console.warn('quote earlier email:',e&&e.message||e);}
+  return {threadId:pick.threadId,subject:hv(msgs[0],'subject')||pick.subject,lastId:hv(last,'message-id'),refs:hv(last,'references'),quote};
 }
 async function gmailMakeDraft(it,tok){
   const cur=_tpls[_tplIdx]||{subject:'',body:''};
@@ -3568,7 +3578,7 @@ async function gmailMakeDraft(it,tok){
   const th=await gmailFindThread(it,tok);
   const raw=mailBuildRaw({to:sp.to,cc:sp.cc,bcc:alwaysBccFor(sp),
     subject:th?('Re: '+th.subject.replace(/^\s*((re|fw|fwd)\s*:\s*)+/i,'')):tplSubj,
-    body,inReplyTo:th&&th.lastId,references:th&&th.refs});
+    body:th&&th.quote?body+'\n\n'+th.quote:body,inReplyTo:th&&th.lastId,references:th&&th.refs});
   const msg={raw};if(th)msg.threadId=th.threadId;
   const d=await gmailApi('drafts',tok,{message:msg});
   return {kind:th?'reply':'new',id:d.message&&d.message.id};
