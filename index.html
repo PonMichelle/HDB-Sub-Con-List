@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-18c</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-18d</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -3421,8 +3421,19 @@ async function checkMail(interactive){
     let done={};try{done=JSON.parse(localStorage.getItem(mpKey())||'{}')||{};}catch(e){}
     const fresh=a=>a.filter(m=>!done[m.id]);
     const tmap=loadThreadMap();
+    // names of your OTHER projects — in this app and in the sister app (e.g. NTU lives in Private, Project GB in HDB)
+    const others=(projects||[]).filter(p=>p&&p.id!==currentProject.id&&p.name).map(p=>mailNorm(p.name));
+    try{
+      if(!window._otherProjNames){
+        const db=await initFirebase();
+        const s=await db.ref(OTHER_PFX+'/'+fbKey(OTHER_PFX+'_projects')).get();
+        let v=s.val()||[];if(!Array.isArray(v))v=Object.values(v);
+        window._otherProjNames=v.filter(p=>p&&p.name).map(p=>mailNorm(p.name));
+      }
+      window._otherProjNames.forEach(n=>{if(n&&others.indexOf(n)<0)others.push(n);});
+    }catch(e){console.warn('other app projects:',e&&e.message||e);}
     const ctx={records,statusMap,projectName:currentProject.name,me:(firebase.auth().currentUser||{}).email||'',threadMap:tmap,
-      otherProjects:(projects||[]).filter(p=>p&&p.id!==currentProject.id&&p.name).map(p=>mailNorm(p.name))};
+      otherProjects:others.filter(n=>n!==mailNorm(currentProject.name))};
     // every sent mail (even ones already processed) tells us which thread belongs to which company
     mailMatch(sent.slice().sort((a,b)=>a.date<b.date?-1:1),ctx,'out').threads.forEach(t=>{const o=tmap[t.threadId];if(!o||o.id!==t.id||!o.date||t.date<o.date)tmap[t.threadId]={id:t.id,date:t.date};}); // keep the EARLIEST sent date of the thread
     saveThreadMap(tmap);
