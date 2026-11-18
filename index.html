@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-17a</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-18a</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -3331,6 +3331,7 @@ function saveThreadMap(t){try{const k=Object.keys(t);if(k.length>1500)k.slice(0,
 let mailFlags={},_mailBusy=false;
 function mfKey(){return 'mf_'+MY_PFX+'_'+(currentProject?currentProject.id:'');}
 function mpKey(){return 'mp2_'+MY_PFX+'_'+(currentProject?currentProject.id:'');}
+function mlKey(){return 'ml_'+MY_PFX+'_'+(currentProject?currentProject.id:'');}
 function loadMailFlags(){try{mailFlags=JSON.parse(localStorage.getItem(mfKey())||'{}')||{};}catch(e){mailFlags={};}loadMailChanges();}
 function saveMailFlags(){try{localStorage.setItem(mfKey(),JSON.stringify(mailFlags));}catch(e){}}
 function mailFlagHtml(id){
@@ -3405,7 +3406,7 @@ async function checkMail(interactive){
   try{
     if(interactive)toast('Checking your Gmail…');
     const tok=await gmailToken(interactive);
-    let days=21;try{const last=+localStorage.getItem('mlast2_'+MY_PFX+'_'+currentProject.id);if(last)days=Math.min(60,Math.max(3,Math.ceil((Date.now()-last)/864e5)+2));}catch(e){}
+    let days=21;try{const last=+localStorage.getItem('mlast3_'+MY_PFX+'_'+currentProject.id);if(last)days=Math.min(60,Math.max(3,Math.ceil((Date.now()-last)/864e5)+2));}catch(e){}
     const after=Math.floor((Date.now()-days*864e5)/1000);
     const [inbox,sent]=await Promise.all([
       gmailFetch('after:'+after+' -from:me -in:sent -in:drafts -in:trash -in:spam',tok,300),
@@ -3425,16 +3426,22 @@ async function checkMail(interactive){
     const rIn=mailMatch(fresh(inbox).sort((a,b)=>a.date<b.date?-1:1),ctx,'in');
     // learn contact details (new email, new name, new phone) from replies we are sure about; changes are logged for confirmation
     let nChanged=0;
-    for(const L of rIn.learn.slice(0,15)){
+    // learning has its own "already read" list: a reply that was ticked (or flagged) is still read for new details,
+    // and mail beyond the per-run cap is picked up on the next check instead of being skipped for good
+    let doneL={};try{doneL=JSON.parse(localStorage.getItem(mlKey())||'{}')||{};}catch(e){}
+    const rLearn=mailMatch(inbox.filter(m=>!doneL[m.id]).sort((a,b)=>a.date<b.date?-1:1),ctx,'in');
+    for(const L of rLearn.learn.slice(0,40)){
       const rec=records.find(x=>x.id===L.id);if(!rec)continue;
-      let body='';try{const full=await gmailApi('messages/'+L.msg.id+'?format=full',tok);body=mailBodyText(full.payload);}catch(e){}
+      let body='',got=false;try{const full=await gmailApi('messages/'+L.msg.id+'?format=full',tok);body=mailBodyText(full.payload);got=true;}catch(e){}
+      if(!got)continue;
       const ch=mailLearn(L.msg,rec,body,ctx.me);
       ch.forEach(c=>{
         rec[c.field]=c.new;nChanged++;
         mailChanges.push({key:L.msg.id+'|'+L.id+'|'+c.field,id:L.id,field:c.field,old:c.old,new:c.new,from:L.msg.from,subject:L.msg.subject,date:L.msg.date,msgId:L.msg.id});
       });
-      done[L.msg.id]=1;
+      doneL[L.msg.id]=1;
     }
+    try{const ks=Object.keys(doneL);if(ks.length>1500)ks.slice(0,ks.length-1500).forEach(k=>delete doneL[k]);localStorage.setItem(mlKey(),JSON.stringify(doneL));}catch(e){}
     if(nChanged){saveMailChanges();saveRecords();}
     if(rIn.ticks.length){if(!ticks.length)pushUndo();rIn.ticks.forEach(t=>{const s=statusMap[t.id]||{};if(!s[t.field]){statusMap[t.id]={...s,[t.field]:t.date};ticks.push(t);}});}
     // flags (kept until the row gets its quotation ticked or the owner dismisses it)
@@ -3442,7 +3449,7 @@ async function checkMail(interactive){
     Object.keys(mailFlags).forEach(id=>{const s=statusMap[id]||{};if(s.qrcDate||s.noqDate)delete mailFlags[id];});
     saveMailFlags();
     [].concat(ticks,rIn.flags).forEach(x=>{done[x.msgId]=1;});
-    try{localStorage.setItem(mpKey(),JSON.stringify(done));localStorage.setItem('mlast2_'+MY_PFX+'_'+currentProject.id,String(Date.now()));}catch(e){}
+    try{localStorage.setItem(mpKey(),JSON.stringify(done));localStorage.setItem('mlast3_'+MY_PFX+'_'+currentProject.id,String(Date.now()));}catch(e){}
     if(ticks.length){saveStatus();}
     render();
     const nFlag=Object.keys(mailFlags).length;
@@ -3529,9 +3536,47 @@ function mailBuildRaw(m){
   if(m.bcc)h.push('Bcc: '+mailHdr(m.bcc));
   h.push('Subject: '+mailEncSubj(m.subject));
   if(m.inReplyTo){h.push('In-Reply-To: '+mailHdr(m.inReplyTo));h.push('References: '+mailHdr(((m.references||'')+' '+m.inReplyTo).trim()));}
-  h.push('Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64');
-  const body=mailB64(String(m.body||'').replace(/\r?\n/g,'\r\n')).replace(/(.{76})/g,'$1\r\n');
+  let body;
+  const wrap=b=>b.replace(/(.{76})/g,'$1\r\n');
+  if(m.html){ // HTML draft (used when the earlier email is quoted with its original formatting)
+    const hb=wrap(mailB64(String(m.html)));
+    if(m.inline&&m.inline.length){
+      const bd='=_rel_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+      h.push('Content-Type: multipart/related; boundary="'+bd+'"');
+      body='--'+bd+'\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n'+hb+'\r\n'+
+        m.inline.map(p=>'--'+bd+'\r\nContent-Type: '+String(p.mime).replace(/[^A-Za-z0-9.+\/-]/g,'')+'\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <'+String(p.cid).replace(/[^A-Za-z0-9._@+$=-]/g,'')+'>\r\nContent-Disposition: inline\r\n\r\n'+wrap(p.b64)+'\r\n').join('')+'--'+bd+'--';
+    }else{h.push('Content-Type: text/html; charset=UTF-8','Content-Transfer-Encoding: base64');body=hb;}
+  }else{
+    h.push('Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64');
+    body=wrap(mailB64(String(m.body||'').replace(/\r?\n/g,'\r\n')));
+  }
   return mailB64(h.join('\r\n')+'\r\n\r\n'+body).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function mailEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// Links keep their full address as the visible text. A zero-width space after "https://" stops Gmail turning a
+// Drive / SharePoint link into a "smart chip" that shows only the folder or file name; the href stays the full link.
+function mailTextToHtml(t){return mailEsc(t).replace(/(https?:\/\/)([^\s<]+)/g,'<a href="$1$2">$1​$2</a>').replace(/\r?\n/g,'<br>');}
+function mailDecB64(d){try{const s=atob(String(d).replace(/-/g,'+').replace(/_/g,'/'));const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder('utf-8').decode(b);}catch(e){return '';}}
+// finds the html body and the inline pictures (Content-ID) of a Gmail message payload
+function mailPayloadParts(p){
+  const o={html:'',images:[]};
+  (function walk(x){
+    if(!x)return;
+    if(x.mimeType==='text/html'&&x.body&&x.body.data&&!o.html)o.html=mailDecB64(x.body.data);
+    if(/^image\//i.test(x.mimeType||'')){
+      const h=(x.headers||[]).find(y=>/^content-id$/i.test(y.name));
+      if(h&&x.body&&(x.body.attachmentId||x.body.data)&&(+x.body.size||0)<600000)o.images.push({cid:String(h.value).replace(/^\s*<|>\s*$/g,''),mime:x.mimeType,attId:x.body.attachmentId||'',data:x.body.data||''});
+    }
+    (x.parts||[]).forEach(walk);
+  })(p);
+  return o;
+}
+function mailCleanHtml(h){
+  let b=String(h||'');
+  const styles=(b.match(/<style[\s\S]*?<\/style>/gi)||[]).join('');
+  const m=b.match(/<body[^>]*>([\s\S]*?)<\/body>/i);if(m)b=m[1];
+  b=b.replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<title[\s\S]*?<\/title>/gi,'').replace(/<!doctype[^>]*>/gi,'').replace(/<\/?(html|head|body|meta|link)\b[^>]*>/gi,'');
+  return styles+b;
 }
 // cands: [{threadId,subject}] newest first. siblings = how many records share this email (several trades?)
 function mailPickThread(cands,trade,siblings){
@@ -3558,27 +3603,68 @@ async function gmailFindThread(it,tok){
   const hv=(m,n)=>{const h=((m.payload&&m.payload.headers)||[]).find(x=>x.name.toLowerCase()===n);return h?h.value:'';};
   const last=msgs[msgs.length-1];
   // the earlier email, so it can be quoted under the new text (Gmail's API does not add the quote by itself)
-  let quote='';
+  let quote='',qhtml='',qhead='',inline=[];
   try{
     const full=await gmailApi('messages/'+last.id+'?format=full',tok);
+    try{ // original formatting: the HTML of the earlier email + its inline pictures
+      const pp=mailPayloadParts(full.payload);
+      if(pp.html&&pp.html.length<400000){
+        qhtml=mailCleanHtml(pp.html);let tot=0;const low=qhtml.toLowerCase();
+        for(const im of pp.images){
+          if(low.indexOf('cid:'+im.cid.toLowerCase())<0)continue;
+          let data=im.data;
+          if(!data&&im.attId){const a=await gmailApi('messages/'+last.id+'/attachments/'+im.attId,tok);data=a.data;}
+          if(!data)continue;
+          const b64=String(data).replace(/-/g,'+').replace(/_/g,'/');
+          if(tot+b64.length>2000000)continue;
+          tot+=b64.length;inline.push({cid:im.cid,mime:im.mime,b64});
+        }
+      }
+    }catch(e){console.warn('quote html:',e&&e.message||e);qhtml='';inline=[];}
     let txt=mailBodyText(full.payload).replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim();
     if(txt.length>8000)txt=txt.slice(0,8000)+'\n[…]';
     const d=new Date(+full.internalDate);
     const when=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+' at '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    if(txt)quote='On '+when+', '+hv(full,'from')+' wrote:\n'+txt.split('\n').map(l=>'> '+l).join('\n');
+    qhead='On '+when+', '+hv(full,'from')+' wrote:';
+    if(txt)quote=qhead+'\n'+txt.split('\n').map(l=>'> '+l).join('\n');
   }catch(e){console.warn('quote earlier email:',e&&e.message||e);}
-  return {threadId:pick.threadId,subject:hv(msgs[0],'subject')||pick.subject,lastId:hv(last,'message-id'),refs:hv(last,'references'),quote};
+  return {threadId:pick.threadId,subject:hv(msgs[0],'subject')||pick.subject,lastId:hv(last,'message-id'),refs:hv(last,'references'),quote,qhtml,qhead,inline};
+}
+let _gSig=null;
+// The signature saved in Gmail → Settings → Signature (read with the existing read-only permission; cached per page load)
+async function gmailSignature(tok){
+  if(_gSig!==null)return _gSig;
+  try{
+    const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs',{headers:{Authorization:'Bearer '+tok}});
+    if(!r.ok)throw new Error('sendAs '+r.status);
+    const list=(await r.json()).sendAs||[];
+    const me=((firebase.auth().currentUser||{}).email||'').toLowerCase();
+    const pick=list.find(x=>String(x.sendAsEmail||'').toLowerCase()===me&&x.signature)||list.find(x=>x.isDefault&&x.signature)||list.find(x=>x.signature);
+    _gSig=pick?String(pick.signature).replace(/<script[\s\S]*?<\/script>/gi,''):'';
+  }catch(e){console.warn('Gmail signature:',e&&e.message||e);return '';} // not cached: try again next time; fall back to the app's own signature
+  return _gSig;
 }
 async function gmailMakeDraft(it,tok){
   const cur=_tpls[_tplIdx]||{subject:'',body:''};
   const sEl=document.getElementById('tplSubj'),bEl=document.getElementById('tplBody');
   const tplSubj=fillTpl(sEl?sEl.value:cur.subject,it);
-  const body=withSignature(bodyWithLinks(fillTpl(bEl?bEl.value:cur.body,it,true)));
+  const core=bodyWithLinks(fillTpl(bEl?bEl.value:cur.body,it,true));
+  const body=withSignature(core);
   const sp=addAlwaysCc(splitToCc(it.emails,it.contact,it.roles));
   const th=await gmailFindThread(it,tok);
+  const sig=await gmailSignature(tok); // the signature set in Gmail Settings (HTML, with its logo/formatting); '' if none
+  let html='',inline=th&&th.inline;
+  if(sig||(th&&th.qhtml)){
+    html='<!DOCTYPE html><html><body><div dir="ltr">'+mailTextToHtml(sig?core:body)+'</div>';
+    if(sig)html+='<br><div class="gmail_signature" data-smartmail="gmail_signature">'+sig+'</div>';
+    if(th&&th.qhtml)html+='<br><div class="gmail_quote"><div dir="ltr" class="gmail_attr">'+mailEsc(th.qhead)+'<br></div><blockquote class="gmail_quote" style="margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">'+th.qhtml+'</blockquote></div>';
+    else if(th&&th.quote)html+='<br><div class="gmail_quote">'+mailTextToHtml(th.quote)+'</div>';
+    html+='</body></html>';
+  }
   const raw=mailBuildRaw({to:sp.to,cc:sp.cc,bcc:alwaysBccFor(sp),
     subject:th?('Re: '+th.subject.replace(/^\s*((re|fw|fwd)\s*:\s*)+/i,'')):tplSubj,
-    body:th&&th.quote?body+'\n\n'+th.quote:body,inReplyTo:th&&th.lastId,references:th&&th.refs});
+    body:th&&th.quote?body+'\n\n'+th.quote:body,
+    html,inline,inReplyTo:th&&th.lastId,references:th&&th.refs});
   const msg={raw};if(th)msg.threadId=th.threadId;
   const d=await gmailApi('drafts',tok,{message:msg});
   return {kind:th?'reply':'new',id:d.message&&d.message.id};
