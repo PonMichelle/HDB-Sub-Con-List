@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-18a</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-18c</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -2671,7 +2671,7 @@ function fillTpl(s,it,bold){
   const dt=document.getElementById('tplDate')&&document.getElementById('tplDate').value?document.getElementById('tplDate').value:'______';
   const B=bold?toBold:(x=>x); // bold {project}/{trade}/{date} only in the body
   const ft=(typeof getFullTitle==='function')?getFullTitle():'';
-  const dl=(typeof getDocLinks==='function'?getDocLinks():[]).join('\n'); // plain URLs (not bold, so they stay clickable)
+  const dl=(typeof getDocLinks==='function'?getDocLinks():[]).map(docLinkText).join('\n'); // plain URLs (not bold, so they stay clickable)
   return (s||'').replace(/\{invdate\}/gi,()=>B(invDateFor(it)||'______')).replace(/\{invsubject\}/gi,()=>invSubjectFor(it)).replace(/\{documentlinks?\}/gi,dl).replace(/\{fulltitle\}/gi,B(ft)).replace(/\{company\}/g,it.company||'').replace(/\{contact\}/g,it.contact||'').replace(/\{trade\}/g,B(it.trade||'')).replace(/\{project\}/g,B(proj)).replace(/\{name\}/g,un).replace(/\{date\}/g,B(dt));
 }
 function toggleTplBox(){
@@ -2785,7 +2785,10 @@ function docLinksKey(){return 'hdb_doclinks_'+(currentProject?currentProject.id:
 function loadDocLinks(){const el=document.getElementById('docLinks');if(!el)return;try{el.value=localStorage.getItem(docLinksKey())||'';}catch(e){}}
 function saveDocLinks(){const el=document.getElementById('docLinks');if(!el)return;try{localStorage.setItem(docLinksKey(),el.value);}catch(e){}}
 function getDocLinks(){const el=document.getElementById('docLinks');let raw=el?el.value:'';if(!raw){try{raw=localStorage.getItem(docLinksKey())||'';}catch(e){}}return raw.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);}
-function bodyWithLinks(body){const lk=getDocLinks();if(!lk.length)return body;if(body.indexOf(lk[0])>=0)return body;/* links already placed inline via {documentlink} */return body+'\n\nDocuments:\n'+lk.join('\n');}
+// A document link may be written "Carpet | https://…". Gmail drafts show it as a clickable "Carpet"; the other paths (Outlook, webmail, mailto) show "Carpet: https://…".
+let _docRaw=false;
+function docLinkText(l){return _docRaw?l:String(l).replace(/^\s*([^|\n]+?)\s*\|\s*(https?:\/\/\S+)/,'$1: $2');}
+function bodyWithLinks(body){const lk=getDocLinks().map(docLinkText);if(!lk.length)return body;if(body.indexOf(lk[0])>=0)return body;/* links already placed inline via {documentlink} */return body+'\n\nDocuments:\n'+lk.join('\n');}
 // Signature — global (same across all projects/tenders, unlike doc links), toggle-able per your preference; **bold** markers render as unicode bold like {project}/{trade}/{date}.
 const DEFAULT_SIGNATURE='Thank you.\n\nRegards\n**Michelle Pon, QS**\n\nWee Hur Construction Pte Ltd\n39 Kim Keat Road, Wee Hur Building, Singapore 328814\n📞 DID: 6357 0568\n📠 Fax: 6258 8283';
 function sigTextKey(){return 'hdb_sig_text';}
@@ -3225,7 +3228,10 @@ function mailMatch(msgs,ctx,mode){
       const tgt=threadHit||(c.length===1?c[0]:null); // the one company we are sure this reply is from → may learn contact details
       if(tgt&&(titleOk||threadHit)&&!tgt.nfa)learn.push({id:tgt.id,msg:m});
       const open=c.filter(invited);
-      if(!titleOk){open.forEach(r=>flag(r,'Reply from this company, but the subject doesn’t contain the project title'));return;}
+      if(!titleOk){
+        if((ctx.otherProjects||[]).some(p=>p&&p.length>=3&&subj.indexOf(p)>=0))return; // the subject names ANOTHER of your projects: not about this one, nothing to check
+        open.forEach(r=>flag(r,'Reply from this company, but the subject doesn’t contain the project title'));return;
+      }
       if(!open.length){
         const un=c.filter(r=>!st(r.id).invDate&&!st(r.id).noqDate&&!st(r.id).qrcDate&&!r.nfa);
         if(un.length&&c.every(r=>!st(r.id).qrcDate&&!st(r.id).noqDate))un.slice(0,1).forEach(r=>flag(r,'Replied with the project title, but this company is not marked Invited',{kind:'uninvited',decline:MAIL_DECLINE.test((m.subject||'')+' '+(m.snippet||'')),sentDate:(m.threadId&&tm[m.threadId]&&tm[m.threadId].date)||''}));
@@ -3415,7 +3421,8 @@ async function checkMail(interactive){
     let done={};try{done=JSON.parse(localStorage.getItem(mpKey())||'{}')||{};}catch(e){}
     const fresh=a=>a.filter(m=>!done[m.id]);
     const tmap=loadThreadMap();
-    const ctx={records,statusMap,projectName:currentProject.name,me:(firebase.auth().currentUser||{}).email||'',threadMap:tmap};
+    const ctx={records,statusMap,projectName:currentProject.name,me:(firebase.auth().currentUser||{}).email||'',threadMap:tmap,
+      otherProjects:(projects||[]).filter(p=>p&&p.id!==currentProject.id&&p.name).map(p=>mailNorm(p.name))};
     // every sent mail (even ones already processed) tells us which thread belongs to which company
     mailMatch(sent.slice().sort((a,b)=>a.date<b.date?-1:1),ctx,'out').threads.forEach(t=>{const o=tmap[t.threadId];if(!o||o.id!==t.id||!o.date||t.date<o.date)tmap[t.threadId]={id:t.id,date:t.date};}); // keep the EARLIEST sent date of the thread
     saveThreadMap(tmap);
@@ -3447,6 +3454,11 @@ async function checkMail(interactive){
     // flags (kept until the row gets its quotation ticked or the owner dismisses it)
     rIn.flags.forEach(f=>{const s=statusMap[f.id]||{};if(s.qrcDate||s.noqDate)return;mailFlags[f.id]=f;});
     Object.keys(mailFlags).forEach(id=>{const s=statusMap[id]||{};if(s.qrcDate||s.noqDate)delete mailFlags[id];});
+    { // drop old "subject doesn't contain the project title" flags whose subject names another of your projects
+      const me2=mailNorm(currentProject.name);
+      Object.keys(mailFlags).forEach(id=>{const sj=mailNorm(mailFlags[id].subject);
+        if(/doesn’t contain the project title/.test(mailFlags[id].why||'')&&sj.indexOf(me2)<0&&ctx.otherProjects.some(p=>p&&p.length>=3&&sj.indexOf(p)>=0))delete mailFlags[id];});
+    }
     saveMailFlags();
     [].concat(ticks,rIn.flags).forEach(x=>{done[x.msgId]=1;});
     try{localStorage.setItem(mpKey(),JSON.stringify(done));localStorage.setItem('mlast3_'+MY_PFX+'_'+currentProject.id,String(Date.now()));}catch(e){}
@@ -3553,9 +3565,8 @@ function mailBuildRaw(m){
   return mailB64(h.join('\r\n')+'\r\n\r\n'+body).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 function mailEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-// Links keep their full address as the visible text. A zero-width space after "https://" stops Gmail turning a
-// Drive / SharePoint link into a "smart chip" that shows only the folder or file name; the href stays the full link.
-function mailTextToHtml(t){return mailEsc(t).replace(/(https?:\/\/)([^\s<]+)/g,'<a href="$1$2">$1​$2</a>').replace(/\r?\n/g,'<br>');}
+// A line "Carpet | https://…" becomes a clickable "Carpet" (the full address stays behind it); a bare address stays as it is.
+function mailTextToHtml(t){return mailEsc(t).replace(/^([^\n|<]{1,80}?)[ \t]*\|[ \t]*(https?:\/\/[^\s<]+)|(https?:\/\/[^\s<]+)/gm,(m,lab,u1,u2)=>lab?'<a href="'+u1+'">'+lab.trim()+'</a>':'<a href="'+u2+'">'+u2+'</a>').replace(/\r?\n/g,'<br>');}
 function mailDecB64(d){try{const s=atob(String(d).replace(/-/g,'+').replace(/_/g,'/'));const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return new TextDecoder('utf-8').decode(b);}catch(e){return '';}}
 // finds the html body and the inline pictures (Content-ID) of a Gmail message payload
 function mailPayloadParts(p){
@@ -3648,7 +3659,7 @@ async function gmailMakeDraft(it,tok){
   const cur=_tpls[_tplIdx]||{subject:'',body:''};
   const sEl=document.getElementById('tplSubj'),bEl=document.getElementById('tplBody');
   const tplSubj=fillTpl(sEl?sEl.value:cur.subject,it);
-  const core=bodyWithLinks(fillTpl(bEl?bEl.value:cur.body,it,true));
+  _docRaw=true;let core;try{core=bodyWithLinks(fillTpl(bEl?bEl.value:cur.body,it,true));}finally{_docRaw=false;}
   const body=withSignature(core);
   const sp=addAlwaysCc(splitToCc(it.emails,it.contact,it.roles));
   const th=await gmailFindThread(it,tok);
