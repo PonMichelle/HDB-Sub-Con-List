@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-18d</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-19a</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -2487,7 +2487,7 @@ function openEmail(idOrEmails,event){
 function showPicker(event){
   const p=document.getElementById('epicker');
   document.getElementById('epdefchk').checked=false;
-  const et=document.getElementById('epThread');if(et)et.style.display=(isMailOwner()&&mailClientId(false))?'':'none';
+  const et=document.getElementById('epThread');if(et)et.style.display=isMailOwner()?'':'none';
   const x=Math.min(event.clientX,window.innerWidth-225);
   const y=Math.min(event.clientY+6,window.innerHeight-250);
   p.style.left=x+'px';p.style.top=y+'px';
@@ -2689,7 +2689,7 @@ function openWithClient(emails,client){
 // separate compose window per company (even for System Default).
 let _batchItems=[],_batchClient='system';
 function showBatchModal(items,client){
-  if(client==='gmailthread'&&!(isMailOwner()&&mailClientId(false)))client='gmail'; // thread replies are owner-only
+  if(client==='gmailthread'&&!isMailOwner())client='gmail'; // thread replies: signed-in @weehur.com.sg users (asks for the Client ID the first time)
   _batchItems=items;_batchClient=client;
   let ov=document.getElementById('batchOv');
   if(!ov){
@@ -2707,7 +2707,8 @@ function showBatchModal(items,client){
       +'</div>'
       +'<div id="attBox" style="padding:10px 18px 12px;border-top:1px solid var(--bdr);margin-top:4px">'
       +'<div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:4px">🔗 Document links <span style="font-weight:400;color:var(--tx3)">— added to every email body (works with “Open all” / webmail too)</span></div>'
-      +'<textarea id="docLinks" oninput="saveDocLinks()" rows="2" placeholder="Paste share links (OneDrive / SharePoint / Drive), one per line" style="width:100%;padding:6px 9px;font-size:11.5px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea>'
+      +'<textarea id="docLinks" oninput="saveDocLinks()" rows="2" placeholder="Paste share links (OneDrive / SharePoint / Drive), one per line. To show a name instead of the long link, write:  Carpet | https://…" style="width:100%;padding:6px 9px;font-size:11.5px;border:1px solid var(--bdr2);border-radius:6px;font-family:inherit;resize:vertical"></textarea>'
+      +'<div style="font-size:10.5px;color:var(--tx3);margin-top:3px">💡 Want a name instead of the long link? Type the name, then <b>|</b>, then the link — e.g. <b>Carpet | https://drive.google.com/…</b>. In Gmail drafts the receiver sees a clickable <b>Carpet</b>.</div>'
       +'</div>'
       +'<div id="ccBox" style="padding:10px 18px 12px;border-top:1px solid var(--bdr)">'
       +'<div style="font-size:11.5px;font-weight:600;color:var(--tx2);margin-bottom:4px">📧 Always CC <span style="font-weight:400;color:var(--tx3)">— added to the Cc of every email (separate several with ;)</span></div>'
@@ -2992,7 +2993,7 @@ async function init(){
 }
 authReady.then(function(){init();}); // start only after sign-in (the directory is loaded by then)
 // The Backup button is shown only to the owner's account (a convenience, not a security rule)
-authReady.then(function(){try{var e=String(firebase.auth().currentUser.email||'').toLowerCase();if(e==='michellepon@weehur.com.sg'){var b=document.getElementById('bkBtn');if(b)b.style.display='';var mb=document.getElementById('mailBtn');if(mb)mb.style.display='';}}catch(x){}});
+authReady.then(function(){try{var e=String(firebase.auth().currentUser.email||'').toLowerCase();if(e==='michellepon@weehur.com.sg'){var b=document.getElementById('bkBtn');if(b)b.style.display='';}if(/@weehur\.com\.sg$/.test(e)){var mb=document.getElementById('mailBtn');if(mb)mb.style.display='';}}catch(x){}});
 async function exportCSV(){
   const list=getFilt();
   const proj=currentProject?currentProject.name:'SubconHub';
@@ -3347,7 +3348,9 @@ function mailFlagHtml(id){
   return h;
 }
 function mEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function isMailOwner(){try{return String(firebase.auth().currentUser.email||'').toLowerCase()==='michellepon@weehur.com.sg';}catch(e){return false;}}
+// Every signed-in @weehur.com.sg user may connect THEIR OWN Gmail (each person's mail stays in their own browser/mailbox).
+// Google decides who is actually allowed to connect (consent screen: Internal, or External with test users).
+function isMailOwner(){try{return /@weehur\.com\.sg$/.test(String(firebase.auth().currentUser.email||'').toLowerCase());}catch(e){return false;}}
 function mailClientId(ask){
   let id='';try{id=localStorage.getItem('gmail_client_id')||'';}catch(e){}
   if(id||!ask)return id;
@@ -3611,13 +3614,13 @@ async function gmailFindThread(it,tok){
   const ems=mailEmails(it.emails);if(!ems.length||!currentProject)return null;
   const q='in:sent to:('+ems.join(' OR ')+') subject:("'+String(currentProject.name).replace(/["\\]/g,' ')+'")';
   const j=await gmailApi('messages?maxResults=10&q='+encodeURIComponent(q),tok);
-  const cands=[],seen=new Set();
-  for(const x of (j.messages||[])){
-    if(seen.has(x.threadId))continue;seen.add(x.threadId);
+  const seen=new Set(),uniqMsgs=(j.messages||[]).filter(x=>{if(seen.has(x.threadId))return false;seen.add(x.threadId);return true;});
+  // the subjects are fetched together (not one after another) — keeps newest-first order
+  const cands=await Promise.all(uniqMsgs.map(async x=>{
     const m=await gmailApi('messages/'+x.id+'?format=metadata&metadataHeaders=Subject',tok);
     const sh=((m.payload&&m.payload.headers)||[]).find(h=>h.name.toLowerCase()==='subject');
-    cands.push({threadId:x.threadId,subject:sh?sh.value:''});
-  }
+    return {threadId:x.threadId,subject:sh?sh.value:''};
+  }));
   const sib=records.filter(r=>mailEmails(r.email).some(e=>ems.indexOf(e)>=0)).length;
   const pick=mailPickThread(cands,it.trade,sib);if(!pick)return null;
   const t=await gmailApi('threads/'+pick.threadId+'?format=metadata&metadataHeaders=Message-ID&metadataHeaders=References&metadataHeaders=Subject',tok);
@@ -3718,9 +3721,18 @@ async function draftOneBatch(i,tab){
 async function draftAllBatch(){
   const btn=document.getElementById('openAllBtn');if(btn)btn.disabled=true;
   const tab=window.open('about:blank','_blank'); // opened now (a click) so the browser allows it; sent to Drafts at the end
-  let nr=0,nn=0,nf=0;
-  try{await gmailToken(true,true);}catch(e){toast('Gmail permission failed: '+((e&&e.message)||e));if(tab)try{tab.close();}catch(x){}if(btn)btn.disabled=false;return;}
-  for(let i=0;i<_batchItems.length;i++){const r=await draftOneBatch(i,null);if(!r)nf++;else if(r.kind==='reply')nr++;else nn++;}
+  let nr=0,nn=0,nf=0,done=0;const total=_batchItems.length,btnHtml=btn?btn.innerHTML:'';
+  // the new tab shows progress instead of staying blank
+  try{tab.document.write('<title>Creating drafts…</title><body style="font-family:Segoe UI,Arial,sans-serif;padding:48px;color:#444"><h2>SubconHub is creating your Gmail drafts…</h2><p id="p">Starting…</p><p style="color:#888">This tab opens Gmail Drafts by itself when it is finished. Nothing is sent.</p>');}catch(e){}
+  const prog=()=>{const t='Creating drafts… '+done+' / '+total;if(btn)btn.textContent=t;try{tab.document.getElementById('p').textContent=t;}catch(x){}};
+  let tok0;
+  try{tok0=await gmailToken(true,true);await gmailSignature(tok0);}catch(e){toast('Gmail permission failed: '+((e&&e.message)||e));if(tab)try{tab.close();}catch(x){}if(btn){btn.disabled=false;btn.innerHTML=btnHtml;}return;}
+  prog();
+  // 4 drafts are made at the same time instead of one after another (this was the lag)
+  let nextI=0;
+  const worker=async()=>{while(nextI<total){const i=nextI++;const r=await draftOneBatch(i,null);done++;prog();if(!r)nf++;else if(r.kind==='reply')nr++;else nn++;}};
+  await Promise.all([worker(),worker(),worker(),worker()]);
+  if(btn)btn.innerHTML=btnHtml;
   toast(nr+' reply draft'+(nr===1?'':'s')+(nn?', '+nn+' new':'')+(nf?', '+nf+' failed':'')+' — check them in Gmail Drafts');
   if(tab){if(nr+nn>0){try{tab.location.href=gmailDraftUrl();}catch(e){}}else{try{tab.close();}catch(x){}}}
   if(btn)btn.disabled=false;
