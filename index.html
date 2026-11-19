@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-19a</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-19c</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -1196,7 +1196,7 @@ html.toon .proj-screen{backdrop-filter:none}
 <div class="toast" id="toast"></div>
 <div class="epicker" id="epicker">
   <div class="epicker-title">Open email with</div>
-  <div class="epicker-item" id="epThread" style="display:none" onclick="pickClient('gmailthread')"><img src="https://www.google.com/favicon.ico" alt=""/>Gmail — reply in earlier thread (draft)</div>
+  <div class="epicker-item" id="epThread" style="display:none" onclick="pickClient('gmailthread')"><img src="https://www.google.com/favicon.ico" alt=""/>Gmail — draft with my Gmail signature (replies in earlier thread if found)</div>
   <div class="epicker-item" onclick="pickClient('gmail')"><img src="https://www.google.com/favicon.ico" alt=""/>Gmail</div>
   <div class="epicker-item" onclick="pickClient('yahoo')"><img src="https://www.yahoo.com/favicon.ico" alt=""/>Yahoo Mail</div>
   <div class="epicker-item" onclick="pickClient('hotmail')"><img src="https://outlook.live.com/favicon.ico" alt=""/>Outlook / Hotmail</div>
@@ -2729,8 +2729,8 @@ function showBatchModal(items,client){
   _tpls=getTpls();if(_tplIdx>=_tpls.length)_tplIdx=0;
   document.getElementById('tplSel').innerHTML=tplOptions();loadTplInto();
   const cl={gmail:'Gmail',gmailthread:'Gmail',yahoo:'Yahoo Mail',hotmail:'Outlook',system:'your mail app'}[client]||client;
-  document.getElementById('batchTitle').textContent=(client==='gmailthread')?`Reply in earlier thread — ${items.length} draft${items.length>1?'s':''}`:`Send ${items.length} email${items.length>1?'s':''}`;
-  document.getElementById('batchSub').textContent=(client==='gmailthread')?'Each ✉ Open (or Open all) saves a Gmail DRAFT as a reply in your earlier email thread with that subcontractor for this project. Nothing is sent — check each draft in Gmail and press Send. The subject stays the same as the earlier thread; if no earlier email is found, a new draft is made.':(client==='system')?`Click each ✉ Open below — ${cl} opens one compose window per click. (One-click "Open all" isn't possible with a desktop mail app.)`:`Click each ✉ Open, or use "Open all" to open all in ${cl}.`;
+  document.getElementById('batchTitle').textContent=(client==='gmailthread')?`Gmail drafts with your signature — ${items.length} draft${items.length>1?'s':''}`:`Send ${items.length} email${items.length>1?'s':''}`;
+  document.getElementById('batchSub').textContent=(client==='gmailthread')?'Each ✉ Open (or Open all) saves a Gmail DRAFT with your Gmail signature (the one set in Gmail Settings). If you already emailed that subcontractor about this project, it is a reply in that earlier thread (subject unchanged, earlier email quoted); if not, a new draft is made. Nothing is sent — check each draft in Gmail and press Send.':(client==='system')?`Click each ✉ Open below — ${cl} opens one compose window per click. (One-click "Open all" isn't possible with a desktop mail app.)`:`Click each ✉ Open, or use "Open all" to open all in ${cl}.`;
   const oab=document.getElementById('openAllBtn');if(oab)oab.style.display=(client==='system')?'none':'';
   document.getElementById('batchList').innerHTML=items.map((it,i)=>`<div class="batchrow" id="brow${i}"><span class="bname" title="${(it.emails||'').replace(/"/g,'&quot;')}">${it.company}</span><button class="btn" style="padding:5px 9px;font-size:12px" onclick="copyOneBatch(${i})" title="Copy this email to paste into your mail">📋</button><button class="btn btn-open" onclick="openOneBatch(${i})">✉ Open</button></div>`).join('');
   loadFullTitle();loadDocLinks();loadAlwaysCc();loadAlwaysBcc();loadSignature();
@@ -3357,13 +3357,34 @@ function mailClientId(ask){
   const v=prompt('To read your Gmail, this page needs a Google "OAuth client ID" (ends with .apps.googleusercontent.com).\n\nPaste it here (you only do this once on this computer):');
   if(!v||!/\.apps\.googleusercontent\.com$/.test(v.trim()))return '';
   id=v.trim();try{localStorage.setItem('gmail_client_id',id);}catch(e){}
+  mailShareClientId(id); // saved for the whole team, so colleagues are never asked
   return id;
+}
+// The Client ID is not a secret. It is kept once in the shared database so every colleague who signs in gets it automatically.
+async function mailShareClientId(id){
+  try{const db=await initFirebase();await db.ref(MY_PFX+'/gmail_client_id').set(id);}catch(e){console.warn('share client id:',e&&e.message||e);}
+}
+let _cidSync=null;
+function mailSyncClientId(){
+  if(_cidSync)return _cidSync;
+  _cidSync=(async()=>{
+    try{
+      let local='';try{local=localStorage.getItem('gmail_client_id')||'';}catch(e){}
+      const db=await initFirebase();
+      const s=await db.ref(MY_PFX+'/gmail_client_id').get();let shared=String(s.val()||'').trim();
+      if(!shared){try{const o=await db.ref(OTHER_PFX+'/gmail_client_id').get();shared=String(o.val()||'').trim();}catch(e){}}
+      if(!local&&/\.apps\.googleusercontent\.com$/.test(shared)){try{localStorage.setItem('gmail_client_id',shared);}catch(e){}}
+      else if(local&&!shared)mailShareClientId(local); // first person who has it shares it with everyone
+    }catch(e){console.warn('client id sync:',e&&e.message||e);}
+  })();
+  return _cidSync;
 }
 // Two kinds of Google permission: read-only (Check mail) and read + create drafts (reply in same thread).
 let _gToks={};
 async function gmailToken(interactive,compose){
   const ck=compose?'c':'r',cur=_gToks[ck];
   if(cur&&Date.now()<cur.exp-60000)return cur.tok;
+  if(!mailClientId(false))await mailSyncClientId();
   const cid=mailClientId(interactive);
   if(!cid)throw new Error(interactive?'No client ID entered':'no-client-id');
   await loadScript('https://accounts.google.com/gsi/client');
@@ -3738,9 +3759,11 @@ async function draftAllBatch(){
   if(btn)btn.disabled=false;
 }
 // Runs by itself (quietly) while the owner has the page open, if Gmail was allowed before
-function mailAutoStart(){
+async function mailAutoStart(){
   if(isMailOwner()){loadScript('https://accounts.google.com/gsi/client').catch(function(){});} // preload so the Google window opens straight from a click
-  if(!isMailOwner()||!mailClientId(false))return;
+  if(!isMailOwner())return;
+  await mailSyncClientId(); // fetches the team's shared Client ID (or shares yours) — nobody has to paste it
+  if(!mailClientId(false))return;
   setTimeout(()=>checkMail(false),4000);
   if(!window._mailTimer)window._mailTimer=setInterval(()=>{if(!document.hidden)checkMail(false);},10*60*1000);
 }
