@@ -119,8 +119,20 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .ti{padding:8px 14px;cursor:pointer;font-size:12px;color:var(--tx2);display:flex;justify-content:space-between;align-items:center;border-left:3px solid transparent;gap:4px;transition:all .15s}
 .ti:hover{background:var(--bblue);color:var(--blue)}
 .ti.act{background:var(--bblue);color:var(--blue);border-left-color:var(--blue);font-weight:600}
+/* the little "move this trade to another main group" menu */
+.tgmenu{position:fixed;z-index:9999;background:var(--sur,#fff);border:1px solid var(--bdr2,#d7dbe3);border-radius:8px;box-shadow:0 8px 28px rgba(15,23,42,.18);min-width:220px;overflow:hidden;font-size:12px}
+.tgmh{padding:7px 11px;background:var(--sur2,#f6f7fb);color:var(--tx3,#888);font-size:11px;border-bottom:1px solid var(--bdr,#eee);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tgmi{padding:8px 11px;cursor:pointer;color:var(--tx,#222);white-space:nowrap}
+.tgmi:hover{background:var(--bblue,#eef1ff);color:var(--blue,#2b5bd7)}
+.tgmi.on{font-weight:700;color:var(--blue,#2b5bd7)}
+/* main groups in the trade list — the same groups the Excel export uses */
+.ti.sbgrp{font-weight:700;color:var(--tx);background:var(--sur2);text-transform:uppercase;font-size:11px;letter-spacing:.3px;padding-left:8px;position:sticky;top:0;z-index:1}
+.ti.sbgrp .tc{font-weight:700}
+.sbcar{flex-shrink:0;width:13px;text-align:center;color:var(--tx3);font-size:10px;cursor:pointer}
+.sbcar:hover{color:var(--blue)}
+.ti.sbsub{padding-left:26px}
 .tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.trename{opacity:0;font-size:12px;color:var(--tx3);cursor:pointer;padding:0 4px;flex-shrink:0}
+.trename{opacity:0;font-size:12px;color:var(--tx3);cursor:pointer;padding:0 3px;flex-shrink:0}
 .ti:hover .trename{opacity:.85}
 .trename:hover{color:var(--blue)}
 .tc{font-size:10px;background:var(--sur3);border-radius:10px;padding:1px 7px;color:var(--tx3);flex-shrink:0;font-weight:500}
@@ -1089,7 +1101,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-20f</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-20h</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -1118,7 +1130,6 @@ html.toon .proj-screen{backdrop-filter:none}
         <button class="btn" id="onlineBtn" onclick="toggleOnline(event)" title="See who is using the site right now">🟢 <span id="onlineN">1</span> online</button>
         <button class="btn" id="undoBtn" onclick="doUndo()" title="Undo the last status change (single or bulk)" style="opacity:.45" disabled>↶ Undo</button>
         <button class="btn" onclick="syncNow()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,4 1,10 7,10"/><polyline points="23,20 23,14 17,14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Sync</button>
-        <button class="btn" onclick="showTradeGroups()" title="Choose which main group (Preliminaries / M &amp; E / Structural / Architectural) each trade goes under in the Excel export">⇅ Trade groups</button>
         <button class="btn" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn" id="mailBtn" style="display:none" onclick="checkMail(true)" title="Read your Gmail and tick Invitation / Quotation received for this project (replies that can't be matched safely are flagged ✉ for you to check)">✉ Check mail</button>
         <button class="btn" id="bkBtn" style="display:none" onclick="downloadBackup()" title="Download a backup file of everything in this app (projects, status, contacts you added or edited). Keep it somewhere safe."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Backup</button>
@@ -1667,6 +1678,9 @@ async function loadAll(){
   renderSB();render();
   try{updateEmailBar();}catch(e){}
   loadTradeRenames(); // shared trade renames (Firebase)
+  // the sidebar groups the trades the same way the export does, so the team's
+  // group choices have to be in hand before it is drawn
+  loadTradeGroups().then(()=>renderSB()).catch(()=>{});
   refreshBcaGrades(); // auto-update grades from BCA in background (7-day cache)
   loadTplsFromCloud(); // shared email templates (Firebase)
   loadMascot(); // shared mascot image (Firebase)
@@ -1722,14 +1736,81 @@ window.addEventListener('beforeunload',()=>{
 
 function getAllTrades(){const m={};records.forEach(r=>{if(r.trade)m[r.trade]=(m[r.trade]||0)+1;});return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0]));}
 function filterTrades(){tq=document.getElementById('tq').value.toLowerCase();renderSB();}
+// Which main groups are folded up in the sidebar (remembered on this machine)
+let _sbShut={};
+try{_sbShut=JSON.parse(localStorage.getItem(MY_PFX+'_sb_shut')||'{}')||{};}catch(e){_sbShut={};}
+function sbToggleGroup(ev,name){
+  ev.stopPropagation();
+  _sbShut[name]=!_sbShut[name];
+  try{localStorage.setItem(MY_PFX+'_sb_shut',JSON.stringify(_sbShut));}catch(e){}
+  renderSB();
+}
+// The trade list is shown under the SAME main groups as the Excel export, so
+// where a trade sits is visible here and not only inside the export dialog.
 function renderSB(){
   const all=getAllTrades();const total=records.length;
   document.getElementById('sbcnt').textContent=`${total} subcontractors · ${all.length} trades`;
   const f=all.filter(([t])=>!tq||t.toLowerCase().includes(tq));
   const ac=tq?records.filter(r=>r.trade.toLowerCase().includes(tq)).length:total;
   let h=`<div class="ti${activeTrade==='ALL'?' act':''}" onclick="setTrade('ALL')"><span class="tn">All Trades</span><span class="tc">${ac}</span></div>`;
-  f.forEach(([t,c])=>{const e=t.replace(/'/g,"\'").replace(/"/g,'&quot;');h+=`<div class="ti${activeTrade===t?' act':''}" onclick="setTrade('${e}')"><span class="tn">${t}</span><span class="trename" title="Rename this trade" onclick="renameTrade(event,'${e}')">✎</span><span class="tc">${c}</span></div>`;});
+  tradeGroupOf('');                               // make sure the map is built
+  const order=TRADE_GROUPS.map(g=>g[0]).concat(['Other Trades']);
+  const bucket={};order.forEach(n=>bucket[n]=[]);
+  f.forEach(row=>{const n=tgGroupName(row[0]);(bucket[n]||bucket['Other Trades']).push(row);});
+  order.forEach(name=>{
+    const list=bucket[name];if(!list.length)return;
+    const subs=list.reduce((n,row)=>n+row[1],0);
+    // while she is searching, every group with a hit is opened
+    const shut=!tq&&_sbShut[name];
+    const gsel=activeTrade==='GRP:'+name;
+    const en=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    h+=`<div class="ti sbgrp${gsel?' act':''}" onclick="setTrade('GRP:${en}')" title="Show every subcontractor in ${en}">`
+      +`<span class="sbcar" onclick="sbToggleGroup(event,'${en}')" title="${shut?'Open':'Fold'} this group">${shut?'▸':'▾'}</span>`
+      +`<span class="tn">${name}</span><span class="tc">${subs}</span></div>`;
+    if(shut)return;
+    list.forEach(([t,c])=>{const e=t.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      h+=`<div class="ti sbsub${activeTrade===t?' act':''}" onclick="setTrade('${e}')"><span class="tn">${t}</span>`
+        +`<span class="trename" title="Move this trade to another main group" onclick="pickGroup(event,'${e}')">⇅</span>`
+        +`<span class="trename" title="Rename this trade" onclick="renameTrade(event,'${e}')">✎</span>`
+        +`<span class="tc">${c}</span></div>`;});
+  });
   document.getElementById('tlist').innerHTML=h;
+}
+const sbGroupSel=()=>activeTrade.indexOf('GRP:')===0?activeTrade.slice(4):'';
+
+// ── move a trade to another main group, from the trade list itself ──────────
+// This used to live behind a "⇅ Trade groups" button at the top, in a dialog
+// listing every trade at once. The groups are on the left now, so the move
+// belongs there too: ⇅ on a trade opens the list of groups.
+function closeGroupMenu(){const m=document.getElementById('tgMenu');if(m)m.remove();}
+function pickGroup(ev,trade){
+  ev.stopPropagation();closeGroupMenu();
+  const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  tradeGroupOf('');
+  const cur=tgGroupName(trade);
+  const names=TRADE_GROUPS.map(g=>g[0]).concat(['Other Trades']);
+  const m=document.createElement('div');m.id='tgMenu';m.className='tgmenu';
+  m.innerHTML='<div class="tgmh">Move “'+esc2(trade)+'” to</div>'
+    +names.map(n=>'<div class="tgmi'+(n===cur?' on':'')+'" data-g="'+esc2(n)+'">'
+      +(n===cur?'✓ ':'&nbsp;&nbsp;&nbsp;')+esc2(n)+'</div>').join('');
+  document.body.appendChild(m);
+  const r=ev.target.getBoundingClientRect();
+  m.style.left=Math.max(6,Math.min(r.left-20,window.innerWidth-250))+'px';
+  m.style.top=Math.min(r.bottom+4,window.innerHeight-m.offsetHeight-8)+'px';
+  m.onclick=e=>{e.stopPropagation();const g=e.target.getAttribute('data-g');
+    if(g){closeGroupMenu();setTradeGroup(trade,g);}};
+  setTimeout(()=>document.addEventListener('click',closeGroupMenu,{once:true}),0);
+}
+async function setTradeGroup(trade,g){
+  if(!trade)return;
+  const k=_tgKey(trade);
+  _tgOver=_tgOver||{};tradeGroupOf('');
+  const base=_tgMap[k],baseName=base?TRADE_GROUPS[base.g][0]:'Other Trades';
+  if(g===baseName)delete _tgOver[k];else _tgOver[k]=g;   // back where the list puts it = no override
+  _tgOver._v=1;                                          // keeps the node from being empty
+  renderSB();
+  try{await sset('trade_groups',_tgOver);toast('“'+trade+'” moved to '+g);}
+  catch(e){toast('Could not save the move — check your connection');}
 }
 function setTrade(t){activeTrade=t;renderSB();render();}
 // ── Rename a whole trade category (persists + syncs to team) ────
@@ -1997,7 +2078,9 @@ function toggleTrackFilter(){
 function getFilt(){
   const q=document.getElementById('mq').value.toLowerCase();
   return sortList(records.filter(r=>{
-    const mt=activeTrade==='ALL'||r.trade===activeTrade;
+    // a main group picked in the sidebar means every trade under it
+    const _g=sbGroupSel();
+    const mt=activeTrade==='ALL'||(_g?tgGroupName(r.trade)===_g:r.trade===activeTrade);
     const ms=!q||r.company.toLowerCase().includes(q)||(r.contact||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.hp||'').includes(q)||(r.email||'').toLowerCase().includes(q)||r.trade.toLowerCase().includes(q)||(r.remark||'').toLowerCase().includes(q)||getGrade(r).toLowerCase().includes(q)||(r.track||'').toLowerCase().includes(q);
     const st=statusMap[r.id]||{};
     const mc=cfMatch(st,r);
@@ -2282,7 +2365,8 @@ function toggleSiblingSel(id,cb){
 function openAdd(){
   eid=null;document.getElementById('mt').textContent='Add Subcontractor';
   ['fco','fct','ftel','fhp','fem','frm'].forEach(id=>document.getElementById(id).value='');
-  popTr();if(activeTrade!=='ALL')document.getElementById('ftr').value=activeTrade;
+  // a whole group is not a trade, so it must not be dropped into the trade box
+  popTr();if(activeTrade!=='ALL'&&!sbGroupSel())document.getElementById('ftr').value=activeTrade;
   hideSibRow();
   document.getElementById('mo').classList.add('open');
 }
@@ -2841,7 +2925,7 @@ function toggleSelectAllShown(){
   if(!ids.length){toast('Nothing to select');return;}
   const allSel=ids.every(id=>emailSel.has(id));
   if(allSel){ids.forEach(id=>emailSel.delete(id));toast('Cleared '+ids.length+' selected');}
-  else{ids.forEach(id=>emailSel.add(id));toast('Selected '+ids.length+(activeTrade==='ALL'?' (all shown)':' in '+activeTrade));}
+  else{ids.forEach(id=>emailSel.add(id));toast('Selected '+ids.length+(activeTrade==='ALL'?' (all shown)':' in '+(sbGroupSel()||activeTrade)));}
   saveEmailSel();render();updateEmailBar();
 }
 function updateSelAllBtn(){
@@ -3045,14 +3129,12 @@ function tgPaint(){
   });
   box.innerHTML=h||'<div style="color:var(--tx3,#888);padding:10px">No trade found.</div>';box.scrollTop=keep;
 }
+// the old dialog's setter — one way of doing it is enough, so it goes through
+// the same function the trade list uses
 async function tgSet(i,g){
-  const t=_tgList[i];if(t===undefined)return;const k=_tgKey(t);
-  _tgOver=_tgOver||{};tradeGroupOf('');
-  const base=_tgMap[k],baseName=base?TRADE_GROUPS[base.g][0]:'Other Trades';
-  if(g===baseName)delete _tgOver[k];else _tgOver[k]=g; // back to where the list puts it = no override
-  _tgOver._v=1; // keeps the node from being empty
+  const t=_tgList[i];if(t===undefined)return;
+  await setTradeGroup(t,g);
   tgPaint();
-  await sset('trade_groups',_tgOver);
 }
 async function exportCSV(){
   const list=getFilt();
