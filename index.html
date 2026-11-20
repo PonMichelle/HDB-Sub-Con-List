@@ -131,6 +131,18 @@ th{background:rgba(255,255,255,0.95)!important;backdrop-filter:blur(8px)}
 .sbcar{flex-shrink:0;width:13px;text-align:center;color:var(--tx3);font-size:10px;cursor:pointer}
 .sbcar:hover{color:var(--blue)}
 .ti.sbsub{padding-left:26px}
+/* a main group must not look like a trade: dark bold band for the group, lighter indented rows (with a guide line) for its trades.
+   html.toon … is written out because the cartoon theme styles every .ti and would otherwise win */
+html .ti.sbgrp,html.toon .ti.sbgrp{font-weight:800;font-size:12px;letter-spacing:.6px;background:var(--ink,#2a3354);color:#fff;border-left-color:transparent;margin-top:10px;padding-top:9px;padding-bottom:9px}
+html .ti.sbgrp .tc,html.toon .ti.sbgrp .tc{background:#fff;color:#24203a;border-color:#fff;font-weight:800}
+html .ti.sbgrp .sbcar,html .ti.sbgrp .sbcar:hover{color:#fff;font-size:12px}
+html .ti.sbgrp.act,html.toon .ti.sbgrp.act{background:var(--t-accent,#cfe0ff);color:#24203a;border-color:var(--ink,#2a3354)}
+html .ti.sbgrp.act .sbcar{color:#24203a}
+html .ti.sbgrp:hover .tn,html .ti.sbsub:hover .tn{transform:none}
+html .ti.sbsub,html.toon .ti.sbsub{font-weight:400;font-size:11.5px;margin-left:16px;padding-left:12px;border-left:3px solid #c9c5dc;border-radius:0 8px 8px 0}
+html.toon .ti.sbsub.act,html .ti.sbsub.act{font-weight:700;border-left-color:var(--ink,#2a3354)}
+.ti.sbsub[draggable=true]{cursor:grab}
+html .ti.sbdrop,html.toon .ti.sbdrop{outline:3px dashed #ff8a00;outline-offset:-3px;background:#fff3d6;color:#24203a}
 .tn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .trename{opacity:0;font-size:12px;color:var(--tx3);cursor:pointer;padding:0 3px;flex-shrink:0}
 .ti:hover .trename{opacity:.85}
@@ -1101,7 +1113,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-20h</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-20i</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -1764,12 +1776,12 @@ function renderSB(){
     const shut=!tq&&_sbShut[name];
     const gsel=activeTrade==='GRP:'+name;
     const en=name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    h+=`<div class="ti sbgrp${gsel?' act':''}" onclick="setTrade('GRP:${en}')" title="Show every subcontractor in ${en}">`
+    h+=`<div class="ti sbgrp${gsel?' act':''}" onclick="setTrade('GRP:${en}')" title="Show every subcontractor in ${en} — drop a trade here to move it into this group" ondragover="sbDragOver(event)" ondragleave="sbDragLeave(event)" ondrop="sbDrop(event,'${en}')">`
       +`<span class="sbcar" onclick="sbToggleGroup(event,'${en}')" title="${shut?'Open':'Fold'} this group">${shut?'▸':'▾'}</span>`
       +`<span class="tn">${name}</span><span class="tc">${subs}</span></div>`;
     if(shut)return;
     list.forEach(([t,c])=>{const e=t.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-      h+=`<div class="ti sbsub${activeTrade===t?' act':''}" onclick="setTrade('${e}')"><span class="tn">${t}</span>`
+      h+=`<div class="ti sbsub${activeTrade===t?' act':''}" onclick="setTrade('${e}')" draggable="true" data-t="${t.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}" title="Drag this trade onto a main group to move it" ondragstart="sbDragStart(event)" ondragend="sbDragEnd()" ondragover="sbDragOver(event)" ondragleave="sbDragLeave(event)" ondrop="sbDrop(event,'${en}')"><span class="tn">${t}</span>`
         +`<span class="trename" title="Move this trade to another main group" onclick="pickGroup(event,'${e}')">⇅</span>`
         +`<span class="trename" title="Rename this trade" onclick="renameTrade(event,'${e}')">✎</span>`
         +`<span class="tc">${c}</span></div>`;});
@@ -1777,6 +1789,22 @@ function renderSB(){
   document.getElementById('tlist').innerHTML=h;
 }
 const sbGroupSel=()=>activeTrade.indexOf('GRP:')===0?activeTrade.slice(4):'';
+
+// ── drag a trade onto a main group (or onto another trade = into that trade's group) ──
+function sbDragStart(ev){
+  const t=ev.currentTarget.getAttribute('data-t');if(!t)return;
+  try{ev.dataTransfer.setData('text/plain',t);ev.dataTransfer.effectAllowed='move';}catch(e){}
+  window._sbDragTrade=t;
+}
+function sbDragOver(ev){if(!window._sbDragTrade)return;ev.preventDefault();try{ev.dataTransfer.dropEffect='move';}catch(e){}ev.currentTarget.classList.add('sbdrop');}
+function sbDragLeave(ev){if(!ev.currentTarget.contains(ev.relatedTarget))ev.currentTarget.classList.remove('sbdrop');}
+function sbDragEnd(){window._sbDragTrade=null;document.querySelectorAll('.sbdrop').forEach(e=>e.classList.remove('sbdrop'));}
+function sbDrop(ev,g){
+  ev.preventDefault();ev.stopPropagation();ev.currentTarget.classList.remove('sbdrop');
+  const t=window._sbDragTrade;window._sbDragTrade=null;
+  if(!t||tgGroupName(t)===g)return;
+  setTradeGroup(t,g);
+}
 
 // ── move a trade to another main group, from the trade list itself ──────────
 // This used to live behind a "⇅ Trade groups" button at the top, in a dialog
