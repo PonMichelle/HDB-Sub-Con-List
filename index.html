@@ -1089,7 +1089,7 @@ html.toon .proj-screen{backdrop-filter:none}
       </button>
       <div class="syncrow" style="margin-top:6px"><div class="sdot" id="sdot"></div><span class="stxt" id="stxt">Loading...</span></div>
       <div class="sbcnt" id="sbcnt"></div>
-      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-20c</div>
+      <div class="sbver" id="sbver" title="Code build date — if this doesn't match what you just uploaded, the live site is showing a cached/old version">Build 2026-11-20f</div>
     </div>
     <div class="tsw"><input type="text" id="tq" placeholder="Filter trades..." oninput="filterTrades()" /></div>
     <div class="tlist" id="tlist"></div>
@@ -1118,6 +1118,7 @@ html.toon .proj-screen{backdrop-filter:none}
         <button class="btn" id="onlineBtn" onclick="toggleOnline(event)" title="See who is using the site right now">🟢 <span id="onlineN">1</span> online</button>
         <button class="btn" id="undoBtn" onclick="doUndo()" title="Undo the last status change (single or bulk)" style="opacity:.45" disabled>↶ Undo</button>
         <button class="btn" onclick="syncNow()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1,4 1,10 7,10"/><polyline points="23,20 23,14 17,14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Sync</button>
+        <button class="btn" onclick="showTradeGroups()" title="Choose which main group (Preliminaries / M &amp; E / Structural / Architectural) each trade goes under in the Excel export">⇅ Trade groups</button>
         <button class="btn" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
         <button class="btn" id="mailBtn" style="display:none" onclick="checkMail(true)" title="Read your Gmail and tick Invitation / Quotation received for this project (replies that can't be matched safely are flagged ✉ for you to check)">✉ Check mail</button>
         <button class="btn" id="bkBtn" style="display:none" onclick="downloadBackup()" title="Download a backup file of everything in this app (projects, status, contacts you added or edited). Keep it somewhere safe."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>Backup</button>
@@ -2994,6 +2995,65 @@ async function init(){
 authReady.then(function(){init();}); // start only after sign-in (the directory is loaded by then)
 // The Backup button is shown only to the owner's account (a convenience, not a security rule)
 authReady.then(function(){try{var e=String(firebase.auth().currentUser.email||'').toLowerCase();if(e==='michellepon@weehur.com.sg'){var b=document.getElementById('bkBtn');if(b)b.style.display='';}if(/@weehur\.com\.sg$/.test(e)){var mb=document.getElementById('mailBtn');if(mb)mb.style.display='';}}catch(x){}});
+// Main groups of the Excel export (taken from the Plaza Singapura quotation list). Each main group holds its trades, in this order;
+// a trade not listed here goes under "Other Trades" at the end. Matching ignores capitals and punctuation.
+const TRADE_GROUPS=[
+ ["Preliminaries",["Accredited Checker (AC) (Standyby)","Arborist","Anti Termite Treatment & Pest Control (Mosqitoe, Rodent, Cockcroch)","BAS EPSS","BIM/ Virtual Design & Construction Requirements (VDC)","Cable Detection","CCTV for AI / Tower Crane / VSS System","CCTV Survey for Sewer Drain Line","Chair Lift","Concrete pump","Crawler Crane","Compressed Air System","Design For Safety Professional (DFSP)","Disinfection Cleaning Services","ECO","Enertainer (AMPD)","External Safety Audit","Fibre Optic Sensor","Green Mark Consultant","Gondola (Rental)","Hoarding Graphic & Project Signboard","In-house Consultant (for D&B project)","Instrumentation Works","Insurance (Project)","King-Post (Above-ground)","Land Surveyor","Lightning Alert System","Linen Chute System","Material Testing","Lorry Cranes","Mechanical Filling Compactor","Mobile App","Mobile Crane","Motorised Winch Machine","Noise Barrier","Noise & Vibration Monitoring System","Passenger Hoist (Rental to Material )","PE","Pre Condition Survey","Project Information Management System (PIMS)","Safety Officer","Scaffolding","Scissor Lift","Security Guard","Soil Investigation","Temporary Site Office / Worker Quarter","Time-Lapsed Camera / Photographs","Tower Crane","Tower Crane Operator","Tree Felling, Conservation & Transplant Services","Worker Quarter","Topographical Survey"]],
+ ["M & E Works",["M&E Package","ACMV Works","Electrical Works","Fire Protection Works","Sanitary & Plumbing Works","Lift Works","Escalator Works","Hot Water System","Platform Lift","Audio Visual (AV) System","Smoke Engineering","Lighting Supplier","Automation system","Car parking guidance system","Central Burning Chamber System","Communication & Security System","Electronic Parking System","Food Waste Treatment System","Insulation panel to Cold Room","Refilling/ Refuelling (Diesel) Station","Refrigeration system for Cold room","Water Features/ Swimming Pool Filtration Installation","Weighting Station System","Fire Sprinkler System","Lighting Manufacturer"]],
+ ["Structural Works",["Aluminium Formwork / Perimeter Protective Screen","Bondek Slab","Bored Pile Works","Climbing Formwork","Column Shoes","Concrete (Supply)","Controlled Demolition","Demolition","Diaphargm Wall","Earthworks","External Works","Flexible Loop & Slim Box","Fire Protection Coating","Minor Sewer","Precast Concrete Component (Supply)","RC Labour Works","RC Pile Works","MicroPiles","Rebar & Mesh (Supply)","Post Tensioning Works","Shotcrete Work to CBP Wall","Soil Improvement","Spalling concrete repair works","Structural Steel Works","Temporary Work & Soil Nail Work (ERSS)","Timber formwork (Supply only)","Splice Sleeve","Spun Pile Works","External Works (Driveway & Drain)","Soil Improvement Works","Steel Formwork System","Temporary Work / ERSS","Delta Beam","Prefab steel staircases"]],
+ ["Architectural Works",["3D Concrete Printing","ABC Waters Professional Consultancy Service","Acid-etched glass","Acoustic Consultancy Services","Acoustic Louvre, Door & Lining","Acoustic Cellulous Spray","Air Tight Door","Allan Block Retaining Wall System","Aluminium & Glazing Works","Aluminium Composite Roof","Arboriculture (Tree cutting & transplant)","Automatic Sliding Gate","Bespoke surface finishes (i.e Marmorino plaster/ Dragged Polished plaster / Venetian plaster)","Built in Furniture (Wardrobe / Kitchen Cabinet) - Interior Design","Carpark Equipment & Road Safety","Carpet","Ceiling & DryWall Partition Works","Climb Wall","Curtain Track","Cyber security Requirement (*Refer to Appendix 2)","Digital Lock for CCA unit","Dock Leveller Systems","Drywall","Dumpwaiter Lift","E-Mobile Charging Station","Epoxy Floor Coating & Hardener","Entrance Mat / Door Mat","Equirone Panel","Fencing & Wire Mesh","Flood Barrier","Fluted panel","Fire rated glass door/ glazing wall","Formliner","Gabion Wall & Geogrid","GEOBARRIER System","GFRC","Green Wall","Ironmongery","Indoor Range Solutions Specialist","Irrigation System","Jonite Grating","Kitchen Appliances","Lab Furniture/ ware","Laminate finish","Landscaping","Lay in Grid Glass Fibre Reinforced Ceiling System (GFRC Ceiling)","Lecture Theatre Seatings","Light fixture (Supply only)","Light Weight Concrete Panel","Loose Furnitures","Mechanised Parking System","Metal Cladding / Metal Roof","Metal Works","Mirror Works","Operable Wall System","Painting Works","PC Vent Brick / Glass Blocks/ Breeze Blocks (Supply)","Pebble Washes / Loose Pebble","Pedestrian Overhead Bridge (POB)","Performance Louvres & Screen","Playground,Exercise Equipment","Prepacked material","Privacy Screen","Projector Screen","PVC Cellular Door","PVC mesh fabric","Rainwater harvesting system","Raised Floor System","Raised Mobile Stage","Recyclable Handling Equipments","Refuse Handling Equipment","Roller Blind","Roller Shutter","Sail Shade","Sanitary Wares & Fittings","Signage Works","Siphonic Drainage System","Shower Screen","Solar Panel","Solid/ Quartz Surface Countertop","Sport Equipment & Running Track System (Singatrack)","Stainless Steel Works","Superflat Floor System","Supply of Tiles","Supply of Vinyl","Stamp Concrete / Concrete Inprint","Synthetic Grass System","System Furnitures","Tensile Membrane Roofing Sytem","Thermalrock S (Slab)","Tiling (Labour supply)","Timber & Fire Rated Doors","Timber Floor","Toilet Cubicles","Traffic Marshal (Supply labour)","Turnstile","Ultra High Performance Concrete","uPVC Skirting","Vibration Isolation","Wallpaper","Water heater","Waterproofing System","Wet Trade (Labour supply)","Cabinet&Wardrobe","Cooker Hob & Hooks","Epoxy hardcourt","Fast and Secure Access (FSA) - Smart lock system","Form Liner","Metal Works (Letter Box, Blast Door,ventilation sleeve&plate, Bicycle Rack, Ext & Int Drying rack, SS Hopper, metal door frame & MS gate","Permenant Gondola System","Solid surface","Tiler (Labour supply)","Aluminium Ramp","Anti-static high pressure laminate (HPL)","Automated Drying Clothes Rack","Bi-fold Door/ PD door","Corten Steel Works","Curtain Wall [CR16] & Windows [CR17]","Drying Clothes Rack","Grab Bar/ Curtain Track System","Graphic Sticker","Kitchen Equipment Specialist (Commercial)","Lockers System","Only for Curtain Wall [CR16]","Outdoor Furniture","Pocket Door System","Recycle Bins","Roof Tiles","Tactile"]],
+];
+const _tgKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+let _tgMap=null;
+let _tgOver=null; // trades YOU moved to another main group ({tradeKey: group name}); shared with the team through the database
+function tradeGroupOf(trade){
+  if(!_tgMap){_tgMap={};TRADE_GROUPS.forEach((g,gi)=>g[1].forEach((t,ti)=>{const k=_tgKey(t);if(!_tgMap[k])_tgMap[k]={g:gi,t:ti};}));}
+  const k=_tgKey(trade),o=_tgOver&&_tgOver[k];
+  if(o){const gi=TRADE_GROUPS.findIndex(g=>g[0]===o);return {g:gi>=0?gi:TRADE_GROUPS.length,t:1e5};} // moved trades go to the end of their group
+  return _tgMap[k]||null;
+}
+async function loadTradeGroups(){
+  try{const v=await sget('trade_groups');_tgOver=(v&&typeof v==='object'&&!Array.isArray(v))?v:{};}catch(e){_tgOver=_tgOver||{};}
+  return _tgOver;
+}
+let _tgList=[];
+function tgGroupName(trade){const p=tradeGroupOf(trade);return (p&&p.g<TRADE_GROUPS.length)?TRADE_GROUPS[p.g][0]:'Other Trades';}
+async function showTradeGroups(){
+  await loadTradeGroups();tradeGroupOf('');
+  const set=new Set();records.forEach(r=>{if(r&&r.trade)set.add(r.trade);});_tgList=[...set];
+  let o=document.getElementById('tgPanel');if(o)o.remove();
+  o=document.createElement('div');o.id='tgPanel';
+  o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  o.innerHTML='<div style="background:var(--sur,#fff);color:var(--tx,#222);border-radius:12px;max-width:720px;width:100%;max-height:88vh;display:flex;flex-direction:column;padding:16px 18px;font-size:13px;box-shadow:0 10px 40px rgba(0,0,0,.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:15px">⇅ Trade groups for the Excel export</b><button class="btn" onclick="document.getElementById(\'tgPanel\').remove()">Close</button></div>'
+    +'<div style="color:var(--tx2,#666);font-size:12px;margin-bottom:8px">Choose which main group each trade goes under. Saved for the whole team and used the next time anyone presses Export. A trade you move goes to the end of its new group.</div>'
+    +'<input id="tgQ" oninput="tgPaint()" placeholder="Search a trade or a group…" style="padding:6px 9px;font-size:12px;border:1px solid var(--bdr2,#ccc);border-radius:6px;margin-bottom:8px;font-family:inherit" />'
+    +'<div id="tgRows" style="overflow:auto;flex:1"></div></div>';
+  o.onclick=e=>{if(e.target===o)o.remove();};
+  document.body.appendChild(o);tgPaint();
+}
+function tgPaint(){
+  const box=document.getElementById('tgRows');if(!box)return;const keep=box.scrollTop;
+  const q=_tgKey((document.getElementById('tgQ')||{}).value||'');
+  const names=TRADE_GROUPS.map(g=>g[0]).concat(['Other Trades']);
+  const rows=_tgList.map((t,i)=>({t,i,g:tgGroupName(t)})).filter(x=>!q||_tgKey(x.t).indexOf(q)>=0||_tgKey(x.g).indexOf(q)>=0)
+    .sort((a,b)=>names.indexOf(a.g)-names.indexOf(b.g)||a.t.localeCompare(b.t));
+  let h='',last='';
+  rows.forEach(x=>{
+    if(x.g!==last){last=x.g;h+='<div style="font-weight:700;background:#b3a2c7;color:#222;padding:4px 8px;margin-top:8px;border-radius:5px">'+mEsc(x.g)+'</div>';}
+    h+='<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:4px 6px;border-bottom:1px solid var(--bdr,#eee)"><span>'+mEsc(x.t)+'</span><select onchange="tgSet('+x.i+',this.value)" style="font-size:12px;padding:3px 5px">'+names.map(n=>'<option'+(n===x.g?' selected':'')+'>'+mEsc(n)+'</option>').join('')+'</select></div>';
+  });
+  box.innerHTML=h||'<div style="color:var(--tx3,#888);padding:10px">No trade found.</div>';box.scrollTop=keep;
+}
+async function tgSet(i,g){
+  const t=_tgList[i];if(t===undefined)return;const k=_tgKey(t);
+  _tgOver=_tgOver||{};tradeGroupOf('');
+  const base=_tgMap[k],baseName=base?TRADE_GROUPS[base.g][0]:'Other Trades';
+  if(g===baseName)delete _tgOver[k];else _tgOver[k]=g; // back to where the list puts it = no override
+  _tgOver._v=1; // keeps the node from being empty
+  tgPaint();
+  await sset('trade_groups',_tgOver);
+}
 async function exportCSV(){
   const list=getFilt();
   const proj=currentProject?currentProject.name:'SubconHub';
@@ -3011,8 +3071,9 @@ async function exportCSV(){
 
   toast('Generating Excel...');
   try{
+    await loadTradeGroups(); // trades the team moved to another main group
     const wb=new ExcelJS.Workbook();
-    const ws=wb.addWorksheet('QuotationList');
+    const ws=wb.addWorksheet('QuotationList',{properties:{outlineProperties:{summaryBelow:false,summaryRight:false}}}); // the +/- button sits on the trade row ABOVE its companies
 
     const fill =hex=>({type:'pattern',pattern:'solid',fgColor:{argb:'FF'+hex}});
     const font =(bold,sz,hex='000000')=>({name:'Calibri',bold,size:sz,color:{argb:'FF'+hex}});
@@ -3105,12 +3166,25 @@ async function exportCSV(){
       tradeMap[t].push(r);
     });
 
-    let dr=8,rNo=1;
-    tradeOrder.forEach(trade=>{
+    // 3 levels, like the Plaza Singapura list:  main group (Preliminaries / M & E / Structural / Architectural)  >  trade  >  companies
+    const MAIN_FILL=fill('B3A2C7'),MAIN_FONT=font(true,10);
+    const buckets=TRADE_GROUPS.map(g=>({name:g[0],trades:[]}));buckets.push({name:'Other Trades',trades:[]});
+    tradeOrder.forEach(trade=>{const p=tradeGroupOf(trade);(p?buckets[p.g]:buckets[buckets.length-1]).trades.push({trade,pos:p?p.t:0});});
+    buckets.forEach(b=>b.trades.sort((x,y)=>x.pos-y.pos)); // the order of the list; "Other Trades" keep the order they have in the app
+
+    let dr=8;
+    buckets.forEach(bk=>{
+    if(!bk.trades.length)return;
+    COLS.forEach((_,i)=>{sc(ws.getCell(dr,i+1),undefined,MAIN_FILL,MAIN_FONT,LV,thinB);});
+    sc(ws.getCell(dr,3),bk.name,MAIN_FILL,MAIN_FONT,LV,thinB); // main group row: outline level 0
+    dr++;
+    let rNo=1; // numbering restarts in every main group
+    bk.trades.forEach(({trade})=>{
       const comps=tradeMap[trade];
       COLS.forEach((_,i)=>{sc(ws.getCell(dr,i+1),undefined,TRADE_FILL,TRADE_FONT,LV,thinB);});
       sc(ws.getCell(dr,2),rNo++,TRADE_FILL,TRADE_FONT,C,thinB);
       sc(ws.getCell(dr,3),trade,TRADE_FILL,TRADE_FONT,LV,thinB);
+      ws.getRow(dr).outlineLevel=1; // trade row: level 1
       dr++;
 
       comps.forEach(r=>{
@@ -3125,9 +3199,12 @@ async function exportCSV(){
         vals.forEach((v,i)=>{
           sc(ws.getCell(dr,i+1),v||undefined,bg,DATA_FONT,i>=10&&i<=22?C:LV,hairB);
         });
+        ws.getRow(dr).outlineLevel=2; // company row: level 2 (fold it with the [−] on its trade row)
         dr++;
       });
     });
+    });
+    ws.properties.outlineLevelRow=2; // tells Excel the sheet has 2 levels of grouping under the main groups
 
     ws.autoFilter={from:'A7',to:{row:dr-1,column:COLS.length}};
 
@@ -3220,8 +3297,15 @@ function mailNorm(s){return String(s||'').toLowerCase().replace(/&amp;/g,'&').re
 function mailEmails(s){return (String(s||'').match(/[A-Za-z0-9._%+'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g)||[]).map(x=>x.toLowerCase());}
 // msgs: [{id,subject,from,to,cc,date:'yyyy-mm-dd',snippet}]   mode: 'in' (received) | 'out' (sent)
 // returns {ticks:[{id,field,date,msgId,subject}], flags:[{id,why,msgId,subject,from,date}]}
+// "Addendum No.1", "Corrigendum 2", "Addendum Nos. 1 & 2" in a subject → [1], [2], [1,2]  (only 1–10, the Addendum boxes the app has)
+function mailAddendumNums(subj){
+  const out=[],re=/\b(?:addendum|addenda|corrigendum|corrigenda)\b[\s(:#-]*(?:nos?\b\.?|number)?[\s.:#-]*(\d{1,2}(?:\s*(?:,|&|and)\s*\d{1,2})*)/ig;let m;
+  while((m=re.exec(String(subj||'')))){m[1].split(/\s*(?:,|&|and)\s*/i).forEach(x=>{const n=+x;if(n>=1&&n<=10&&out.indexOf(n)<0)out.push(n);});}
+  return out.sort((a,b)=>a-b);
+}
+const MAIL_ADDENDUM=/\b(addend|corrigend)/i;
 function mailMatch(msgs,ctx,mode){
-  const proj=mailNorm(ctx.projectName),ticks=[],flags=[],threads=[],learn=[],tm=ctx.threadMap||{};
+  const proj=mailNorm(ctx.projectName),ticks=[],flags=[],threads=[],learn=[],skipped=[],pend={},tm=ctx.threadMap||{};
   const byEmail=new Map(),byDom=new Map();
   ctx.records.forEach(r=>{
     mailEmails(r.email).forEach(e=>{
@@ -3252,7 +3336,24 @@ function mailMatch(msgs,ctx,mode){
       let c=exact;const t=c.filter(r=>mailNorm(r.trade)&&subj.indexOf(mailNorm(r.trade))>=0);if(t.length)c=t;
       if(c.length>1)return; // company has several trades and the subject doesn't say which — don't guess
       if(m.threadId&&c.length===1)threads.push({threadId:m.threadId,id:c[0].id,date:m.date}); // remember: this thread = this company+trade
-      c.forEach(r=>{if(r.nfa||st(r.id).invDate)return;ticks.push({id:r.id,field:'invDate',date:m.date,msgId:m.id,subject:m.subject});});
+      // An email you SEND whose subject says "Addendum No.2" / "Corrigendum 1" ticks that Tender Addendum box (dated the day you sent it) —
+      // it is not an Invitation. The app only shows Addendum N after N-1 is ticked, and only for an invited company, so those are respected.
+      if(MAIL_ADDENDUM.test(m.subject||'')){
+        const nums=mailAddendumNums(m.subject);
+        c.forEach(r=>{
+          if(r.nfa)return;const s=st(r.id),p=pend[r.id]||(pend[r.id]={}),has=f=>!!(s[f]||p[f]);
+          if(s.noqDate)return;
+          if(!nums.length){skipped.push({id:r.id,why:'the subject says Addendum/Corrigendum but has no number (write e.g. “Addendum No.1”)',subject:m.subject});return;}
+          if(!has('invDate')){skipped.push({id:r.id,why:'the company is not marked Invited yet',subject:m.subject});return;}
+          nums.forEach(n=>{
+            const f='add'+n+'Date';if(has(f))return;
+            if(n>1&&!has('add'+(n-1)+'Date')){skipped.push({id:r.id,why:'Addendum No.'+(n-1)+' is not ticked yet — tick it first',subject:m.subject});return;}
+            p[f]=1;ticks.push({id:r.id,field:f,date:m.date,msgId:m.id,subject:m.subject});
+          });
+        });
+        return;
+      }
+      c.forEach(r=>{if(r.nfa||st(r.id).invDate)return;(pend[r.id]||(pend[r.id]={})).invDate=1;ticks.push({id:r.id,field:'invDate',date:m.date,msgId:m.id,subject:m.subject});});
       return;
     }
     // received mail
@@ -3286,7 +3387,7 @@ function mailMatch(msgs,ctx,mode){
     }
     if(dom.length&&titleOk){dom.filter(invited).forEach(r=>flag(r,'Reply with the project title from a different address at this company'));}
   });
-  return {ticks,flags,threads,learn};
+  return {ticks,flags,threads,learn,skipped};
 }
 
 // ── Learn contact details from a subcontractor's reply ───────────────
@@ -3605,7 +3706,9 @@ async function checkMail(interactive){
     render();
     const nFlag=Object.keys(mailFlags).length;
     const wantPanel=interactive||_mailShowWhenDone;_mailShowWhenDone=false;
-    if(wantPanel)showMailPanel(ticks,{scanned:inbox.length+sent.length,days});
+    const skippedAd=[];rOut.skipped.forEach(x=>{if(!skippedAd.some(y=>y.id===x.id&&y.why===x.why))skippedAd.push(x);});
+    if(wantPanel)showMailPanel(ticks,{scanned:inbox.length+sent.length,days,skipped:skippedAd});
+    else if(skippedAd.length)toast(skippedAd.length+' Addendum email'+(skippedAd.length>1?'s':'')+' not ticked — press ✉ Check mail to see why');
     if(!wantPanel&&(ticks.length||nFlag||nChanged))toast('Mail check: ticked '+ticks.length+(nChanged?', updated '+nChanged+' contact detail'+(nChanged>1?'s':'')+' ✎':'')+(nFlag?', '+nFlag+' to check ✉':''));
   }catch(e){
     console.warn('mail check:',e&&e.message||e);
@@ -3622,10 +3725,11 @@ function showMailPanel(ticks,info){
   o=document.createElement('div');o.id='mailPanel';
   o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
   const fl=Object.keys(mailFlags).map(id=>mailFlags[id]);
-  const fld={invDate:'Invitation',qrcDate:'Quotation received',noqDate:'Not Quote'};
+  const fld={invDate:'Invitation',qrcDate:'Quotation received',noqDate:'Not Quote'};for(let i=1;i<=10;i++)fld['add'+i+'Date']='Tender Addendum No.'+i;
   let h='<div style="background:var(--sur,#fff);color:var(--tx,#222);border-radius:12px;max-width:760px;width:100%;max-height:88vh;overflow:auto;padding:18px 20px;font-size:13px;box-shadow:0 10px 40px rgba(0,0,0,.3)">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:15px">✉ Mail check — '+mEsc(currentProject?currentProject.name:'')+'</b><button class="btn" onclick="document.getElementById(\'mailPanel\').remove()">Close</button></div>';
   if(info)h+='<div style="color:var(--tx2,#666);margin-bottom:10px">Looked at '+info.scanned+' emails from the last '+info.days+' days.</div>';
+  if(info&&info.skipped&&info.skipped.length)h+='<div style="background:#fff7e6;border:1px solid #f0d9a8;border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:12px"><b style="color:#9a4b00">Addendum / Corrigendum emails NOT ticked ('+info.skipped.length+')</b>'+info.skipped.map(s=>'<div style="margin-top:3px"><b>'+mEsc(recLabel(s.id))+'</b> — '+mEsc(s.why)+'<div style="color:var(--tx3,#888);font-size:11.5px">“'+mEsc(s.subject)+'”</div></div>').join('')+'</div>';
   h+='<div style="font-weight:600;margin:8px 0 4px;color:#17622b;display:flex;justify-content:space-between;align-items:center"><span>✎ Contact details updated from emails — please confirm ('+mailChanges.length+')</span>'+(mailChanges.length>1?'<button class="btn" onclick="mailConfirmAll()">✔ Confirm all</button>':'')+'</div>';
   h+=mailChanges.length?mailChanges.map(c=>'<div style="padding:6px 0;border-top:1px solid var(--bdr,#eee)"><b>'+mEsc(recLabel(c.id))+'</b> — '+MAIL_FLD[c.field]+'<div style="font-size:12.5px;margin-top:2px"><span style="color:#a02020;text-decoration:line-through">'+mEsc(c.old||'(empty)')+'</span> → <b style="color:#17622b">'+mEsc(c.new)+'</b></div><div style="color:var(--tx3,#888);font-size:11.5px">from '+mEsc(c.date)+' · '+mEsc(c.from)+' · “'+mEsc(c.subject)+'”</div><div style="margin-top:4px"><button class="btn" onclick="mailChangeConfirm(\''+mEsc(c.key)+'\')">✔ Confirm</button> <button class="btn" onclick="mailChangeUndo(\''+mEsc(c.key)+'\')">↶ Undo</button> <button class="btn" onclick="mailShow('+c.id+')">Show this company</button></div></div>').join(''):'<div style="color:var(--tx3,#888)">Nothing waiting.</div>';
   if(ticks){
